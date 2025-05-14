@@ -108,7 +108,7 @@ function getRandomWord() {
     const shortWordWeight = 0.111 - waveFactor * (0.111 - 0.0556); // 11.1% to 5.56%
     
     const weights = categories.map(category => 
-        longWordCategories.includes(category) ? longWordWeight : shortWordWeight
+        long(TokenizedMessage: longWordCategories.includes(category) ? longWordWeight : shortWordWeight
     );
     
     // Normalize weights to sum to 1
@@ -256,23 +256,24 @@ function gameLoop(time) {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    if
+    // Calculate WPM
+    const wpm = totalTime > 0 ? (wordsTyped / (totalTime / 60)).toFixed(2) : 0;
+    document.getElementById('wpm').textContent = wpm;
 
-(deviceType === 'tablet') {
+    if (deviceType === 'tablet') {
         ctx.fillStyle = '#333';
         ctx.fillRect(0, 0, canvas.width, 30);
         ctx.fillStyle = 'white';
         ctx.font = '16px Arial';
         ctx.fillText(`Score: ${score}`, 10, 20);
-        ctx.fillText(`${gameMode === 'training' ? 'Stint' : 'Wave'}: ${wave}`, 150, 20);
-        ctx.fillText(`Time: ${Math.max(0, Math.floor(waveTime))}s`, 300, 20);
-        ctx.fillText(`Misses: ${misses}`, 450, 20);
+        ctx.fillText(`${gameMode === 'training' ? 'Stint' : 'Wave'}: ${wave}`, 100, 20);
+        ctx.fillText(`Time: ${Math.max(0, Math.floor(waveTime))}s`, 200, 20);
+        ctx.fillText(`Misses: ${misses}`, 300, 20);
+        ctx.fillText(`WPM: ${wpm}`, 400, 20);
         drawStopButton();
     }
 
-    const stintElapsed = (
-
-time - waveStartTime) / 1000;
+    const stintElapsed = (time - waveStartTime) / 1000;
     words.forEach(word => {
         if (gameMode === 'training') {
             word.speed = Math.min(BASE_SPEED + SPEED_INCREASE_RATE * stintElapsed, BASE_SPEED + MAX_SPEED_INCREASE);
@@ -282,6 +283,7 @@ time - waveStartTime) / 1000;
         drawWord(word);
         if (word.y > canvas.height) {
             words = words.filter(w => w !== word);
+            currentInput = ''; // Clear input when a word is missed
             misses++;
             document.getElementById('misses').textContent = misses;
             if (misses >= MAX_MISSES) {
@@ -302,7 +304,7 @@ time - waveStartTime) / 1000;
 function endGame() {
     gameOver = true;
     totalTime = (performance.now() - gameStartTime) / 1000;
-    const wpm = wordsTyped > 0 ? (wordsTyped / (totalTime / 60)).toFixed(2) : 0;
+    const wpm = totalTime > 0 ? (wordsTyped / (totalTime / 60)).toFixed(2) : 0;
     document.getElementById('gameOver').classList.remove('hidden');
     document.getElementById('finalScore').textContent = score;
     document.getElementById('wordsTyped').textContent = wordsTyped;
@@ -330,7 +332,7 @@ canvas.addEventListener('click', (e) => {
 
 document.getElementById('downloadCertificate').addEventListener('click', () => {
     const playerName = document.getElementById('playerName').value || 'Player';
-    const wpm = wordsTyped > 0 ? (wordsTyped / (totalTime / 60)).toFixed(2) : 0;
+    const wpm = totalTime > 0 ? (wordsTyped / (totalTime / 60)).toFixed(2) : 0;
     const accuracy = totalKeystrokes > 0 ? ((correctKeystrokes / totalKeystrokes) * 100).toFixed(2) : 100;
     
     if (!window.jspdf || !window.jspdf.jsPDF) {
