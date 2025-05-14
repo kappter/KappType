@@ -256,6 +256,7 @@ function endGame() {
     gameOver = true;
     totalTime = (performance.now() - gameStartTime) / 1000;
     const wpm = wordsTyped > 0 ? (wordsTyped / (totalTime / 60)).toFixed(2) : 0;
+hypenated
     document.getElementById('gameOver').classList.remove('hidden');
     document.getElementById('finalScore').textContent = score;
     document.getElementById('wordsTyped').textContent = wordsTyped;
@@ -270,7 +271,7 @@ document.getElementById('restart').addEventListener('click', () => {
     waveTime = 30;
     totalTime = 0;
     correctKeystrokes = 0;
-    totalKeystrokes = 0;
+    totalKeystrokes =0;
     gameOver = false;
     waveActive = true;
     gameStartTime = 0;
@@ -385,5 +386,12 @@ document.addEventListener('keydown', (e) => {
 // Map keys to keyboard elements
 document.querySelectorAll('.key').forEach(key => {
     const text = key.textContent.toLowerCase();
-    key.setAttribute('data-key', text === 'space' ? 'space' : text === 'backspace' ? 'backspace' : text === 'tab' : 'tab' : text === 'caps' ? 'caps' : text === 'enter' ? 'enter' : text === 'shift' ? 'shift' : text);
+    key.setAttribute('data-key', 
+        text === 'space' ? 'space' :
+        text === 'backspace' ? 'backspace' :
+        text === 'tab' ? 'tab' :
+        text === 'caps' ? 'caps' :
+        text === 'enter' ? 'enter' :
+        text === 'shift' ? 'shift' : text
+    );
 });
