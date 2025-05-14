@@ -42,10 +42,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Typing Game</title>
+    <title>Typing Tempest</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <header>
+        <h1>Typing Tempest</h1>
+    </header>
     <div class="game-container">
         <div class="info">
             <div>Score: <span id="score">0</span></div>
@@ -58,6 +61,11 @@
             <h2>Game Over</h2>
             <p>Final Score: <span id="finalScore"></span></p>
             <p>Words Typed: <span id="wordsTyped"></span></p>
+            <div class="certificate-form">
+                <label for="playerName">Enter Your Name:</label>
+                <input type="text" id="playerName" placeholder="Your Name">
+                <button id="downloadCertificate">Download Certificate</button>
+            </div>
             <button id="restart">Restart</button>
         </div>
         <div class="keyboard">
@@ -78,6 +86,9 @@
             </div>
         </div>
     </div>
+    <footer>
+        <p>Typing Tempest &copy; 2025</p>
+    </footer>
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
     <script src="game.js"></script>
 </body>

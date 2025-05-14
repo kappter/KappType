@@ -15,6 +15,10 @@ let lastTime = 0;
 let gameOver = false;
 let waveActive = true;
 let waveStartTime = 0;
+let totalTime = 0;
+let correctKeystrokes = 0;
+let totalKeystrokes = 0;
+let gameStartTime = performance.now();
 
 const MAX_MISSES = 5;
 const BASE_SPEED = 0.5;
@@ -72,8 +76,25 @@ function endWave() {
 }
 
 function startGame() {
+    gameStartTime = performance.now();
     startWave();
     requestAnimationFrame(gameLoop);
+}
+
+function drawWord(wordObj) {
+    const word = wordObj.text;
+    let matchedLength = 0;
+    if (currentInput.toLowerCase().startsWith(word.toLowerCase().slice(0, currentInput.length))) {
+        matchedLength = currentInput.length;
+    }
+    
+    ctx.font = '20px Arial';
+    let x = wordObj.x;
+    for (let i = 0; i < word.length; i++) {
+        ctx.fillStyle = i < matchedLength ? 'red' : 'black';
+        ctx.fillText(word[i], x, wordObj.y);
+        x += ctx.measureText(word[i]).width;
+    }
 }
 
 function gameLoop(time) {
@@ -81,6 +102,7 @@ function gameLoop(time) {
 
     const delta = (time - lastTime) / 1000;
     lastTime = time;
+    totalTime = (time - gameStartTime) / 1000;
 
     if (waveActive) {
         waveTime -= delta;
@@ -90,11 +112,10 @@ function gameLoop(time) {
     }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.font = '20px Arial';
 
     words.forEach(word => {
         word.y += word.speed;
-        ctx.fillText(word.text, word.x, word.y);
+        drawWord(word);
         if (word.y > canvas.height) {
             words = words.filter(w => w !== word);
             misses++;
@@ -113,6 +134,7 @@ function gameLoop(time) {
 
 function endGame() {
     gameOver = true;
+    totalTime = (performance.now() - gameStartTime) / 1000;
     document.getElementById('gameOver').classList.remove('hidden');
     document.getElementById('finalScore').textContent = score;
     document.getElementById('wordsTyped').textContent = wordsTyped;
@@ -124,13 +146,84 @@ document.getElementById('restart').addEventListener('click', () => {
     misses = 0;
     wordsTyped = 0;
     waveTime = 30;
+    totalTime = 0;
+    correctKeystrokes = 0;
+    totalKeystrokes = 0;
     gameOver = false;
     waveActive = true;
+    gameStartTime = performance.now();
     document.getElementById('gameOver').classList.add('hidden');
     document.getElementById('score').textContent = score;
     document.getElementById('wave').textContent = wave;
     document.getElementById('misses').textContent = misses;
     startWave();
+});
+
+document.getElementById('downloadCertificate').addEventListener('click', () => {
+    const playerName = document.getElementById('playerName').value || 'Player';
+    const wpm = wordsTyped > 0 ? (wordsTyped / (totalTime / 60)).toFixed(2) : 0;
+    const accuracy = totalKeystrokes > 0 ? ((correctKeystrokes / totalKeystrokes) * 100).toFixed(2) : 100;
+    
+    const latexContent = `
+\\documentclass[a4paper]{article}
+\\usepackage[utf8]{inputenc}
+\\usepackage{geometry}
+\\geometry{margin=1in}
+\\usepackage{titling}
+\\usepackage{noto}
+
+\\title{Typing Tempest Certificate}
+\\author{}
+\\date{}
+
+\\begin{document}
+
+\\begin{center}
+    \\vspace*{1cm}
+    \\Huge \\textbf{Certificate of Achievement} \\\\
+    \\vspace{0.5cm}
+    \\Large Typing Tempest \\\\
+    \\vspace{1cm}
+    \\large Awarded to \\\\
+    \\textbf{${playerName}} \\\\
+    \\vspace{0.5cm}
+    for outstanding performance in typing.
+\\end{center}
+
+\\vspace{1cm}
+
+\\begin{center}
+    \\begin{tabular}{ll}
+        \\textbf{Score:} & ${score} \\\\
+        \\textbf{Wave Reached:} & ${wave} \\\\
+        \\textbf{Words Typed:} & ${wordsTyped} \\\\
+        \\textbf{Typing Speed:} & ${wpm} WPM \\\\
+        \\textbf{Accuracy:} & ${accuracy}\\% \\\\
+        \\textbf{Total Time:} & ${totalTime.toFixed(2)} seconds \\\\
+        \\textbf{Missed Words:} & ${misses} \\\\
+    \\end{tabular}
+\\end{center}
+
+\\vspace{1cm}
+
+\\begin{center}
+    \\large Issued on ${new Date().toLocaleDateString()} \\\\
+    \\vspace{0.5cm}
+    \\rule{4cm}{0.4pt} \\\\
+    \\small Signature
+\\end{center}
+
+\\end{document}
+    `;
+    
+    // Trigger PDF generation (handled by the system)
+    const blob = new Blob([latexContent], { type: 'text/latex' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${playerName}_TypingTempest_Certificate.tex`;
+    a.click();
+    URL.revokeObjectURL(url);
 });
 
 document.addEventListener('keydown', (e) => {
@@ -144,10 +237,13 @@ document.addEventListener('keydown', (e) => {
         setTimeout(() => keyElement.classList.remove('active'), 100);
     }
 
+    totalKeystrokes++;
     if (e.key === 'Backspace') {
         currentInput = currentInput.slice(0, -1);
     } else if (e.key.length === 1) {
         currentInput += e.key;
+        const activeWord = words.find(w => w.text.toLowerCase().startsWith(currentInput.toLowerCase()));
+        if (activeWord) correctKeystrokes++;
     }
 
     words.forEach(word => {
