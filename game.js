@@ -95,8 +95,8 @@ function setupStartButton() {
         deviceType = document.getElementById('deviceType').value;
         gameMode = document.getElementById('gameMode').value;
         experienceLevel = parseInt(document.getElementById('experienceLevel').value);
-        BASE_SPEED = gameMode === 'training' ? 0.2 + (experienceLevel - 1) * 0.03 : 0.3 + (experienceLevel - 1) * 0.04;
-        WORD_SPAWN_RATE = 3000 - (experienceLevel - 1) * 222;
+        BASE_SPEED = gameMode === 'vocab' ? 0.1 : (gameMode === 'training' ? 0.2 + (experienceLevel - 1) * 0.03 : 0.3 + (experienceLevel - 1) * 0.04);
+        WORD_SPAWN_RATE = gameMode === 'vocab' ? 5000 : 3000 - (experienceLevel - 1) * 222;
         canvas.height = deviceType === 'tablet' ? 300 : 400;
         document.getElementById('startScreen').classList.add('hidden');
         document.querySelector('.game-container').classList.remove('hidden');
@@ -162,10 +162,11 @@ function getRandomWord() {
 function addWord() {
     if (!waveActive) return;
     const word = getRandomWord();
-    typedFirstLetter = false;
+    typedFirstLetter = true; // Reveal first letter
+    currentInput = gameMode === 'vocab' ? word[0] : ''; // Start with first letter
     ctx.font = `${BASE_FONT_SIZE}px Arial`;
     let x = lastWordX;
-    const wordWidth = ctx.measureText(word).width;
+    const wordWidth = ctx.measureText(word.replace(/\s/g, '_')).width;
     if (gameMode === 'training') {
         if (x + wordWidth > canvas.width) {
             x = 10;
@@ -226,14 +227,15 @@ function drawWord(wordObj) {
     ctx.font = `${wordObj.fontSize}px Arial`;
     let x = wordObj.x;
     for (let i = 0; i < word.length; i++) {
+        const char = word[i];
         if (gameMode === 'vocab' && !typedFirstLetter) {
             ctx.fillStyle = 'black';
-            ctx.fillText('_', x, wordObj.y);
+            ctx.fillText(char === ' ' ? ' ' : '_', x, wordObj.y);
         } else {
             ctx.fillStyle = i < matchedLength ? 'red' : (gameMode === 'vocab' ? 'lightgray' : 'black');
-            ctx.fillText(word[i], x, wordObj.y);
+            ctx.fillText(char, x, wordObj.y);
         }
-        x += ctx.measureText(word[i] || '_').width;
+        x += ctx.measureText(char === ' ' ? ' ' : char || '_').width;
     }
 }
 
@@ -278,6 +280,7 @@ function resetGame() {
     flashEffect.active = false;
     currentDefinition = '';
     typedFirstLetter = false;
+    currentInput = '';
     document.getElementById('gameOver').classList.add('hidden');
     document.querySelector('.game-container').classList.add('hidden');
     document.getElementById('startScreen').classList.remove('hidden');
@@ -333,8 +336,10 @@ function gameLoop(time) {
         drawWord(word);
         if (word.y > canvas.height) {
             words = words.filter(w => w !== word);
-            currentInput = '';
-            typedFirstLetter = false;
+            if (gameMode !== 'vocab' || !word.text.toLowerCase().startsWith(currentInput.toLowerCase())) {
+                currentInput = gameMode === 'vocab' ? word.text[0] : '';
+                typedFirstLetter = gameMode === 'vocab';
+            }
             misses++;
             document.getElementById('misses').textContent = misses;
             if (misses >= MAX_MISSES) {
@@ -462,7 +467,7 @@ document.addEventListener('keydown', (e) => {
         if (typedFirstLetter || gameMode !== 'vocab') {
             currentInput = currentInput.slice(0, -1);
         }
-    } else if (/^[a-z0-9\-']$/.test(key)) {
+    } else if (/^[a-z0-9\-' ]$/.test(key)) {
         totalKeystrokes++;
         if (gameMode === 'vocab' && !typedFirstLetter) {
             typedFirstLetter = true;
@@ -481,10 +486,10 @@ document.addEventListener('keydown', (e) => {
     words.forEach(word => {
         if (currentInput.toLowerCase() === word.text.toLowerCase()) {
             words = words.filter(w => w !== word);
-            score += word.text.length * 10;
+            score += word.text.replace(/\s/g, '').length * 10;
             wordsTyped++;
-            currentInput = '';
-            typedFirstLetter = false;
+            currentInput = gameMode === 'vocab' && words.length > 0 ? words[0].text[0] : '';
+            typedFirstLetter = gameMode === 'vocab';
             if (gameMode === 'training') {
                 addWord();
             }
