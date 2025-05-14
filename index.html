@@ -51,7 +51,12 @@
     </header>
     <div id="startScreen" class="start-screen">
         <h2>Welcome to Typing Tempest</h2>
-        <p>Select Your Experience Level (1 = Easy, 10 = Hard):</p>
+        <p>Select Game Mode:</p>
+        <select id="gameMode">
+            <option value="arcade">Arcade Mode</option>
+            <option value="training">Training Mode</option>
+        </select>
+        <p>Select Experience Level (1 = Easy, 10 = Hard):</p>
         <select id="experienceLevel">
             <option value="1">1</option>
             <option value="2">2</option>
@@ -69,7 +74,7 @@
     <div class="game-container hidden">
         <div class="info">
             <div>Score: <span id="score">0</span></div>
-            <div>Wave: <span id="wave">1</span></div>
+            <div><span id="waveLabel">Wave</span>: <span id="wave">1</span></div>
             <div>Time: <span id="timer">30</span>s</div>
             <div>Misses: <span id="misses">0</span></div>
         </div>
@@ -78,6 +83,7 @@
             <h2>Game Over</h2>
             <p>Final Score: <span id="finalScore"></span></p>
             <p>Words Typed: <span id="wordsTyped"></span></p>
+            <p>Typing Speed: <span id="wpm"></span> WPM</p>
             <div class="certificate-form">
                 <label for="playerName">Enter Your Name:</label>
                 <input type="text" id="playerName" placeholder="Your Name">

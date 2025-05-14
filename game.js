@@ -20,11 +20,14 @@ let correctKeystrokes = 0;
 let totalKeystrokes = 0;
 let gameStartTime = 0;
 let experienceLevel = 1;
+let gameMode = 'arcade';
 let BASE_SPEED = 0.3;
 let WORD_SPAWN_RATE = 3000;
 
 const MAX_MISSES = 5;
 const SPEED_INCREMENT = 0.2;
+const LINE_HEIGHT = 30;
+const MAX_WORDS_PER_LINE = 3;
 
 // Load CSV
 fetch('words.csv')
@@ -34,13 +37,14 @@ fetch('words.csv')
             header: true,
             complete: function(results) {
                 wordData = results.data[0];
-                // Wait for start button
                 document.getElementById('startGame').addEventListener('click', () => {
+                    gameMode = document.getElementById('gameMode').value;
                     experienceLevel = parseInt(document.getElementById('experienceLevel').value);
-                    BASE_SPEED = 0.3 + (experienceLevel - 1) * 0.04; // 0.3 to 0.7
-                    WORD_SPAWN_RATE = 3000 - (experienceLevel - 1) * 222; // 3000ms to 1000ms
+                    BASE_SPEED = gameMode === 'training' ? 0.2 + (experienceLevel - 1) * 0.03 : 0.3 + (experienceLevel - 1) * 0.04;
+                    WORD_SPAWN_RATE = 3000 - (experienceLevel - 1) * 222;
                     document.getElementById('startScreen').classList.add('hidden');
                     document.querySelector('.game-container').classList.remove('hidden');
+                    document.getElementById('waveLabel').textContent = gameMode === 'training' ? 'Stint' : 'Wave';
                     startGame();
                 });
             }
@@ -60,8 +64,18 @@ function getRandomWord() {
 function addWord() {
     if (!waveActive) return;
     const word = getRandomWord();
-    const x = Math.random() * (canvas.width - ctx.measureText(word).width);
-    words.push({ text: word, x, y: 0, speed: BASE_SPEED + (wave - 1) * SPEED_INCREMENT });
+    if (gameMode === 'training') {
+        const line = words.length < MAX_WORDS_PER_LINE ? 0 : Math.floor(words.length / MAX_WORDS_PER_LINE);
+        let x = 10;
+        const lineWords = words.filter(w => w.line === line);
+        if (lineWords.length > 0) {
+            x = lineWords[lineWords.length - 1].x + ctx.measureText(lineWords[lineWords.length - 1].text).width + 10;
+        }
+        words.push({ text: word, x, y: 30 + line * LINE_HEIGHT, speed: BASE_SPEED, line });
+    } else {
+        const x = Math.random() * (canvas.width - ctx.measureText(word).width);
+        words.push({ text: word, x, y: 0, speed: BASE_SPEED + (wave - 1) * SPEED_INCREMENT });
+    }
 }
 
 function startWave() {
@@ -81,7 +95,7 @@ function endWave() {
         wave++;
         waveTime = 30;
         startWave();
-    }, 3000); // 3-second pause
+    }, 3000);
 }
 
 function startGame() {
@@ -122,20 +136,35 @@ function gameLoop(time) {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    words.forEach(word => {
-        word.y += word.speed;
-        drawWord(word);
-        if (word.y > canvas.height) {
-            words = words.filter(w => w !== word);
-            misses++;
-            document.getElementById('misses').textContent = misses;
-            if (misses >= MAX_MISSES) {
-                endGame();
+    if (gameMode === 'training') {
+        words.forEach(word => {
+            word.x += word.speed;
+            drawWord(word);
+            if (word.x > canvas.width) {
+                words = words.filter(w => w !== word);
+                misses++;
+                document.getElementById('misses').textContent = misses;
+                if (misses >= MAX_MISSES) {
+                    endGame();
+                }
             }
-        }
-    });
+        });
+    } else {
+        words.forEach(word => {
+            word.y += word.speed;
+            drawWord(word);
+            if (word.y > canvas.height) {
+                words = words.filter(w => w !== word);
+                misses++;
+                document.getElementById('misses').textContent = misses;
+                if (misses >= MAX_MISSES) {
+                    endGame();
+                }
+            }
+        });
+    }
 
-    document.getElementById('score').textContent = score;
+    document.getElementById('score').HCO3>score;
     document.getElementById('wave').textContent = wave;
     document.getElementById('timer').textContent = Math.max(0, Math.floor(waveTime));
     requestAnimationFrame(gameLoop);
@@ -144,9 +173,11 @@ function gameLoop(time) {
 function endGame() {
     gameOver = true;
     totalTime = (performance.now() - gameStartTime) / 1000;
+    const wpm = wordsTyped > 0 ? (wordsTyped / (totalTime / 60)).toFixed(2) : 0;
     document.getElementById('gameOver').classList.remove('hidden');
     document.getElementById('finalScore').textContent = score;
     document.getElementById('wordsTyped').textContent = wordsTyped;
+    document.getElementById('wpm').textContent = wpm;
 }
 
 document.getElementById('restart').addEventListener('click', () => {
@@ -190,6 +221,8 @@ document.getElementById('downloadCertificate').addEventListener('click', () => {
     \\Huge \\textbf{Certificate of Achievement} \\\\
     \\vspace{0.5cm}
     \\Large Typing Tempest \\\\
+    \\vspace{0.5cm}
+    \\large ${gameMode.charAt(0).toUpperCase() + gameMode.slice(1)} Mode \\\\
     \\vspace{1cm}
     \\large Awarded to \\\\
     \\textbf{${playerName}} \\\\
@@ -202,7 +235,7 @@ document.getElementById('downloadCertificate').addEventListener('click', () => {
 \\begin{center}
     \\begin{tabular}{ll}
         \\textbf{Score:} & ${score} \\\\
-        \\textbf{Wave Reached:} & ${wave} \\\\
+        \\textbf{${gameMode === 'training' ? 'Stint Reached' : 'Wave Reached'}:} & ${wave} \\\\
         \\textbf{Words Typed:} & ${wordsTyped} \\\\
         \\textbf{Typing Speed:} & ${wpm} WPM \\\\
         \\textbf{Accuracy:} & ${accuracy}\\% \\\\
@@ -254,7 +287,23 @@ document.addEventListener('keydown', (e) => {
 
     words.forEach(word => {
         if (currentInput.toLowerCase() === word.text.toLowerCase()) {
-            words = words.filter(w => w !== word);
+            if (gameMode === 'training') {
+                const line = word.line;
+                words = words.filter(w => w !== word);
+                const lineWords = words.filter(w => w.line === line);
+                lineWords.forEach((w, i) => {
+                    w.x = 10 + (i > 0 ? lineWords.slice(0, i).reduce((sum, lw) => sum + ctx.measureText(lw.text).width + 10, 0) : 0);
+                });
+                if (lineWords.length === 0 && words.length < MAX_WORDS_PER_LINE) {
+                    words.forEach(w => {
+                        w.line = Math.max(0, w.line - 1);
+                        w.y = 30 + w.line * LINE_HEIGHT;
+                    });
+                    addWord();
+                }
+            } else {
+                words = words.filter(w => w !== word);
+            }
             score += word.text.length * 10;
             wordsTyped++;
             currentInput = '';
