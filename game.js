@@ -338,7 +338,7 @@ document.getElementById('stopGame').addEventListener('click', resetGame);
 
 canvas.addEventListener('click', (e) => {
     if (deviceType !== 'tablet' || gameOver) return;
-    const rect = canvas.getBoundingClientRect();
+    const rect = canvas.getBoundingRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     if (
@@ -428,13 +428,20 @@ document.addEventListener('keydown', (e) => {
         setTimeout(() => keyElement.classList.remove('active'), 100);
     }
 
-    totalKeystrokes++;
+    // Only process alphanumeric, hyphen, or apostrophe keys for input
     if (e.key === 'Backspace') {
+        totalKeystrokes++;
         currentInput = currentInput.slice(0, -1);
-    } else if (e.key.length === 1) {
+    } else if (/^[a-z0-9\-']$/.test(key)) {
+        totalKeystrokes++;
         currentInput += e.key;
         const activeWord = words.find(w => w.text.toLowerCase().startsWith(currentInput.toLowerCase()));
-        if (activeWord) correctKeystrokes++;
+        if (activeWord) {
+            correctKeystrokes++;
+        } else {
+            // Clear input if it doesn't match any word
+            currentInput = '';
+        }
     }
 
     words.forEach(word => {
