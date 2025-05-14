@@ -49,7 +49,24 @@
     <header>
         <h1>Typing Tempest</h1>
     </header>
-    <div class="game-container">
+    <div id="startScreen" class="start-screen">
+        <h2>Welcome to Typing Tempest</h2>
+        <p>Select Your Experience Level (1 = Easy, 10 = Hard):</p>
+        <select id="experienceLevel">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+        </select>
+        <button id="startGame">Start Game</button>
+    </div>
+    <div class="game-container hidden">
         <div class="info">
             <div>Score: <span id="score">0</span></div>
             <div>Wave: <span id="wave">1</span></div>
@@ -87,7 +104,7 @@
         </div>
     </div>
     <footer>
-        <p>Typing Tempest &copy; 2025</p>
+        <p>Typing Tempest © 2025</p>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
     <script src="game.js"></script>

@@ -18,12 +18,13 @@ let waveStartTime = 0;
 let totalTime = 0;
 let correctKeystrokes = 0;
 let totalKeystrokes = 0;
-let gameStartTime = performance.now();
+let gameStartTime = 0;
+let experienceLevel = 1;
+let BASE_SPEED = 0.3;
+let WORD_SPAWN_RATE = 3000;
 
 const MAX_MISSES = 5;
-const BASE_SPEED = 0.5;
 const SPEED_INCREMENT = 0.2;
-const WORD_SPAWN_RATE = 2000; // ms
 
 // Load CSV
 fetch('words.csv')
@@ -33,7 +34,15 @@ fetch('words.csv')
             header: true,
             complete: function(results) {
                 wordData = results.data[0];
-                startGame();
+                // Wait for start button
+                document.getElementById('startGame').addEventListener('click', () => {
+                    experienceLevel = parseInt(document.getElementById('experienceLevel').value);
+                    BASE_SPEED = 0.3 + (experienceLevel - 1) * 0.04; // 0.3 to 0.7
+                    WORD_SPAWN_RATE = 3000 - (experienceLevel - 1) * 222; // 3000ms to 1000ms
+                    document.getElementById('startScreen').classList.add('hidden');
+                    document.querySelector('.game-container').classList.remove('hidden');
+                    startGame();
+                });
             }
         });
     });
@@ -151,12 +160,10 @@ document.getElementById('restart').addEventListener('click', () => {
     totalKeystrokes = 0;
     gameOver = false;
     waveActive = true;
-    gameStartTime = performance.now();
+    gameStartTime = 0;
     document.getElementById('gameOver').classList.add('hidden');
-    document.getElementById('score').textContent = score;
-    document.getElementById('wave').textContent = wave;
-    document.getElementById('misses').textContent = misses;
-    startWave();
+    document.querySelector('.game-container').classList.add('hidden');
+    document.getElementById('startScreen').classList.remove('hidden');
 });
 
 document.getElementById('downloadCertificate').addEventListener('click', () => {
@@ -216,7 +223,6 @@ document.getElementById('downloadCertificate').addEventListener('click', () => {
 \\end{document}
     `;
     
-    // Trigger PDF generation (handled by the system)
     const blob = new Blob([latexContent], { type: 'text/latex' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
