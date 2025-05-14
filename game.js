@@ -40,7 +40,25 @@ fetch('words.csv')
         Papa.parse(data, {
             header: true,
             complete: function(results) {
-                wordData = results.data[0];
+                // Process row-based CSV into word arrays
+                wordData = {
+                    two_letter: [],
+                    three_letter: [],
+                    four_letter: [],
+                    five_letter: [],
+                    six_letter: [],
+                    seven_letter: [],
+                    hyphenated: [],
+                    special: [],
+                    sat_words: []
+                };
+                results.data.forEach(row => {
+                    Object.keys(wordData).forEach(category => {
+                        if (row[category] && row[category].trim()) {
+                            wordData[category].push(row[category].trim());
+                        }
+                    });
+                });
                 document.getElementById('startGame').addEventListener('click', () => {
                     deviceType = document.getElementById('deviceType').value;
                     gameMode = document.getElementById('gameMode').value;
@@ -69,16 +87,16 @@ function getBackgroundColor(wave) {
 function getRandomWord() {
     const categories = [
         'two_letter', 'three_letter', 'four_letter', 'five_letter',
-        'six_letter', 'seven_letter', 'hyphenated', 'special'
+        'six_letter', 'seven_letter', 'hyphenated', 'special', 'sat_words'
     ];
-    const longWordCategories = ['five_letter', 'six_letter', 'seven_letter', 'hyphenated', 'special'];
+    const longWordCategories = ['five_letter', 'six_letter', 'seven_letter', 'hyphenated', 'special', 'sat_words'];
     const shortWordCategories = ['two_letter', 'three_letter', 'four_letter'];
     
     // Calculate weights based on wave
     const maxWeightWave = 10;
     const waveFactor = Math.min(wave - 1, maxWeightWave - 1) / (maxWeightWave - 1); // 0 to 1
-    const longWordWeight = 0.125 + waveFactor * (0.2 - 0.125); // 12.5% to 20%
-    const shortWordWeight = 0.125 - waveFactor * (0.125 - 0.0667); // 12.5% to 6.67%
+    const longWordWeight = 0.111 + waveFactor * (0.167 - 0.111); // 11.1% to 16.7%
+    const shortWordWeight = 0.111 - waveFactor * (0.111 - 0.0556); // 11.1% to 5.56%
     
     const weights = categories.map(category => 
         longWordCategories.includes(category) ? longWordWeight : shortWordWeight
@@ -95,14 +113,16 @@ function getRandomWord() {
         sum += normalizedWeights[i];
         if (rand < sum) {
             const category = categories[i];
-            const words = wordData[category].split(',').filter(w => w);
+            const words = wordData[category].filter(w => w);
+            if (words.length === 0) continue; // Skip empty categories
             return words[Math.floor(Math.random() * words.length)];
         }
     }
     
-    // Fallback
-    const category = categories[Math.floor(Math.random() * categories.length)];
-    const words = wordData[category].split(',').filter(w => w);
+    // Fallback: Random non-empty category
+    const nonEmptyCategories = categories.filter(cat => wordData[cat].length > 0);
+    const category = nonEmptyCategories[Math.floor(Math.random() * nonEmptyCategories.length)];
+    const words = wordData[category];
     return words[Math.floor(Math.random() * words.length)];
 }
 
@@ -268,6 +288,11 @@ document.getElementById('downloadCertificate').addEventListener('click', () => {
     const wpm = wordsTyped > 0 ? (wordsTyped / (totalTime / 60)).toFixed(2) : 0;
     const accuracy = totalKeystrokes > 0 ? ((correctKeystrokes / totalKeystrokes) * 100).toFixed(2) : 100;
     
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert('PDF generation failed. Please try again or screenshot the results.');
+        return;
+    }
+    
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
@@ -293,20 +318,27 @@ document.getElementById('downloadCertificate').addEventListener('click', () => {
 
     // Stats table
     doc.setFontSize(12);
-    const stats = [
-        `Score: ${score}`,
-        `${gameMode === 'training' ? 'Stint Reached' : 'Wave Reached'}: ${wave}`,
-        `Words Typed: ${wordsTyped}`,
-        `Typing Speed: ${wpm} WPM`,
-        `Accuracy: ${accuracy}%`,
-        `Total Time: ${totalTime.toFixed(2)} seconds`,
-        `Missed Words: ${misses}`
-    ];
     let y = 100;
-    stats.forEach(stat => {
-        doc.text(stat, 105, y, { align: 'center' });
-        y += 10;
-    });
+    doc.text('Score:', 80, y);
+    doc.text(`${score}`, 130, y);
+    y += 10;
+    doc.text(gameMode === 'training' ? 'Stint Reached:' : 'Wave Reached:', 80, y);
+    doc.text(`${wave}`, 130, y);
+    y += 10;
+    doc.text('Words Typed:', 80, y);
+    doc.text(`${wordsTyped}`, 130, y);
+    y += 10;
+    doc.text('Typing Speed:', 80, y);
+    doc.text(`${wpm} WPM`, 130, y);
+    y += 10;
+    doc.text('Accuracy:', 80, y);
+    doc.text(`${accuracy}%`, 130, y);
+    y += 10;
+    doc.text('Total Time:', 80, y);
+    doc.text(`${totalTime.toFixed(2)} seconds`, 130, y);
+    y += 10;
+    doc.text('Missed Words:', 80, y);
+    doc.text(`${misses}`, 130, y);
 
     // Footer
     doc.text(`Issued on ${new Date().toLocaleDateString()}`, 105, y + 20, { align: 'center' });
