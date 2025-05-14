@@ -15,16 +15,16 @@ header {
     background-color: #333;
     color: white;
     text-align: center;
-    padding: 10px 0;
+    padding: 5px 0;
 }
 
 header h1 {
     margin: 0;
-    font-size: 24px;
+    font-size: 20px;
 }
 
 .start-screen {
-    margin-top: 100px;
+    margin-top: 60px;
     text-align: center;
     background-color: rgba(255, 255, 255, 0.9);
     padding: 20px;
@@ -57,7 +57,7 @@ header h1 {
 }
 
 .game-container {
-    margin-top: 60px;
+    margin-top: 50px;
     margin-bottom: 40px;
     display: flex;
     flex-direction: column;
@@ -176,8 +176,16 @@ footer {
 
 /* Tablet-specific styles */
 @media screen and (max-width: 1024px) {
+    header {
+        padding: 3px 0;
+    }
+
+    header h1 {
+        font-size: 18px;
+    }
+
     .game-container {
-        margin-top: 50px;
+        margin-top: 40px;
         margin-bottom: 20px;
     }
 
@@ -192,7 +200,7 @@ footer {
     }
 
     .start-screen {
-        margin-top: 80px;
+        margin-top: 50px;
         padding: 15px;
     }
 

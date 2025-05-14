@@ -30,6 +30,8 @@ const MAX_MISSES = 5;
 const SPEED_INCREMENT = 0.2;
 const BASE_FONT_SIZE = 20;
 const MAX_FONT_SIZE = 24;
+const SPEED_INCREASE_RATE = 0.01;
+const MAX_SPEED_INCREASE = 0.3;
 
 // Load CSV
 fetch('words.csv')
@@ -59,8 +61,8 @@ fetch('words.csv')
     });
 
 function getBackgroundColor(wave) {
-    const maxWaves = 10; // Cap darkening at wave 10
-    const lightness = 90 - Math.min(wave - 1, maxWaves - 1) * 7; // 90% to 20%
+    const maxWaves = 10;
+    const lightness = 90 - Math.min(wave - 1, maxWaves - 1) * 7;
     return `hsl(200, 70%, ${lightness}%)`;
 }
 
@@ -77,7 +79,7 @@ function getRandomWord() {
 function addWord() {
     if (!waveActive) return;
     const word = getRandomWord();
-    ctx.font = `${BASE_FONT_SIZE}px Arial`; // Set font for width calculation
+    ctx.font = `${BASE_FONT_SIZE}px Arial`;
     let x = lastWordX;
     const wordWidth = ctx.measureText(word).width;
     if (gameMode === 'training') {
@@ -166,7 +168,11 @@ function gameLoop(time) {
         ctx.fillText(`Misses: ${misses}`, 450, 20);
     }
 
+    const stintElapsed = (time - waveStartTime) / 1000;
     words.forEach(word => {
+        if (gameMode === 'training') {
+            word.speed = Math.min(BASE_SPEED + SPEED_INCREASE_RATE * stintElapsed, BASE_SPEED + MAX_SPEED_INCREASE);
+        }
         word.y += word.speed;
         word.fontSize = BASE_FONT_SIZE + (word.y / canvas.height) * (MAX_FONT_SIZE - BASE_FONT_SIZE);
         drawWord(word);
@@ -217,7 +223,7 @@ document.getElementById('restart').addEventListener('click', () => {
     document.getElementById('startScreen').classList.remove('hidden');
     document.querySelector('.keyboard').classList.remove('hidden');
     document.querySelector('.info').classList.remove('hidden');
-    document.body.style.backgroundColor = ''; // Reset to CSS default
+    document.body.style.backgroundColor = '';
 });
 
 document.getElementById('downloadCertificate').addEventListener('click', () => {
@@ -225,67 +231,53 @@ document.getElementById('downloadCertificate').addEventListener('click', () => {
     const wpm = wordsTyped > 0 ? (wordsTyped / (totalTime / 60)).toFixed(2) : 0;
     const accuracy = totalKeystrokes > 0 ? ((correctKeystrokes / totalKeystrokes) * 100).toFixed(2) : 100;
     
-    const latexContent = `
-\\documentclass[a4paper]{article}
-\\usepackage[utf8]{inputenc}
-\\usepackage{geometry}
-\\geometry{margin=1in}
-\\usepackage{titling}
-\\usepackage{noto}
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
 
-\\title{Typing Tempest Certificate}
-\\author{}
-\\date{}
+    // Set fonts and sizes
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(24);
+    doc.text('Certificate of Achievement', 105, 20, { align: 'center' });
 
-\\begin{document}
+    doc.setFontSize(18);
+    doc.text('Typing Tempest', 105, 35, { align: 'center' });
 
-\\begin{center}
-    \\vspace*{1cm}
-    \\Huge \\textbf{Certificate of Achievement} \\\\
-    \\vspace{0.5cm}
-    \\Large Typing Tempest \\\\
-    \\vspace{0.5cm}
-    \\large ${gameMode.charAt(0).toUpperCase() + gameMode.slice(1)} Mode \\\\
-    \\vspace{1cm}
-    \\large Awarded to \\\\
-    \\textbf{${playerName}} \\\\
-    \\vspace{0.5cm}
-    for outstanding performance in typing.
-\\end{center}
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(14);
+    doc.text(`${gameMode.charAt(0).toUpperCase() + gameMode.slice(1)} Mode`, 105, 45, { align: 'center' });
 
-\\vspace{1cm}
+    doc.text('Awarded to', 105, 60, { align: 'center' });
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.text(playerName, 105, 70, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(12);
+    doc.text('for outstanding performance in typing.', 105, 80, { align: 'center' });
 
-\\begin{center}
-    \\begin{tabular}{ll}
-        \\textbf{Score:} & ${score} \\\\
-        \\textbf{${gameMode === 'training' ? 'Stint Reached' : 'Wave Reached'}:} & ${wave} \\\\
-        \\textbf{Words Typed:} & ${wordsTyped} \\\\
-        \\textbf{Typing Speed:} & ${wpm} WPM \\\\
-        \\textbf{Accuracy:} & ${accuracy}\\% \\\\
-        \\textbf{Total Time:} & ${totalTime.toFixed(2)} seconds \\\\
-        \\textbf{Missed Words:} & ${misses} \\\\
-    \\end{tabular}
-\\end{center}
+    // Stats table
+    doc.setFontSize(12);
+    const stats = [
+        `Score: ${score}`,
+        `${gameMode === 'training' ? 'Stint Reached' : 'Wave Reached'}: ${wave}`,
+        `Words Typed: ${wordsTyped}`,
+        `Typing Speed: ${wpm} WPM`,
+        `Accuracy: ${accuracy}%`,
+        `Total Time: ${totalTime.toFixed(2)} seconds`,
+        `Missed Words: ${misses}`
+    ];
+    let y = 100;
+    stats.forEach(stat => {
+        doc.text(stat, 105, y, { align: 'center' });
+        y += 10;
+    });
 
-\\vspace{1cm}
+    // Footer
+    doc.text(`Issued on ${new Date().toLocaleDateString()}`, 105, y + 20, { align: 'center' });
+    doc.line(80, y + 30, 130, y + 30); // Signature line
+    doc.text('Signature', 105, y + 35, { align: 'center' });
 
-\\begin{center}
-    \\large Issued on ${new Date().toLocaleDateString()} \\\\
-    \\vspace{0.5cm}
-    \\rule{4cm}{0.4pt} \\\\
-    \\small Signature
-\\end{center}
-
-\\end{document}
-    `;
-    
-    const blob = new Blob([latexContent], { type: 'text/latex' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${playerName}_TypingTempest_Certificate.tex`;
-    a.click();
-    URL.revokeObjectURL(url);
+    // Save PDF
+    doc.save(`${playerName}_TypingTempest_Certificate.pdf`);
 });
 
 document.addEventListener('keydown', (e) => {
@@ -324,5 +316,5 @@ document.addEventListener('keydown', (e) => {
 // Map keys to keyboard elements
 document.querySelectorAll('.key').forEach(key => {
     const text = key.textContent.toLowerCase();
-    key.setAttribute('data-key', text === 'space' ? 'space' : text === 'backspace' ? 'backspace' : text === 'tab' ? 'tab' : text === 'caps' ? 'caps' : text === 'enter' ? 'enter' : text === 'shift' ? 'shift' : text);
+    key.setAttribute('data-key', text === 'space' ? 'space' : text === 'backspace' ? 'backspace' : text === 'tab' : 'tab' : text === 'caps' ? 'caps' : text === 'enter' ? 'enter' : text === 'shift' ? 'shift' : text);
 });
