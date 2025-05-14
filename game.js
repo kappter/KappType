@@ -21,6 +21,7 @@ let totalKeystrokes = 0;
 let gameStartTime = 0;
 let experienceLevel = 1;
 let gameMode = 'arcade';
+let deviceType = 'desktop';
 let BASE_SPEED = 0.3;
 let WORD_SPAWN_RATE = 3000;
 let lastWordX = 10;
@@ -37,13 +38,18 @@ fetch('words.csv')
             complete: function(results) {
                 wordData = results.data[0];
                 document.getElementById('startGame').addEventListener('click', () => {
+                    deviceType = document.getElementById('deviceType').value;
                     gameMode = document.getElementById('gameMode').value;
                     experienceLevel = parseInt(document.getElementById('experienceLevel').value);
                     BASE_SPEED = gameMode === 'training' ? 0.2 + (experienceLevel - 1) * 0.03 : 0.3 + (experienceLevel - 1) * 0.04;
                     WORD_SPAWN_RATE = 3000 - (experienceLevel - 1) * 222;
+                    canvas.height = deviceType === 'tablet' ? 300 : 400;
                     document.getElementById('startScreen').classList.add('hidden');
                     document.querySelector('.game-container').classList.remove('hidden');
                     document.getElementById('waveLabel').textContent = gameMode === 'training' ? 'Stint' : 'Wave';
+                    document.querySelector('.keyboard').classList.toggle('hidden', deviceType === 'tablet');
+                    document.querySelector('.info').classList.toggle('hidden', deviceType === 'tablet');
+                    canvas.focus();
                     startGame();
                 });
             }
@@ -65,11 +71,17 @@ function addWord() {
     const word = getRandomWord();
     let x = lastWordX;
     const wordWidth = ctx.measureText(word).width;
-    if (x + wordWidth > canvas.width) {
-        x = 10; // Loop back to left
+    if (gameMode === 'training') {
+        if (x + wordWidth > canvas.width) {
+            x = 10;
+        }
+        words.push({ text: word, x, y: 0, speed: BASE_SPEED });
+        lastWordX = x + wordWidth + 10;
+    } else {
+        x = Math.random() * (canvas.width - wordWidth);
+        words.push({ text: word, x, y: 0, speed: BASE_SPEED + (wave - 1) * SPEED_INCREMENT });
+        lastWordX = x + wordWidth + 10;
     }
-    words.push({ text: word, x, y: 0, speed: BASE_SPEED + (gameMode === 'arcade' ? (wave - 1) * SPEED_INCREMENT : 0) });
-    lastWordX = x + wordWidth + 10;
 }
 
 function startWave() {
@@ -133,6 +145,17 @@ function gameLoop(time) {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    if (deviceType === 'tablet') {
+        ctx.fillStyle = '#333';
+        ctx.fillRect(0, 0, canvas.width, 30);
+        ctx.fillStyle = 'white';
+        ctx.font = '16px Arial';
+        ctx.fillText(`Score: ${score}`, 10, 20);
+        ctx.fillText(`${gameMode === 'training' ? 'Stint' : 'Wave'}: ${wave}`, 150, 20);
+        ctx.fillText(`Time: ${Math.max(0, Math.floor(waveTime))}s`, 300, 20);
+        ctx.fillText(`Misses: ${misses}`, 450, 20);
+    }
+
     words.forEach(word => {
         word.y += word.speed;
         drawWord(word);
@@ -181,6 +204,8 @@ document.getElementById('restart').addEventListener('click', () => {
     document.getElementById('gameOver').classList.add('hidden');
     document.querySelector('.game-container').classList.add('hidden');
     document.getElementById('startScreen').classList.remove('hidden');
+    document.querySelector('.keyboard').classList.remove('hidden');
+    document.querySelector('.info').classList.remove('hidden');
 });
 
 document.getElementById('downloadCertificate').addEventListener('click', () => {
@@ -287,5 +312,5 @@ document.addEventListener('keydown', (e) => {
 // Map keys to keyboard elements
 document.querySelectorAll('.key').forEach(key => {
     const text = key.textContent.toLowerCase();
-    key.setAttribute('data-key', text === 'space' ? 'space' : text === 'backspace' ? 'backspace' : text === 'tab' ? 'tab' : text === 'caps' ? 'caps' : text === 'enter' ? 'enter' : text === 'shift' : 'shift' : text);
+    key.setAttribute('data-key', text === 'space' ? 'space' : text === 'backspace' ? 'backspace' : text === 'tab' ? 'tab' : text === 'caps' ? 'caps' : text === 'enter' ? 'enter' : text === 'shift' ? 'shift' : text);
 });

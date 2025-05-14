@@ -125,6 +125,10 @@ canvas {
     margin-top: 20px;
 }
 
+.keyboard.hidden {
+    display: none;
+}
+
 .row {
     display: flex;
     margin-bottom: 5px;
@@ -165,4 +169,35 @@ footer {
     text-align: center;
     padding: 10px 0;
     font-size: 14px;
+}
+
+/* Tablet-specific styles */
+@media screen and (max-width: 1024px) {
+    .game-container {
+        margin-top: 50px;
+        margin-bottom: 20px;
+    }
+
+    .info {
+        width: 90vw;
+        font-size: 16px;
+    }
+
+    canvas {
+        width: 90vw !important;
+        max-width: 600px;
+    }
+
+    .start-screen {
+        margin-top: 80px;
+        padding: 15px;
+    }
+
+    .start-screen h2 {
+        font-size: 24px;
+    }
+
+    .start-screen select, .start-screen button {
+        font-size: 14px;
+    }
 }

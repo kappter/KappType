@@ -49,8 +49,13 @@
     <header>
         <h1>Typing Tempest</h1>
     </header>
-    <div id="startScreen" class="start-screen">
+    Brushes<div id="startScreen" class="start-screen">
         <h2>Welcome to Typing Tempest</h2>
+        <p>Select Device Type:</p>
+        <select id="deviceType">
+            <option value="desktop">Desktop</option>
+            <option value="tablet">Tablet</option>
+        </select>
         <p>Select Game Mode:</p>
         <select id="gameMode">
             <option value="arcade">Arcade Mode</option>
@@ -78,7 +83,7 @@
             <div>Time: <span id="timer">30</span>s</div>
             <div>Misses: <span id="misses">0</span></div>
         </div>
-        <canvas id="gameCanvas"></canvas>
+        <canvas id="gameCanvas" tabindex="0"></canvas>
         <div id="gameOver" class="game-over hidden">
             <h2>Game Over</h2>
             <p>Final Score: <span id="finalScore"></span></p>
