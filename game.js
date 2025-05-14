@@ -28,6 +28,8 @@ let lastWordX = 10;
 
 const MAX_MISSES = 5;
 const SPEED_INCREMENT = 0.2;
+const BASE_FONT_SIZE = 20;
+const MAX_FONT_SIZE = 24;
 
 // Load CSV
 fetch('words.csv')
@@ -56,6 +58,12 @@ fetch('words.csv')
         });
     });
 
+function getBackgroundColor(wave) {
+    const maxWaves = 10; // Cap darkening at wave 10
+    const lightness = 90 - Math.min(wave - 1, maxWaves - 1) * 7; // 90% to 20%
+    return `hsl(200, 70%, ${lightness}%)`;
+}
+
 function getRandomWord() {
     const categories = [
         'two_letter', 'three_letter', 'four_letter', 'five_letter',
@@ -69,17 +77,18 @@ function getRandomWord() {
 function addWord() {
     if (!waveActive) return;
     const word = getRandomWord();
+    ctx.font = `${BASE_FONT_SIZE}px Arial`; // Set font for width calculation
     let x = lastWordX;
     const wordWidth = ctx.measureText(word).width;
     if (gameMode === 'training') {
         if (x + wordWidth > canvas.width) {
             x = 10;
         }
-        words.push({ text: word, x, y: 0, speed: BASE_SPEED });
+        words.push({ text: word, x, y: 0, speed: BASE_SPEED, fontSize: BASE_FONT_SIZE });
         lastWordX = x + wordWidth + 10;
     } else {
         x = Math.random() * (canvas.width - wordWidth);
-        words.push({ text: word, x, y: 0, speed: BASE_SPEED + (wave - 1) * SPEED_INCREMENT });
+        words.push({ text: word, x, y: 0, speed: BASE_SPEED + (wave - 1) * SPEED_INCREMENT, fontSize: BASE_FONT_SIZE });
         lastWordX = x + wordWidth + 10;
     }
 }
@@ -90,6 +99,7 @@ function startWave() {
     words = [];
     lastWordX = 10;
     currentInput = '';
+    document.body.style.backgroundColor = getBackgroundColor(wave);
     addWord();
     if (gameMode === 'arcade') {
         setInterval(() => {
@@ -120,7 +130,7 @@ function drawWord(wordObj) {
         matchedLength = currentInput.length;
     }
     
-    ctx.font = '20px Arial';
+    ctx.font = `${wordObj.fontSize}px Arial`;
     let x = wordObj.x;
     for (let i = 0; i < word.length; i++) {
         ctx.fillStyle = i < matchedLength ? 'red' : 'black';
@@ -158,6 +168,7 @@ function gameLoop(time) {
 
     words.forEach(word => {
         word.y += word.speed;
+        word.fontSize = BASE_FONT_SIZE + (word.y / canvas.height) * (MAX_FONT_SIZE - BASE_FONT_SIZE);
         drawWord(word);
         if (word.y > canvas.height) {
             words = words.filter(w => w !== word);
@@ -206,6 +217,7 @@ document.getElementById('restart').addEventListener('click', () => {
     document.getElementById('startScreen').classList.remove('hidden');
     document.querySelector('.keyboard').classList.remove('hidden');
     document.querySelector('.info').classList.remove('hidden');
+    document.body.style.backgroundColor = ''; // Reset to CSS default
 });
 
 document.getElementById('downloadCertificate').addEventListener('click', () => {
