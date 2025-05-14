@@ -1,118 +1,93 @@
 # Typing Tempest
 
-Typing Tempest is a browser-based typing game designed to improve typing speed and accuracy, targeting 40 words per minute (WPM). It offers Arcade and Training modes, supports Desktop and Tablet devices, and includes 100 SAT vocabulary words for educational value. Players type falling words to earn points and advance through waves or stints, with visual effects and a downloadable PDF certificate.
+Welcome to **Typing Tempest**, an exciting typing game that challenges your speed and accuracy! Type falling words or terms before they reach the bottom to score points and advance through waves or stints. With three gameplay modes, adjustable difficulty, and real-time performance tracking, Typing Tempest is perfect for casual players, typing enthusiasts, and students learning computer science vocabulary. Play on desktop or tablet, improve your skills, and earn a personalized certificate!
 
 ## Features
 
-### Gameplay
-- **Two Game Modes**:
-  - **Arcade Mode**: Words spawn randomly, with speed increasing per wave (`BASE_SPEED + (wave - 1) * 0.2`).
-  - **Training Mode**: Words spawn left-to-right, with speed increasing within stints (0.01 pixels/frame per second, capped at `BASE_SPEED + 0.3`).
-- **Experience Levels**: 1 (easy) to 10 (hard), adjusting spawn rate (3000ms to 1778ms) and base speed (Arcade: 0.3 to 0.66; Training: 0.2 to 0.47 pixels/frame).
-- **Word Categories**: Nine categories in `words.csv`:
-  - `two_letter`, `three_letter`, `four_letter`, `five_letter`, `six_letter`, `seven_letter`, `hyphenated`, `special`, `sat_words`.
-  - `sat_words` includes 100 SAT words from [Vocabulary.com](https://www.vocabulary.com/lists/191545) (e.g., `abate`, `benevolent`).
-- **Wave-Based Difficulty**:
-  - Waves/stints last 30 seconds, with confetti on completion.
-  - Higher waves favor long words (`five_letter`, `six_letter`, `seven_letter`, `hyphenated`, `special`, `sat_words`): ~11.1% per category (Wave 1) to ~16.7% (Wave 10+); short words (`two_letter`, `three_letter`, `four_letter`): ~11.1% to ~5.56%.
-- **Scoring**: 10 points per letter for correct words.
-- **Misses**: Game ends after 5 missed words.
-
-### Visual and UI Elements
-- **Canvas**: 600x400 (Desktop) or 600x300 (Tablet).
-- **Word Effects**: Words grow from 20px to 24px, with typed letters in red.
-- **Background**: Darkens per wave (HSL 200, 70%, 90% to 23%).
-- **Confetti**: Celebrates wave/stint completion.
-- **Keyboard Display**: On-screen keyboard (Desktop only) highlights keys.
-- **Info Panel**: Shows score, wave/stint, time, misses (Desktop); on canvas (Tablet).
-- **Compact Header**: Fixed, minimal title.
-
-### Customization
+- **Three Gameplay Modes**:
+  - **Arcade Mode**: Words fall randomly with increasing speed and spawn rate as waves progress. Survive as long as you can!
+  - **Training Mode**: Words appear sequentially from left to right, with gradually increasing speed, ideal for practicing typing skills.
+  - **Vocab Mode**: Type computer science terms matching displayed definitions. Terms appear as falling underscores, revealing in light gray after the first letter, great for learning vocabulary.
 - **Device Support**:
-  - **Desktop**: Full UI with keyboard and info panel.
-  - **Tablet**: Smaller canvas, no keyboard, info on canvas.
-- **words.csv Structure**:
-  - Row-based, with columns: `two_letter`, `three_letter`, `four_letter`, `five_letter`, `six_letter`, `seven_letter`, `hyphenated`, `special`, `sat_words`.
-  - Each row has one word per category (or empty). Example:
-    ```
-    two_letter,three_letter,four_letter,five_letter,six_letter,seven_letter,hyphenated,special,sat_words
-    to,cat,play,smile,create,perfect,well-known,it's,abate
-    of,dog,work,write,design,complex,high-tech,you're,abdicate
-    ```
-  - Supports random selection from any category, with 100 SAT words in `sat_words`.
-- **Certificate**: PDF with player name, mode, score, wave/stint, words typed, WPM, accuracy, time, and misses (fixed syntax error in generation).
+  - **Desktop**: Features an onscreen virtual keyboard with keypress animations and an info panel showing score, wave/stint, time, misses, WPM, and definition (vocab mode).
+  - **Tablet**: Optimized UI with on-canvas stats, definition display, and a stop button, perfect for touch devices (virtual keyboard hidden).
+- **Customizable Difficulty**: Choose from 10 experience levels (1 = Easy, 10 = Hard) to adjust word spawn rate and falling speed.
+- **Real-Time WPM Tracking**: Monitor your Words Per Minute (WPM) live, displayed in the info panel (desktop) or on the canvas (tablet).
+- **Input Clearing on Miss**: When a word reaches the bottom, the current typed input is cleared, letting you start fresh.
+- **Vocab Mode Mechanics**:
+  - Definitions from a computer science vocabulary set are shown onscreen.
+  - Terms appear as falling underscores until any first letter is typed, then display in light gray.
+  - No penalty for the first letter, encouraging exploration for learning.
+- **Dynamic Word Selection**:
+  - Arcade/Training: Words sourced from a CSV with categories (e.g., two-letter, hyphenated, SAT words), with longer words in later waves.
+  - Vocab: Terms from a vocabulary CSV, paired with definitions.
+- **Wave Advancement Feedback**: A flash effect celebrates wave/stint ends with a white overlay fading out.
+- **Game Over and Certificate**:
+  - Game ends after 5 missed words, showing final score, words typed, and WPM.
+  - Download a personalized PDF certificate with your name, score, WPM, accuracy, and more.
+- **Responsive Design**: Adapts to screen sizes with CSS media queries.
+- **Visual Feedback**:
+  - Background darkens per wave.
+  - Typed letters highlight in red (or gray in vocab mode).
+  - Words/underscores grow as they fall.
 
-### Technical Details
-- **Libraries**:
-  - [PapaParse](https://www.papaparse.com/) for CSV parsing.
-  - [jsPDF](https://github.com/parallax/jsPDF) for PDF certificates.
-  - [canvas-confetti](https://github.com/catdad/canvas-confetti) for effects.
-- **Canvas API**: Renders words and game state.
-- **Responsive Design**: CSS media queries for Tablet (max-width: 1024px).
-- **Error Handling**: Handles empty CSV categories, jsPDF errors.
+## Screenshots
 
-## Setup
+*(Add screenshots here, e.g.:)*
+- Start Screen: `screenshots/start-screen.png`
+- Arcade Mode: `screenshots/arcade-mode.png`
+- Training Mode: `screenshots/training-mode.png`
+- Vocab Mode: `screenshots/vocab-mode.png`
+- Game Over: `screenshots/game-over.png`
 
-### Prerequisites
-- Modern browser (Chrome, Firefox, Safari).
-- Local server (e.g., Python’s `http.server`) or hosting (e.g., GitHub Pages).
+## Setup Instructions
 
-### Installation
-1. **Clone or Download**:
-   - Clone or download: `index.html`, `styles.css`, `game.js`, `words.csv`.
-2. **Directory Structure**:
+### Running Locally
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/kappter/typing-tempest.git
+   cd typing-tempest
    ```
-   typing-tempest/
-   ├── index.html
-   ├── styles.css
-   ├── game.js
-   ├── words.csv
+2. Start a local server:
+   ```bash
+   python -m http.server 8000
    ```
-3. **Run Locally**:
-   - Navigate to directory.
-   - Start server:
-     ```bash
-     python -m http.server 8000
-     ```
-   - Open `http://localhost:8000`.
-4. **Deploy to GitHub Pages**:
-   - Push to GitHub repository.
-   - Enable GitHub Pages in settings (`main` or `gh-pages` branch).
-   - Access at `https://<username>.github.io/<repository>`.
+3. Open `http://localhost:8000`.
+4. Ensure `words.csv` and `vocabulary.csv` are in the root directory.
 
-### Customization
-- **Add Words**:
-  - Edit `words.csv`, ensuring no trailing commas. Example:
-    ```
-    to,cat,play,smile,create,perfect,well-known,it's,abate
-    of,new,work,write,design,complex,high-tech,you're,abdicate
-    ```
-- **Adjust Difficulty**:
-  - Modify `BASE_SPEED`, `WORD_SPAWN_RATE`, `SPEED_INCREMENT` in `game.js`.
-- **New Modes**:
-  - Add modes (e.g., SAT-only) in `index.html` and `game.js`.
+### Deploying to GitHub Pages
+1. Push to GitHub:
+   ```bash
+   git add .
+   git commit -m "Deploy Typing Tempest"
+   git push origin main
+   ```
+2. Enable GitHub Pages:
+   - Go to Settings > Pages.
+   - Set Source to `main` (or `gh-pages`) and root directory.
+3. Access at `https://kappter.github.io/typing-tempest`.
+4. Verify all assets (`index.html`, `game.js`, `styles.css`, `words.csv`, `vocabulary.csv`) are committed.
 
-## How to Play
-1. **Start Screen**:
-   - Select Device Type (Desktop/Tablet), Game Mode (Arcade/Training), Experience Level (1–10).
-   - Click **Start Game**.
-2. **Gameplay**:
-   - Type falling words to score points.
-   - Advance waves (Arcade) or stints (Training) every 30 seconds.
-   - Game ends after 5 misses.
-3. **Game Over**:
-   - View score, words typed, WPM.
-   - Enter name, download PDF certificate.
-   - Click **Restart**.
+## Technologies Used
+- **HTML5**: Structure and UI.
+- **CSS3**: Styling with responsive design.
+- **JavaScript**: Game logic, canvas rendering, event handling.
+- **HTML5 Canvas**: For rendering falling words/terms, stats, flash effect.
+- **PapaParse**: Parses `words.csv` and `vocabulary.csv`.
+- **jsPDF**: Generates PDF certificates.
+- **GitHub Pages**: Hosts the live game.
 
 ## Contributing
-- **Add Words**: Update `words.csv` with category-appropriate words.
-- **Enhance Features**: Submit pull requests for modes, UI, or optimizations.
-- **Report Issues**: Open issues for bugs or suggestions.
+We welcome contributions! To contribute:
+1. Fork the repository.
+2. Create a feature branch (`git checkout -b feature/new-feature`).
+3. Commit changes (`git commit -m "Add new feature"`).
+4. Push to the branch (`git push origin feature/new-feature`).
+5. Open a Pull Request.
+Report bugs or suggest features via [GitHub Issues](https://github.com/kappter/typing-tempest/issues).
 
 ## License
-MIT License (see [LICENSE](LICENSE) if included).
+This project is licensed under the [MIT License](LICENSE).
 
-## Acknowledgments
-- SAT vocabulary from [Vocabulary.com](https://www.vocabulary.com/lists/191545).
-- Uses [PapaParse](https://www.papaparse.com/), [jsPDF](https://github.com/parallax/jsPDF), [canvas-confetti](https://github.com/catdad/canvas-confetti).
+---
+Typing Tempest © 2025 | Built with 💻 and ☕
