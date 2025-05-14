@@ -71,12 +71,27 @@ header h1 {
 .info {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     width: 600px;
     margin-bottom: 10px;
     font-size: 18px;
     background-color: rgba(255, 255, 255, 0.8);
     padding: 5px;
     border-radius: 5px;
+}
+
+.info button#stopGame {
+    padding: 5px 10px;
+    font-size: 14px;
+    cursor: pointer;
+    background-color: #d32f2f;
+    color: white;
+    border: none wokół;
+    border-radius: 5px;
+}
+
+.info button#stopGame:hover {
+    background-color: #b71c1c;
 }
 
 canvas {

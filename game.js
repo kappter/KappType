@@ -33,6 +33,15 @@ const MAX_FONT_SIZE = 24;
 const SPEED_INCREASE_RATE = 0.01;
 const MAX_SPEED_INCREASE = 0.3;
 
+// Stop button for tablet mode
+const stopButton = {
+    x: canvas.width - 70,
+    y: 10,
+    width: 60,
+    height: 20,
+    text: 'Stop'
+};
+
 // Load CSV
 fetch('words.csv')
     .then(response => response.text())
@@ -198,6 +207,39 @@ function drawWord(wordObj) {
     }
 }
 
+function drawStopButton() {
+    ctx.fillStyle = '#d32f2f';
+    ctx.fillRect(stopButton.x, stopButton.y, stopButton.width, stopButton.height);
+    ctx.fillStyle = 'white';
+    ctx.font = '14px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(stopButton.text, stopButton.x + stopButton.width / 2, stopButton.y + stopButton.height / 2);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+}
+
+function resetGame() {
+    score = 0;
+    wave = 1;
+    misses = 0;
+    wordsTyped = 0;
+    waveTime = 30;
+    totalTime = 0;
+    correctKeystrokes = 0;
+    totalKeystrokes = 0;
+    gameOver = false;
+    waveActive = true;
+    gameStartTime = 0;
+    lastWordX = 10;
+    document.getElementById('gameOver').classList.add('hidden');
+    document.querySelector('.game-container').classList.add('hidden');
+    document.getElementById('startScreen').classList.remove('hidden');
+    document.querySelector('.keyboard').classList.toggle('hidden', deviceType === 'tablet');
+    document.querySelector('.info').classList.toggle('hidden', deviceType === 'tablet');
+    document.body.style.backgroundColor = '';
+}
+
 function gameLoop(time) {
     if (gameOver) return;
 
@@ -214,7 +256,9 @@ function gameLoop(time) {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    if (deviceType === 'tablet') {
+    if
+
+(deviceType === 'tablet') {
         ctx.fillStyle = '#333';
         ctx.fillRect(0, 0, canvas.width, 30);
         ctx.fillStyle = 'white';
@@ -223,9 +267,12 @@ function gameLoop(time) {
         ctx.fillText(`${gameMode === 'training' ? 'Stint' : 'Wave'}: ${wave}`, 150, 20);
         ctx.fillText(`Time: ${Math.max(0, Math.floor(waveTime))}s`, 300, 20);
         ctx.fillText(`Misses: ${misses}`, 450, 20);
+        drawStopButton();
     }
 
-    const stintElapsed = (time - waveStartTime) / 1000;
+    const stintElapsed = (
+
+time - waveStartTime) / 1000;
     words.forEach(word => {
         if (gameMode === 'training') {
             word.speed = Math.min(BASE_SPEED + SPEED_INCREASE_RATE * stintElapsed, BASE_SPEED + MAX_SPEED_INCREASE);
@@ -256,32 +303,29 @@ function endGame() {
     gameOver = true;
     totalTime = (performance.now() - gameStartTime) / 1000;
     const wpm = wordsTyped > 0 ? (wordsTyped / (totalTime / 60)).toFixed(2) : 0;
-hypenated
     document.getElementById('gameOver').classList.remove('hidden');
     document.getElementById('finalScore').textContent = score;
     document.getElementById('wordsTyped').textContent = wordsTyped;
     document.getElementById('wpm').textContent = wpm;
 }
 
-document.getElementById('restart').addEventListener('click', () => {
-    score = 0;
-    wave = 1;
-    misses = 0;
-    wordsTyped = 0;
-    waveTime = 30;
-    totalTime = 0;
-    correctKeystrokes = 0;
-    totalKeystrokes =0;
-    gameOver = false;
-    waveActive = true;
-    gameStartTime = 0;
-    lastWordX = 10;
-    document.getElementById('gameOver').classList.add('hidden');
-    document.querySelector('.game-container').classList.add('hidden');
-    document.getElementById('startScreen').classList.remove('hidden');
-    document.querySelector('.keyboard').classList.remove('hidden');
-    document.querySelector('.info').classList.remove('hidden');
-    document.body.style.backgroundColor = '';
+document.getElementById('restart').addEventListener('click', resetGame);
+
+document.getElementById('stopGame').addEventListener('click', resetGame);
+
+canvas.addEventListener('click', (e) => {
+    if (deviceType !== 'tablet' || gameOver) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    if (
+        x >= stopButton.x &&
+        x <= stopButton.x + stopButton.width &&
+        y >= stopButton.y &&
+        y <= stopButton.y + stopButton.height
+    ) {
+        resetGame();
+    }
 });
 
 document.getElementById('downloadCertificate').addEventListener('click', () => {

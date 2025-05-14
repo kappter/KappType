@@ -44,25 +44,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Typing Tempest</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 </head>
 <body>
     <header>
         <h1>Typing Tempest</h1>
     </header>
+
     <div id="startScreen" class="start-screen">
         <h2>Welcome to Typing Tempest</h2>
-        <p>Select Device Type:</p>
+        <label for="deviceType">Select Device Type:</label><br>
         <select id="deviceType">
             <option value="desktop">Desktop</option>
             <option value="tablet">Tablet</option>
-        </select>
-        <p>Select Game Mode:</p>
+        </select><br>
+        <label for="gameMode">Select Game Mode:</label><br>
         <select id="gameMode">
             <option value="arcade">Arcade Mode</option>
             <option value="training">Training Mode</option>
-        </select>
-        <p>Select Experience Level (1 = Easy, 10 = Hard):</p>
+        </select><br>
+        <label for="experienceLevel">Select Experience Level (1 = Easy, 10 = Hard):</label><br>
         <select id="experienceLevel">
             <option value="1">1</option>
             <option value="2">2</option>
@@ -74,53 +74,59 @@
             <option value="8">8</option>
             <option value="9">9</option>
             <option value="10">10</option>
-        </select>
+        </select><br>
         <button id="startGame">Start Game</button>
     </div>
+
     <div class="game-container hidden">
         <div class="info">
-            <div>Score: <span id="score">0</span></div>
-            <div><span id="waveLabel">Wave</span>: <span id="wave">1</span></div>
-            <div>Time: <span id="timer">30</span>s</div>
-            <div>Misses: <span id="misses">0</span></div>
+            <span>Score: <span id="score">0</span></span>
+            <span id="waveLabel">Wave</span>: <span id="wave">1</span>
+            <span>Time: <span id="timer">30</span>s</span>
+            <span>Misses: <span id="misses">0</span></span>
+            <button id="stopGame">Stop</button>
         </div>
-        <canvas id="gameCanvas" tabindex="0"></canvas>
-        <div id="gameOver" class="game-over hidden">
-            <h2>Game Over</h2>
-            <p>Final Score: <span id="finalScore"></span></p>
-            <p>Words Typed: <span id="wordsTyped"></span></p>
-            <p>Typing Speed: <span id="wpm"></span> WPM</p>
-            <div class="certificate-form">
-                <label for="playerName">Enter Your Name:</label>
-                <input type="text" id="playerName" placeholder="Your Name">
-                <button id="downloadCertificate">Download Certificate</button>
-            </div>
-            <button id="restart">Restart</button>
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <div id="gameOver" class="game-over hidden">
+        <h2>Game Over</h2>
+        <p>Final Score: <span id="finalScore"></span></p>
+        <p>Words Typed: <span id="wordsTyped"></span></p>
+        <p>Typing Speed: <span id="wpm"></span> WPM</p>
+        <div class="certificate-form">
+            <label>Enter Your Name:</label>
+            <input type="text" id="playerName">
+            <button id="downloadCertificate">Download Certificate</button>
         </div>
-        <div class="keyboard">
-            <div class="row">
-                <span class="key">`</span><span class="key">1</span><span class="key">2</span><span class="key">3</span><span class="key">4</span><span class="key">5</span><span class="key">6</span><span class="key">7</span><span class="key">8</span><span class="key">9</span><span class="key">0</span><span class="key">-</span><span class="key">=</span><span class="key backspace">Backspace</span>
-            </div>
-            <div class="row">
-                <span class="key tab">Tab</span><span class="key">q</span><span class="key">w</span><span class="key">e</span><span class="key">r</span><span class="key">t</span><span class="key">y</span><span class="key">u</span><span class="key">i</span><span class="key">o</span><span class="key">p</span><span class="key">[</span><span class="key">]</span><span class="key">\</span>
-            </div>
-            <div class="row">
-                <span class="key caps">Caps</span><span class="key">a</span><span class="key">s</span><span class="key">d</span><span class="key">f</span><span class="key">g</span><span class="key">h</span><span class="key">j</span><span class="key">k</span><span class="key">l</span><span class="key">;</span><span class="key">'</span><span class="key enter">Enter</span>
-            </div>
-            <div class="row">
-                <span class="key shift">Shift</span><span class="key">z</span><span class="key">x</span><span class="key">c</span><span class="key">v</span><span class="key">b</span><span class="key">n</span><span class="key">m</span><span class="key">,</span><span class="key">.</span><span class="key">/</span><span class="key shift">Shift</span>
-            </div>
-            <div class="row">
-                <span class="key space">Space</span>
-            </div>
+        <button id="restart">Restart</button>
+    </div>
+
+    <div class="keyboard">
+        <div class="row">
+            <span class="key">`</span><span class="key">1</span><span class="key">2</span><span class="key">3</span><span class="key">4</span><span class="key">5</span><span class="key">6</span><span class="key">7</span><span class="key">8</span><span class="key">9</span><span class="key">0</span><span class="key">-</span><span class="key">=</span><span class="key backspace">Backspace</span>
+        </div>
+        <div class="row">
+            <span class="key tab">Tab</span><span class="key">q</span><span class="key">w</span><span class="key">e</span><span class="key">r</span><span class="key">t</span><span class="key">y</span><span class="key">u</span><span class="key">i</span><span class="key">o</span><span class="key">p</span><span class="key">[</span><span class="key">]</span><span class="key">\</span>
+        </div>
+        <div class="row">
+            <span class="key caps">Caps</span><span class="key">a</span><span class="key">s</span><span class="key">d</span><span class="key">f</span><span class="key">g</span><span class="key">h</span><span class="key">j</span><span class="key">k</span><span class="key">l</span><span class="key">;</span><span class="key">'</span><span class="key enter">Enter</span>
+        </div>
+        <div class="row">
+            <span class="key shift">Shift</span><span class="key">z</span><span class="key">x</span><span class="key">c</span><span class="key">v</span><span class="key">b</span><span class="key">n</span><span class="key">m</span><span class="key">,</span><span class="key">.</span><span class="key">/</span><span class="key shift">Shift</span>
+        </div>
+        <div class="row">
+            <span class="key space">Space</span>
         </div>
     </div>
+
     <footer>
-        <p>Typing Tempest © 2025</p>
+        Typing Tempest © 2025
     </footer>
-    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.6.0/confetti.min.js"></script>
     <script src="game.js"></script>
 </body>
 </html>
