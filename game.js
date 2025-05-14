@@ -319,27 +319,27 @@ document.getElementById('downloadCertificate').addEventListener('click', () => {
     // Stats table
     doc.setFontSize(12);
     let y = 100;
-    doc.text('Score:', 80, y, { align: 'left' });
-    doc.text(String(score || 0), 130, y, { align: 'left' });
+    doc.text('Score:', 80, y);
+    doc.text(`${score || 0}`, 130, y);
     y += 10;
     const waveLabel = gameMode === 'training' ? 'Stint Reached:' : 'Wave Reached:';
-    doc.text(waveLabel, 80, y, { align: 'left' });
-    doc.text(String(wave || 1), 130, y, { align: 'left' });
+    doc.text(waveLabel, 80, y);
+    doc.text(`${wave || 1}`, 130, y);
     y += 10;
-    doc.text('Words Typed:', 80, y, { align: 'left' });
-    doc.text(String(wordsTyped || 0), 130, y, { align: 'left' });
+    doc.text('Words Typed:', 80, y);
+    doc.text(`${wordsTyped || 0}`, 130, y);
     y += 10;
-    doc.text('Typing Speed:', 80, y, { align: 'left' });
-    doc.text(`${wpm} WPM`, 130, y, { align: 'left' });
+    doc.text('Typing Speed:', 80, y);
+    doc.text(`${wpm} WPM`, 130, y);
     y += 10;
-    doc.text('Accuracy:', 80, y, { align: 'left' });
-    doc.text(`${accuracy}%`, 130, y, { align: 'left' });
+    doc.text('Accuracy:', 80, y);
+    doc.text(`${accuracy}%`, 130, y);
     y += 10;
-    doc.text('Total Time:', 80, y, { align: 'left' });
-    doc.text(`${(totalTime || 0).toFixed(2)} seconds`, 130, y, { align: 'left' });
+    doc.text('Total Time:', 80, y);
+    doc.text(`${(totalTime || 0).toFixed(2)} seconds`, 130, y);
     y += 10;
-    doc.text('Missed Words:', 80, y, { align: 'left' });
-    doc.text(String(misses || 0), 130, y, { align: 'left' });
+    doc.text('Missed Words:', 80, y);
+    doc.text(`${misses || 0}`, 130, y);
 
     // Footer
     doc.text(`Issued on ${new Date().toLocaleDateString()}`, 105, y + 20, { align: 'center' });
