@@ -71,6 +71,36 @@ function getRandomWord() {
         'two_letter', 'three_letter', 'four_letter', 'five_letter',
         'six_letter', 'seven_letter', 'hyphenated', 'special'
     ];
+    const longWordCategories = ['five_letter', 'six_letter', 'seven_letter', 'hyphenated', 'special'];
+    const shortWordCategories = ['two_letter', 'three_letter', 'four_letter'];
+    
+    // Calculate weights based on wave
+    const maxWeightWave = 10;
+    const waveFactor = Math.min(wave - 1, maxWeightWave - 1) / (maxWeightWave - 1); // 0 to 1
+    const longWordWeight = 0.125 + waveFactor * (0.2 - 0.125); // 12.5% to 20%
+    const shortWordWeight = 0.125 - waveFactor * (0.125 - 0.0667); // 12.5% to 6.67%
+    
+    const weights = categories.map(category => 
+        longWordCategories.includes(category) ? longWordWeight : shortWordWeight
+    );
+    
+    // Normalize weights to sum to 1
+    const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+    const normalizedWeights = weights.map(w => w / totalWeight);
+    
+    // Choose category based on weights
+    let rand = Math.random();
+    let sum = 0;
+    for (let i = 0; i < categories.length; i++) {
+        sum += normalizedWeights[i];
+        if (rand < sum) {
+            const category = categories[i];
+            const words = wordData[category].split(',').filter(w => w);
+            return words[Math.floor(Math.random() * words.length)];
+        }
+    }
+    
+    // Fallback
     const category = categories[Math.floor(Math.random() * categories.length)];
     const words = wordData[category].split(',').filter(w => w);
     return words[Math.floor(Math.random() * words.length)];
@@ -112,6 +142,13 @@ function startWave() {
 
 function endWave() {
     waveActive = false;
+    // Trigger confetti
+    confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00']
+    });
     setTimeout(() => {
         wave++;
         waveTime = 30;
@@ -273,10 +310,9 @@ document.getElementById('downloadCertificate').addEventListener('click', () => {
 
     // Footer
     doc.text(`Issued on ${new Date().toLocaleDateString()}`, 105, y + 20, { align: 'center' });
-    doc.line(80, y + 30, 130, y + 30); // Signature line
+    doc.line(80, y + 30, 130, y + 30);
     doc.text('Signature', 105, y + 35, { align: 'center' });
 
-    // Save PDF
     doc.save(`${playerName}_TypingTempest_Certificate.pdf`);
 });
 
