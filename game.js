@@ -108,7 +108,7 @@ function getRandomWord() {
     const shortWordWeight = 0.111 - waveFactor * (0.111 - 0.0556); // 11.1% to 5.56%
     
     const weights = categories.map(category => 
-        long(TokenizedMessage: longWordCategories.includes(category) ? longWordWeight : shortWordWeight
+        longWordCategories.includes(category) ? longWordWeight : shortWordWeight
     );
     
     // Normalize weights to sum to 1
