@@ -392,71 +392,63 @@ document.getElementById('downloadCertificate').addEventListener('click', () => {
     y += 10;
     const waveLabel = gameMode === 'training' ? 'Stint Reached:' : 'Wave Reached:';
     doc.text(waveLabel, 80, y);
-    doc.text(`${wave || 1}`, 130copy() {
-        const playerName = document.getElementById('playerName').value || 'Player';
-        const wpm = totalTime > 0 ? (wordsTyped / (totalTime / 60)).toFixed(2) : 0;
-        const accuracy = totalKeystrokes > 0 ? ((correctKeystrokes / totalKeystrokes) * 100).toFixed(2) : 100;
+    doc.text(`${wave || 1}`, 130, y);
+    y += 10;
+    doc.text('Words Typed:', 80, y);
+    doc.text(`${wordsTyped || 0}`, 130, y);
+    y += 10;
+    doc.text('Typing Speed:', 80, y);
+    doc.text(`${wpm} WPM`, 130, y);
+    y += 10;
+    doc.text('Accuracy:', 80, y);
+    doc.text(`${accuracy}%`, 130, y);
+    y += 10;
+    doc.text('Total Time:', 80, y);
+    doc.text(`${(totalTime || 0).toFixed(2)} seconds`, 130, y);
+    y += 10;
+    doc.text('Missed Words:', 80, y);
+    doc.text(`${misses || 0}`, 130, y);
 
-        if (!window.jspdf || !window.jspdf.jsPDF) {
-            alert('PDF generation failed. Please try again or screenshot the results.');
-            return;
+    // Footer
+    doc.text(`Issued on ${new Date().toLocaleDateString()}`, 105, y + 20, { align: 'center' });
+    doc.line(80, y + 30, 130, y + 30);
+    doc.text('Signature', 105, y + 35, { align: 'center' });
+
+    doc.save(`${playerName}_TypingTempest_Certificate.pdf`);
+});
+
+document.addEventListener('keydown', (e) => {
+    if (gameOver) return;
+
+    const key = e.key.toLowerCase();
+    const keyElement = document.querySelector(`.key[data-key="${key}"]`) || 
+                      document.querySelector(`.key[data-key="${key === ' ' ? 'space' : key === 'enter' ? 'enter' : key}"]`);
+    if (keyElement) {
+        keyElement.classList.add('active');
+        setTimeout(() => keyElement.classList.remove('active'), 100);
+    }
+
+    totalKeystrokes++;
+    if (e.key === 'Backspace') {
+        currentInput = currentInput.slice(0, -1);
+    } else if (e.key.length === 1) {
+        currentInput += e.key;
+        const activeWord = words.find(w => w.text.toLowerCase().startsWith(currentInput.toLowerCase()));
+        if (activeWord) correctKeystrokes++;
+    }
+
+    words.forEach(word => {
+        if (currentInput.toLowerCase() === word.text.toLowerCase()) {
+            words = words.filter(w => w !== word);
+            score += word.text.length * 10;
+            wordsTyped++;
+            currentInput = '';
+            if (gameMode === 'training') {
+                addWord();
+            }
         }
-
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-
-        // Set fonts and sizes
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(24);
-        doc.text('Certificate of Achievement', 105, 20, { align: 'center' });
-
-        doc.setFontSize(18);
-        doc.text('Typing Tempest', 105, 35, { align: 'center' });
-
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(14);
-        doc.text(`${gameMode.charAt(0).toUpperCase() + gameMode.slice(1)} Mode`, 105, 45, { align: 'center' });
-
-        doc.text('Awarded to', 105, 60, { align: 'center' });
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(16);
-        doc.text(playerName, 105, 70, { align: 'center' });
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(12);
-        doc.text('for outstanding performance in typing.', 105, 80, { align: 'center' });
-
-        // Stats table
-        doc.setFontSize(12);
-        let y = 100;
-        doc.text('Score:', 80, y);
-        doc.text(`${score || 0}`, 130, y);
-        y += 10;
-        const waveLabel = gameMode === 'training' ? 'Stint Reached:' : 'Wave Reached:';
-        doc.text(waveLabel, 80, y);
-        doc.text(`${wave || 1}`, 130, y);
-        y += 10;
-        doc.text('Words Typed:', 80, y);
-        doc.text(`${wordsTyped || 0}`, 130, y);
-        y += 10;
-        doc.text('Typing Speed:', 80, y);
-        doc.text(`${wpm} WPM`, 130, y);
-        y += 10;
-        doc.text('Accuracy:', 80, y);
-        doc.text(`${accuracy}%`, 130, y);
-        y += 10;
-        doc.text('Total Time:', 80, y);
-        doc.text(`${(totalTime || 0).toFixed(2)} seconds`, 130, y);
-        y += 10;
-        doc.text('Missed Words:', 80, y);
-        doc.text(`${misses || 0}`, 130, y);
-
-        // Footer
-        doc.text(`Issued on ${new Date().toLocaleDateString()}`, 105, y + 20, { align: 'center' });
-        doc.line(80, y + 30, 130, y + 30);
-        doc.text('Signature', 105, y + 35, { align: 'center' });
-
-        doc.save(`${playerName}_TypingTempest_Certificate.pdf`);
     });
+});
 
 // Map keys to keyboard elements
 document.querySelectorAll('.key').forEach(key => {
