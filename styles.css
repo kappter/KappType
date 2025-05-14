@@ -1,0 +1,92 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.game-container {
+    text-align: center;
+}
+
+.info {
+    display: flex;
+    justify-content: space-between;
+    width: 600px;
+    margin-bottom: 10px;
+    font-size: 18px;
+}
+
+canvas {
+    border: 2px solid #333;
+    background-color: #fff;
+}
+
+.game-over {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.game-over.hidden {
+    display: none;
+}
+
+.game-over button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+.game-over button:hover {
+    background-color: #45a049;
+}
+
+.keyboard {
+    margin-top: 20px;
+    display: inline-block;
+}
+
+.row {
+    display: flex;
+    margin-bottom: 5px;
+}
+
+.key {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+    background-color: #ddd;
+    border: 1px solid #999;
+    border-radius: 5px;
+    margin: 0 2px;
+    font-size: 14px;
+    text-transform: uppercase;
+}
+
+.key.active {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.key.backspace { width: 100px; }
+.key.tab { width: 60px; }
+.key.caps { width: 70px; }
+.key.enter { width: 80px; }
+.key.shift { width: 90px; }
+.key.space { width: 200px; }
