@@ -23,11 +23,10 @@ let experienceLevel = 1;
 let gameMode = 'arcade';
 let BASE_SPEED = 0.3;
 let WORD_SPAWN_RATE = 3000;
+let lastWordX = 10;
 
 const MAX_MISSES = 5;
 const SPEED_INCREMENT = 0.2;
-const LINE_HEIGHT = 30;
-const MAX_WORDS_PER_LINE = 3;
 
 // Load CSV
 fetch('words.csv')
@@ -64,29 +63,27 @@ function getRandomWord() {
 function addWord() {
     if (!waveActive) return;
     const word = getRandomWord();
-    if (gameMode === 'training') {
-        const line = words.length < MAX_WORDS_PER_LINE ? 0 : Math.floor(words.length / MAX_WORDS_PER_LINE);
-        let x = 10;
-        const lineWords = words.filter(w => w.line === line);
-        if (lineWords.length > 0) {
-            x = lineWords[lineWords.length - 1].x + ctx.measureText(lineWords[lineWords.length - 1].text).width + 10;
-        }
-        words.push({ text: word, x, y: 30 + line * LINE_HEIGHT, speed: BASE_SPEED, line });
-    } else {
-        const x = Math.random() * (canvas.width - ctx.measureText(word).width);
-        words.push({ text: word, x, y: 0, speed: BASE_SPEED + (wave - 1) * SPEED_INCREMENT });
+    let x = lastWordX;
+    const wordWidth = ctx.measureText(word).width;
+    if (x + wordWidth > canvas.width) {
+        x = 10; // Loop back to left
     }
+    words.push({ text: word, x, y: 0, speed: BASE_SPEED + (gameMode === 'arcade' ? (wave - 1) * SPEED_INCREMENT : 0) });
+    lastWordX = x + wordWidth + 10;
 }
 
 function startWave() {
     waveActive = true;
     waveStartTime = performance.now();
     words = [];
+    lastWordX = 10;
     currentInput = '';
     addWord();
-    setInterval(() => {
-        if (waveActive && !gameOver) addWord();
-    }, WORD_SPAWN_RATE);
+    if (gameMode === 'arcade') {
+        setInterval(() => {
+            if (waveActive && !gameOver) addWord();
+        }, WORD_SPAWN_RATE);
+    }
 }
 
 function endWave() {
@@ -136,35 +133,23 @@ function gameLoop(time) {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    if (gameMode === 'training') {
-        words.forEach(word => {
-            word.x += word.speed;
-            drawWord(word);
-            if (word.x > canvas.width) {
-                words = words.filter(w => w !== word);
-                misses++;
-                document.getElementById('misses').textContent = misses;
-                if (misses >= MAX_MISSES) {
-                    endGame();
-                }
+    words.forEach(word => {
+        word.y += word.speed;
+        drawWord(word);
+        if (word.y > canvas.height) {
+            words = words.filter(w => w !== word);
+            misses++;
+            document.getElementById('misses').textContent = misses;
+            if (misses >= MAX_MISSES) {
+                endGame();
             }
-        });
-    } else {
-        words.forEach(word => {
-            word.y += word.speed;
-            drawWord(word);
-            if (word.y > canvas.height) {
-                words = words.filter(w => w !== word);
-                misses++;
-                document.getElementById('misses').textContent = misses;
-                if (misses >= MAX_MISSES) {
-                    endGame();
-                }
+            if (gameMode === 'training' && words.length === 0) {
+                addWord();
             }
-        });
-    }
+        }
+    });
 
-    document.getElementById('score').HCO3>score;
+    document.getElementById('score').textContent = score;
     document.getElementById('wave').textContent = wave;
     document.getElementById('timer').textContent = Math.max(0, Math.floor(waveTime));
     requestAnimationFrame(gameLoop);
@@ -192,6 +177,7 @@ document.getElementById('restart').addEventListener('click', () => {
     gameOver = false;
     waveActive = true;
     gameStartTime = 0;
+    lastWordX = 10;
     document.getElementById('gameOver').classList.add('hidden');
     document.querySelector('.game-container').classList.add('hidden');
     document.getElementById('startScreen').classList.remove('hidden');
@@ -287,26 +273,13 @@ document.addEventListener('keydown', (e) => {
 
     words.forEach(word => {
         if (currentInput.toLowerCase() === word.text.toLowerCase()) {
-            if (gameMode === 'training') {
-                const line = word.line;
-                words = words.filter(w => w !== word);
-                const lineWords = words.filter(w => w.line === line);
-                lineWords.forEach((w, i) => {
-                    w.x = 10 + (i > 0 ? lineWords.slice(0, i).reduce((sum, lw) => sum + ctx.measureText(lw.text).width + 10, 0) : 0);
-                });
-                if (lineWords.length === 0 && words.length < MAX_WORDS_PER_LINE) {
-                    words.forEach(w => {
-                        w.line = Math.max(0, w.line - 1);
-                        w.y = 30 + w.line * LINE_HEIGHT;
-                    });
-                    addWord();
-                }
-            } else {
-                words = words.filter(w => w !== word);
-            }
+            words = words.filter(w => w !== word);
             score += word.text.length * 10;
             wordsTyped++;
             currentInput = '';
+            if (gameMode === 'training') {
+                addWord();
+            }
         }
     });
 });
@@ -314,5 +287,5 @@ document.addEventListener('keydown', (e) => {
 // Map keys to keyboard elements
 document.querySelectorAll('.key').forEach(key => {
     const text = key.textContent.toLowerCase();
-    key.setAttribute('data-key', text === 'space' ? 'space' : text === 'backspace' ? 'backspace' : text === 'tab' ? 'tab' : text === 'caps' ? 'caps' : text === 'enter' ? 'enter' : text === 'shift' ? 'shift' : text);
+    key.setAttribute('data-key', text === 'space' ? 'space' : text === 'backspace' ? 'backspace' : text === 'tab' ? 'tab' : text === 'caps' ? 'caps' : text === 'enter' ? 'enter' : text === 'shift' : 'shift' : text);
 });
