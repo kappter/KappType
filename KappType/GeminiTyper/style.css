@@ -16,7 +16,7 @@ header, footer {
     text-align: center;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     position: fixed;
-    z-index: 10; /* Ensure they are above the game */
+    z-index: 10;
 }
 
 header {
@@ -27,36 +27,95 @@ footer {
     bottom: 0;
 }
 
+.main-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center; /* Center content vertically */
+    min-height: calc(100vh - 120px); /* Adjust based on header/footer height */
+    margin-top: 60px; /* Add margin to avoid header overlap */
+    margin-bottom: 60px; /* Add margin to avoid footer overlap */
+    width: 100%;
+}
+
+#start-screen {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    z-index: 11;
+}
+
+#start-screen h2 {
+    margin-bottom: 1em;
+}
+
+#difficulty-levels {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 10px;
+    margin-bottom: 1em;
+}
+
+#difficulty-levels button {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#difficulty-levels button:hover {
+    background-color: #0056b3;
+}
+
+#training-mode {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #28a745;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 1em;
+}
+
+#training-mode:hover {
+    background-color: #218838;
+}
+
 .game-container {
     background-color: #fff;
     padding: 30px;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     text-align: center;
-    margin-top: 50px; /* Adjust to prevent overlap with header */
-    margin-bottom: 70px; /* Adjust to prevent overlap with footer */
-    display: flex;
+    display: none; /* Initially hidden */
+    margin-top: 20px; /* Add space above the game container */
     flex-direction: column;
-    align-items: center;
+    align-items: center; /* Center content horizontally */
 }
 
 .game-area {
     position: relative;
-    min-height: 200px; /* Reduced height */
-    margin-bottom: 10px; /* Reduced margin */
+    min-height: 200px;
+    margin-bottom: 10px;
     border: 1px solid #ccc;
     overflow: hidden;
-    width: 80%; /* Adjust width as needed */
+    width: 80%;
 }
 
 .word {
     position: absolute;
-    top: -30px; /* Start above the visible area */
+    top: -30px;
     left: 50%;
     transform: translateX(-50%);
     white-space: nowrap;
     font-size: 1.2em;
-    transition: top 0.5s linear; /* Adjust speed here */
+    transition: top 0.5s linear;
 }
 
 .word .typed {
@@ -64,40 +123,51 @@ footer {
 }
 
 .input-area {
-    margin-bottom: 10px; /* Reduced margin */
+    margin-bottom: 10px;
+    width: 80%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
+
 #typing-input {
-    padding: 8px; /* Reduced padding */
+    padding: 8px;
     font-size: 1em;
     border: 1px solid #ccc;
     border-radius: 4px;
+    width: 100%;
+    max-width: 400px;
 }
 
 #score, #wave-timer {
-    margin-top: 8px; /* Reduced margin */
+    margin-top: 8px;
     font-weight: bold;
+    width: 100%;
+    text-align: center;
 }
+
 
 .keyboard-container {
     display: grid;
-    grid-template-columns: repeat(13, 1fr); /* Approximate layout */
-    grid-gap: 3px; /* Reduced gap */
-    padding: 8px; /* Reduced padding */
+    grid-template-columns: repeat(13, 1fr);
+    grid-gap: 3px;
+    padding: 8px;
     background-color: #eee;
     border-radius: 5px;
-    margin-top: 15px; /* Add some space between input and keyboard */
-    width: 90%; /* Adjust keyboard width */
+    margin-top: 15px;
+    width: 90%;
+    max-width: 600px;
 }
 
 .key {
     background-color: #ddd;
-    padding: 8px; /* Reduced padding */
+    padding: 8px;
     border-radius: 4px;
     text-align: center;
     cursor: default;
     user-select: none;
-    font-size: 0.9em; /* Slightly smaller font */
+    font-size: 0.9em;
 }
 
 .key.active {
@@ -118,4 +188,18 @@ footer button {
 
 footer button:hover {
     background-color: #4cae4c;
+}
+
+/* Training Mode Styles */
+.training-word {
+    position: absolute;
+    top: 50px;
+    left: -100px;
+    white-space: nowrap;
+    font-size: 1.2em;
+    transition: left 4s linear; /* Adjust for speed */
+}
+
+.training-word.active {
+    color: red;
 }
