@@ -4,6 +4,10 @@ const scoreDisplay = document.getElementById('score');
 const waveTimerDisplay = document.getElementById('wave-timer');
 const keyboardContainer = document.querySelector('.keyboard-container');
 const downloadCertificateBtn = document.getElementById('download-certificate');
+const startScreen = document.getElementById('start-screen');
+const gameContainer = document.querySelector('.game-container');
+const difficultyLevels = document.getElementById('difficulty-levels');
+const trainingModeButton = document.getElementById('training-mode');
 
 let wordsData = {};
 let currentWords = [];
@@ -13,11 +17,17 @@ let waveDuration = 30;
 let timeLeft = waveDuration;
 let gameInterval;
 let waveInterval;
-let wordFallSpeed = 1; // Base speed
-let speedIncreaseRate = 0.1; // How much the speed increases per wave
+let wordFallSpeed = 1;
+let speedIncreaseRate = 0.1;
 let startTime;
 let endTime;
 let missedWords = 0;
+let gameMode = 'normal'; // 'normal' or 'training'
+let difficultyLevel = 1;
+let trainingInterval;
+let trainingWords = [];
+let currentTrainingWordIndex = 0;
+let wordsPerMinuteGoal = 40; // Target WPM
 
 const keyboardLayout = [
     ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
@@ -41,7 +51,8 @@ function loadWords() {
                     }
                 });
             }
-            startNewWave();
+            // Don't start the game here, wait for difficulty selection
+            // startNewWave();
         });
 }
 
@@ -78,7 +89,7 @@ function createFallingWord() {
             clearInterval(fallInterval);
             wordElement.remove();
         }
-    }, 20); // Adjust for smoother animation if needed
+    }, 20);
 
     currentWords.push({ element: wordElement, text: wordText, interval: fallInterval });
 }
@@ -98,7 +109,7 @@ function checkWord() {
         if (wordObj.text === typedText && wordObj.element.dataset.typed !== 'true') {
             score++;
             scoreDisplay.textContent = `Score: ${score}`;
-            wordObj.element.dataset.typed = 'true'; // Mark as typed
+            wordObj.element.dataset.typed = 'true';
             typingInput.value = '';
         }
     });
@@ -109,14 +120,20 @@ function updateTimer() {
     waveTimerDisplay.textContent = `Wave ends in: ${timeLeft}`;
     if (timeLeft <= 0) {
         clearInterval(gameInterval);
+        clearInterval(waveInterval); // Clear the wave interval
         endWave();
     }
 }
 
 function startNewWave() {
+    gameMode = 'normal';
+    gameContainer.style.display = 'flex';
+    startScreen.style.display = 'none';
     if (waveNumber === 1) {
         startTime = new Date();
         missedWords = 0;
+        score = 0;
+        scoreDisplay.textContent = `Score: ${score}`;
     }
 
     currentWords.forEach(wordObj => {
@@ -126,23 +143,25 @@ function startNewWave() {
     currentWords = [];
     timeLeft = waveDuration;
     waveTimerDisplay.textContent = `Wave ends in: ${timeLeft}`;
-    wordFallSpeed += speedIncreaseRate; // Increase speed for the new wave
+    wordFallSpeed = 1 + (difficultyLevel - 1) * 0.2; // Adjust based on difficulty
+    speedIncreaseRate = 0.1 + (difficultyLevel - 1) * 0.05;
 
     gameInterval = setInterval(() => {
         createFallingWord();
-        if (Math.random() < 0.3 + (waveNumber * 0.02)) { // Increase word frequency over time
+        if (Math.random() < 0.3 + (waveNumber * 0.02)) {
             createFallingWord();
         }
-    }, 1000 / (1 + (waveNumber * 0.1))); // Adjust word generation frequency
+    }, 1000 / (1 + (waveNumber * 0.1)));
 
     waveInterval = setInterval(updateTimer, 1000);
 }
 
 function endWave() {
     clearInterval(waveInterval);
+    clearInterval(gameInterval);
     alert(`Wave ${waveNumber} ended! Score: ${score}`);
     waveNumber++;
-    setTimeout(startNewWave, 2000); // Start the next wave after a short delay
+    setTimeout(startNewWave, 2000);
 }
 
 function renderKeyboard() {
@@ -169,7 +188,7 @@ function handleKeyPress(event) {
         keyElement.classList.add('active');
         setTimeout(() => {
             keyElement.classList.remove('active');
-        }, 100); // Briefly highlight the key
+        }, 100);
     }
 }
 
@@ -178,6 +197,9 @@ function downloadCertificate() {
     if (userName) {
         endTime = new Date();
         const totalTimeSeconds = Math.round((endTime - startTime) / 1000);
+        const wordsPerMinute = score > 0 && totalTimeSeconds > 0
+            ? Math.round((score / totalTimeSeconds) * 60)
+            : 0;
         const accuracy = score > 0 ? Math.round((score / (score + missedWords)) * 100) : 0;
 
         const { jsPDF } = window.jspdf;
@@ -194,6 +216,8 @@ function downloadCertificate() {
 
         pdf.setFontSize(16);
         pdf.text(`for completing ${waveNumber - 1} waves of the Falling Words typing game.`, 105, 80, null, null, "center");
+        pdf.text(`Words Per Minute: ${wordsPerMinute}`, 105, 90, null, null, "center");
+
 
         pdf.setFontSize(14);
         pdf.text(`Score: ${score}`, 20, 100);
@@ -212,12 +236,92 @@ function formatTime(totalSeconds) {
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 }
 
+function startTrainingMode() {
+    gameMode = 'training';
+    gameContainer.style.display = 'flex';
+    startScreen.style.display = 'none';
+    gameArea.innerHTML = ''; // Clear any existing words
+    trainingWords = [];
+    currentTrainingWordIndex = 0;
+    timeLeft = 30;
+    waveTimerDisplay.textContent = `Training: ${timeLeft}`;
+
+
+    const wordList = [];
+    for (let i = 0; i < 10; i++) { // Generate 10 words for training
+        wordList.push(getRandomWord());
+    }
+
+    let xPos = 50;
+    wordList.forEach((word, index) => {
+        const wordElement = document.createElement('div');
+        wordElement.classList.add('training-word');
+        wordElement.textContent = word;
+        wordElement.style.left = `${xPos}px`;
+        wordElement.style.top = '50px';
+        gameArea.appendChild(wordElement);
+        trainingWords.push({ element: wordElement, text: word });
+        xPos += 120; // Adjust spacing as needed
+    });
+
+    trainingInterval = setInterval(() => {
+        timeLeft--;
+        waveTimerDisplay.textContent = `Training: ${timeLeft}`;
+        if (timeLeft <= 0) {
+            clearInterval(trainingInterval);
+            endTrainingMode();
+        }
+    }, 1000);
+
+
+    typingInput.addEventListener('input', checkTrainingWord); // Use a different check function
+    typingInput.value = '';
+
+}
+
+function checkTrainingWord() {
+    const typedText = typingInput.value.trim();
+
+    if (trainingWords[currentTrainingWordIndex] && trainingWords[currentTrainingWordIndex].text === typedText) {
+        const currentWordElement = trainingWords[currentTrainingWordIndex].element;
+        currentWordElement.classList.add('active');
+        currentTrainingWordIndex++;
+        typingInput.value = '';
+
+        if (currentTrainingWordIndex >= trainingWords.length) {
+            setTimeout(endTrainingMode, 500);
+        }
+    }
+}
+
+function endTrainingMode() {
+    clearInterval(trainingInterval);
+    typingInput.removeEventListener('input', checkTrainingWord);
+    alert("Training session ended!");
+    gameContainer.style.display = 'none';
+    startScreen.style.display = 'flex';
+    gameArea.innerHTML = '';
+    timeLeft = waveDuration;
+    waveTimerDisplay.textContent = `Wave ends in: ${timeLeft}`;
+    currentTrainingWordIndex = 0;
+
+}
+
+
 // Event listeners
 typingInput.addEventListener('input', checkWord);
 document.addEventListener('keydown', handleKeyPress);
 downloadCertificateBtn.addEventListener('click', downloadCertificate);
+difficultyLevels.addEventListener('click', (event) => {
+    if (event.target.tagName === 'BUTTON') {
+        difficultyLevel = parseInt(event.target.dataset.level);
+        startNewWave();
+    }
+});
+trainingModeButton.addEventListener('click', startTrainingMode);
 
 // Initialize the game
 renderKeyboard();
 loadWords();
-typingInput.focus(); // Keep focus on the input field
+typingInput.focus();
+</script>
