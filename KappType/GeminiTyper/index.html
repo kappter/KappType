@@ -10,16 +10,34 @@
     <header>
         <h1>Falling Words</h1>
     </header>
-    <div class="game-container">
-        <div class="game-area">
+    <div class="main-container">
+        <div id="start-screen">
+            <h2>Select Difficulty</h2>
+            <div id="difficulty-levels">
+                <button data-level="1">Level 1</button>
+                <button data-level="2">Level 2</button>
+                <button data-level="3">Level 3</button>
+                <button data-level="4">Level 4</button>
+                <button data-level="5">Level 5</button>
+                <button data-level="6">Level 6</button>
+                <button data-level="7">Level 7</button>
+                <button data-level="8">Level 8</button>
+                <button data-level="9">Level 9</button>
+                <button data-level="10">Level 10</button>
             </div>
-        <div class="input-area">
-            <input type="text" id="typing-input" autofocus>
-            <div id="score">Score: 0</div>
-            <div id="wave-timer">Wave ends in: 30</div>
+            <button id="training-mode">Training Mode</button>
         </div>
-        <div class="keyboard-container">
+        <div class="game-container" style="display: none;">
+            <div class="game-area">
             </div>
+            <div class="input-area">
+                <input type="text" id="typing-input" autofocus>
+                <div id="score">Score: 0</div>
+                <div id="wave-timer">Wave ends in: 30</div>
+            </div>
+            <div class="keyboard-container">
+            </div>
+        </div>
     </div>
     <footer>
         <button id="download-certificate">Download Certificate</button>
