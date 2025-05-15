@@ -17,3 +17,11 @@
 #userInput:focus {
   @apply outline-none ring-2 ring-blue-500;
 }
+
+#startScreen {
+  z-index: 10;
+}
+
+#certificateButton:hover {
+  @apply bg-green-600;
+}
