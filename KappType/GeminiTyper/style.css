@@ -1,0 +1,121 @@
+body {
+    font-family: sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f0f0f0;
+    margin: 0;
+}
+
+header, footer {
+    background-color: #333;
+    color: white;
+    padding: 1em 0;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    z-index: 10; /* Ensure they are above the game */
+}
+
+header {
+    top: 0;
+}
+
+footer {
+    bottom: 0;
+}
+
+.game-container {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    margin-top: 50px; /* Adjust to prevent overlap with header */
+    margin-bottom: 70px; /* Adjust to prevent overlap with footer */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.game-area {
+    position: relative;
+    min-height: 200px; /* Reduced height */
+    margin-bottom: 10px; /* Reduced margin */
+    border: 1px solid #ccc;
+    overflow: hidden;
+    width: 80%; /* Adjust width as needed */
+}
+
+.word {
+    position: absolute;
+    top: -30px; /* Start above the visible area */
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    font-size: 1.2em;
+    transition: top 0.5s linear; /* Adjust speed here */
+}
+
+.word .typed {
+    color: red;
+}
+
+.input-area {
+    margin-bottom: 10px; /* Reduced margin */
+}
+
+#typing-input {
+    padding: 8px; /* Reduced padding */
+    font-size: 1em;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#score, #wave-timer {
+    margin-top: 8px; /* Reduced margin */
+    font-weight: bold;
+}
+
+.keyboard-container {
+    display: grid;
+    grid-template-columns: repeat(13, 1fr); /* Approximate layout */
+    grid-gap: 3px; /* Reduced gap */
+    padding: 8px; /* Reduced padding */
+    background-color: #eee;
+    border-radius: 5px;
+    margin-top: 15px; /* Add some space between input and keyboard */
+    width: 90%; /* Adjust keyboard width */
+}
+
+.key {
+    background-color: #ddd;
+    padding: 8px; /* Reduced padding */
+    border-radius: 4px;
+    text-align: center;
+    cursor: default;
+    user-select: none;
+    font-size: 0.9em; /* Slightly smaller font */
+}
+
+.key.active {
+    background-color: #aaf;
+    color: white;
+}
+
+footer button {
+    padding: 10px 20px;
+    font-size: 1em;
+    background-color: #5cb85c;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+footer button:hover {
+    background-color: #4cae4c;
+}
