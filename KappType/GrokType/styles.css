@@ -1,0 +1,19 @@
+#gameCanvas {
+  background-color: #1a202c;
+}
+
+.key {
+  @apply bg-gray-700 text-white p-2 rounded w-10 h-10 flex items-center justify-center;
+}
+
+.key.pressed {
+  @apply bg-blue-500;
+}
+
+.space {
+  @apply w-32;
+}
+
+#userInput:focus {
+  @apply outline-none ring-2 ring-blue-500;
+}
