@@ -309,19 +309,23 @@ function endTrainingMode() {
 
 
 // Event listeners
-typingInput.addEventListener('input', checkWord);
-document.addEventListener('keydown', handleKeyPress);
-downloadCertificateBtn.addEventListener('click', downloadCertificate);
-difficultyLevels.addEventListener('click', (event) => {
-    if (event.target.tagName === 'BUTTON') {
-        difficultyLevel = parseInt(event.target.dataset.level);
-        startNewWave();
-    }
-});
-trainingModeButton.addEventListener('click', startTrainingMode);
+// Make sure these are inside the window.onload function
+window.onload = function() {
+    renderKeyboard();
+    loadWords();
 
-// Initialize the game
-renderKeyboard();
-loadWords();
-typingInput.focus();
+    typingInput.addEventListener('input', checkWord);
+    document.addEventListener('keydown', handleKeyPress);
+    downloadCertificateBtn.addEventListener('click', downloadCertificate);
+    difficultyLevels.addEventListener('click', (event) => {
+        if (event.target.tagName === 'BUTTON') {
+            difficultyLevel = parseInt(event.target.dataset.level);
+            startNewWave();
+        }
+    });
+    trainingModeButton.addEventListener('click', startTrainingMode);
+
+    typingInput.focus();
+};
 </script>
+
