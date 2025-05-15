@@ -5,7 +5,6 @@ canvas.height = 400;
 
 let words = [];
 let wordData = {};
-let vocabData = [];
 let score = 0;
 let wave = 1;
 let misses = 0;
@@ -26,8 +25,6 @@ let deviceType = 'desktop';
 let BASE_SPEED = 0.3;
 let WORD_SPAWN_RATE = 3000;
 let lastWordX = 10;
-let currentDefinition = '';
-let typedFirstLetter = false;
 
 const MAX_MISSES = 5;
 const SPEED_INCREMENT = 0.2;
@@ -53,19 +50,24 @@ const flashEffect = {
     fadeDuration: 300 // 300ms fade
 };
 
-// Load CSVs
-function loadData() {
-    Promise.all([
-        fetch('words.csv').then(response => response.text()),
-        fetch('vocabulary.csv').then(response => response.text())
-    ]).then(([wordsText, vocabText]) => {
-        Papa.parse(wordsText, {
+// Load CSV
+fetch('words.csv')
+    .then(response => response.text())
+    .then(data => {
+        Papa.parse(data, {
             header: true,
             complete: function(results) {
+                // Process row-based CSV into word arrays
                 wordData = {
-                    two_letter: [], three_letter: [], four_letter: [],
-                    five_letter: [], six_letter: [], seven_letter: [],
-                    hyphenated: [], special: [], sat_words: []
+                    two_letter: [],
+                    three_letter: [],
+                    four_letter: [],
+                    five_letter: [],
+                    six_letter: [],
+                    seven_letter: [],
+                    hyphenated: [],
+                    special: [],
+                    sat_words: []
                 };
                 results.data.forEach(row => {
                     Object.keys(wordData).forEach(category => {
@@ -74,40 +76,24 @@ function loadData() {
                         }
                     });
                 });
-            }
-        });
-        Papa.parse(vocabText, {
-            header: true,
-            skipEmptyLines: true,
-            complete: function(results) {
-                vocabData = results.data.map(row => ({
-                    term: row.term.trim(),
-                    definition: row.definition.trim()
-                }));
-                setupStartButton();
+                document.getElementById('startGame').addEventListener('click', () => {
+                    deviceType = document.getElementById('deviceType').value;
+                    gameMode = document.getElementById('gameMode').value;
+                    experienceLevel = parseInt(document.getElementById('experienceLevel').value);
+                    BASE_SPEED = gameMode === 'training' ? 0.2 + (experienceLevel - 1) * 0.03 : 0.3 + (experienceLevel - 1) * 0.04;
+                    WORD_SPAWN_RATE = 3000 - (experienceLevel - 1) * 222;
+                    canvas.height = deviceType === 'tablet' ? 300 : 400;
+                    document.getElementById('startScreen').classList.add('hidden');
+                    document.querySelector('.game-container').classList.remove('hidden');
+                    document.getElementById('waveLabel').textContent = gameMode === 'training' ? 'Stint' : 'Wave';
+                    document.querySelector('.keyboard').classList.toggle('hidden', deviceType === 'tablet');
+                    document.querySelector('.info').classList.toggle('hidden', deviceType === 'tablet');
+                    canvas.focus();
+                    startGame();
+                });
             }
         });
     });
-}
-
-function setupStartButton() {
-    document.getElementById('startGame').addEventListener('click', () => {
-        deviceType = document.getElementById('deviceType').value;
-        gameMode = document.getElementById('gameMode').value;
-        experienceLevel = parseInt(document.getElementById('experienceLevel').value);
-        BASE_SPEED = gameMode === 'vocab' ? 0.1 : (gameMode === 'training' ? 0.2 + (experienceLevel - 1) * 0.03 : 0.3 + (experienceLevel - 1) * 0.04);
-        WORD_SPAWN_RATE = gameMode === 'vocab' ? 5000 : 3000 - (experienceLevel - 1) * 222;
-        canvas.height = deviceType === 'tablet' ? 300 : 400;
-        document.getElementById('startScreen').classList.add('hidden');
-        document.querySelector('.game-container').classList.remove('hidden');
-        document.getElementById('waveLabel').textContent = gameMode === 'training' ? 'Stint' : 'Wave';
-        document.getElementById('definition').classList.toggle('hidden', gameMode !== 'vocab');
-        document.querySelector('.keyboard').classList.toggle('hidden', deviceType === 'tablet');
-        document.querySelector('.info').classList.toggle('hidden', deviceType === 'tablet');
-        canvas.focus();
-        startGame();
-    });
-}
 
 function getBackgroundColor(wave) {
     const maxWaves = 10;
@@ -116,12 +102,6 @@ function getBackgroundColor(wave) {
 }
 
 function getRandomWord() {
-    if (gameMode === 'vocab') {
-        const termData = vocabData[Math.floor(Math.random() * vocabData.length)];
-        currentDefinition = termData.definition;
-        document.getElementById('definition').textContent = currentDefinition;
-        return termData.term;
-    }
     const categories = [
         'two_letter', 'three_letter', 'four_letter', 'five_letter',
         'six_letter', 'seven_letter', 'hyphenated', 'special', 'sat_words'
@@ -129,18 +109,21 @@ function getRandomWord() {
     const longWordCategories = ['five_letter', 'six_letter', 'seven_letter', 'hyphenated', 'special', 'sat_words'];
     const shortWordCategories = ['two_letter', 'three_letter', 'four_letter'];
     
+    // Calculate weights based on wave
     const maxWeightWave = 10;
-    const waveFactor = Math.min(wave - 1, maxWeightWave - 1) / (maxWeightWave - 1);
-    const longWordWeight = 0.111 + waveFactor * (0.167 - 0.111);
-    const shortWordWeight = 0.111 - waveFactor * (0.111 - 0.0556);
+    const waveFactor = Math.min(wave - 1, maxWeightWave - 1) / (maxWeightWave - 1); // 0 to 1
+    const longWordWeight = 0.111 + waveFactor * (0.167 - 0.111); // 11.1% to 16.7%
+    const shortWordWeight = 0.111 - waveFactor * (0.111 - 0.0556); // 11.1% to 5.56%
     
     const weights = categories.map(category => 
         longWordCategories.includes(category) ? longWordWeight : shortWordWeight
     );
     
+    // Normalize weights to sum to 1
     const totalWeight = weights.reduce((sum, w) => sum + w, 0);
     const normalizedWeights = weights.map(w => w / totalWeight);
     
+    // Choose category based on weights
     let rand = Math.random();
     let sum = 0;
     for (let i = 0; i < categories.length; i++) {
@@ -148,11 +131,12 @@ function getRandomWord() {
         if (rand < sum) {
             const category = categories[i];
             const words = wordData[category].filter(w => w);
-            if (words.length === 0) continue;
+            if (words.length === 0) continue; // Skip empty categories
             return words[Math.floor(Math.random() * words.length)];
         }
     }
     
+    // Fallback: Random non-empty category
     const nonEmptyCategories = categories.filter(cat => wordData[cat].length > 0);
     const category = nonEmptyCategories[Math.floor(Math.random() * nonEmptyCategories.length)];
     const words = wordData[category];
@@ -162,11 +146,9 @@ function getRandomWord() {
 function addWord() {
     if (!waveActive) return;
     const word = getRandomWord();
-    typedFirstLetter = true; // Reveal first letter
-    currentInput = gameMode === 'vocab' ? word[0] : ''; // Start with first letter
     ctx.font = `${BASE_FONT_SIZE}px Arial`;
     let x = lastWordX;
-    const wordWidth = ctx.measureText(word.replace(/\s/g, '_')).width;
+    const wordWidth = ctx.measureText(word).width;
     if (gameMode === 'training') {
         if (x + wordWidth > canvas.width) {
             x = 10;
@@ -186,14 +168,9 @@ function startWave() {
     words = [];
     lastWordX = 10;
     currentInput = '';
-    typedFirstLetter = false;
     document.body.style.backgroundColor = getBackgroundColor(wave);
-    if (gameMode === 'vocab') {
-        currentDefinition = '';
-        document.getElementById('definition').textContent = '';
-    }
     addWord();
-    if (gameMode === 'arcade' || gameMode === 'vocab') {
+    if (gameMode === 'arcade') {
         setInterval(() => {
             if (waveActive && !gameOver) addWord();
         }, WORD_SPAWN_RATE);
@@ -202,6 +179,7 @@ function startWave() {
 
 function endWave() {
     waveActive = false;
+    // Trigger flash effect
     flashEffect.active = true;
     flashEffect.startTime = performance.now();
     setTimeout(() => {
@@ -227,15 +205,9 @@ function drawWord(wordObj) {
     ctx.font = `${wordObj.fontSize}px Arial`;
     let x = wordObj.x;
     for (let i = 0; i < word.length; i++) {
-        const char = word[i];
-        if (gameMode === 'vocab' && !typedFirstLetter) {
-            ctx.fillStyle = 'black';
-            ctx.fillText(char === ' ' ? ' ' : '_', x, wordObj.y);
-        } else {
-            ctx.fillStyle = i < matchedLength ? 'red' : (gameMode === 'vocab' ? 'lightgray' : 'black');
-            ctx.fillText(char, x, wordObj.y);
-        }
-        x += ctx.measureText(char === ' ' ? ' ' : char || '_').width;
+        ctx.fillStyle = i < matchedLength ? 'red' : 'black';
+        ctx.fillText(word[i], x, wordObj.y);
+        x += ctx.measureText(word[i]).width;
     }
 }
 
@@ -259,7 +231,7 @@ function drawFlashEffect(time) {
         return;
     }
     const fadeProgress = Math.min(elapsed / flashEffect.fadeDuration, 1);
-    const opacity = 0.5 * (1 - fadeProgress);
+    const opacity = 0.5 * (1 - fadeProgress); // Start at 0.5, fade to 0
     ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
@@ -278,13 +250,9 @@ function resetGame() {
     gameStartTime = 0;
     lastWordX = 10;
     flashEffect.active = false;
-    currentDefinition = '';
-    typedFirstLetter = false;
-    currentInput = '';
     document.getElementById('gameOver').classList.add('hidden');
     document.querySelector('.game-container').classList.add('hidden');
     document.getElementById('startScreen').classList.remove('hidden');
-    document.getElementById('definition').classList.add('hidden');
     document.querySelector('.keyboard').classList.toggle('hidden', deviceType === 'tablet');
     document.querySelector('.info').classList.toggle('hidden', deviceType === 'tablet');
     document.body.style.backgroundColor = '';
@@ -306,6 +274,7 @@ function gameLoop(time) {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // Calculate WPM
     const wpm = totalTime > 0 ? (wordsTyped / (totalTime / 60)).toFixed(2) : 0;
     document.getElementById('wpm').textContent = wpm;
 
@@ -319,10 +288,6 @@ function gameLoop(time) {
         ctx.fillText(`Time: ${Math.max(0, Math.floor(waveTime))}s`, 200, 20);
         ctx.fillText(`Misses: ${misses}`, 300, 20);
         ctx.fillText(`WPM: ${wpm}`, 400, 20);
-        if (gameMode === 'vocab') {
-            ctx.font = '14px Arial';
-            ctx.fillText(`Def: ${currentDefinition.substring(0, 30)}${currentDefinition.length > 30 ? '...' : ''}`, 10, 50);
-        }
         drawStopButton();
     }
 
@@ -336,10 +301,7 @@ function gameLoop(time) {
         drawWord(word);
         if (word.y > canvas.height) {
             words = words.filter(w => w !== word);
-            if (gameMode !== 'vocab' || !word.text.toLowerCase().startsWith(currentInput.toLowerCase())) {
-                currentInput = gameMode === 'vocab' ? word.text[0] : '';
-                typedFirstLetter = gameMode === 'vocab';
-            }
+            currentInput = ''; // Clear input when a word is missed
             misses++;
             document.getElementById('misses').textContent = misses;
             if (misses >= MAX_MISSES) {
@@ -351,6 +313,7 @@ function gameLoop(time) {
         }
     });
 
+    // Draw flash effect after words to ensure it's on top
     drawFlashEffect(time);
 
     document.getElementById('score').textContent = score;
@@ -375,7 +338,7 @@ document.getElementById('stopGame').addEventListener('click', resetGame);
 
 canvas.addEventListener('click', (e) => {
     if (deviceType !== 'tablet' || gameOver) return;
-    const rect = canvas.getBoundingClientRect();
+    const rect = canvas.getBoundingRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     if (
@@ -401,6 +364,7 @@ document.getElementById('downloadCertificate').addEventListener('click', () => {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
+    // Set fonts and sizes
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(24);
     doc.text('Certificate of Achievement', 105, 20, { align: 'center' });
@@ -420,6 +384,7 @@ document.getElementById('downloadCertificate').addEventListener('click', () => {
     doc.setFontSize(12);
     doc.text('for outstanding performance in typing.', 105, 80, { align: 'center' });
 
+    // Stats table
     doc.setFontSize(12);
     let y = 100;
     doc.text('Score:', 80, y);
@@ -444,6 +409,7 @@ document.getElementById('downloadCertificate').addEventListener('click', () => {
     doc.text('Missed Words:', 80, y);
     doc.text(`${misses || 0}`, 130, y);
 
+    // Footer
     doc.text(`Issued on ${new Date().toLocaleDateString()}`, 105, y + 20, { align: 'center' });
     doc.line(80, y + 30, 130, y + 30);
     doc.text('Signature', 105, y + 35, { align: 'center' });
@@ -462,23 +428,18 @@ document.addEventListener('keydown', (e) => {
         setTimeout(() => keyElement.classList.remove('active'), 100);
     }
 
+    // Only process alphanumeric, hyphen, or apostrophe keys for input
     if (e.key === 'Backspace') {
         totalKeystrokes++;
-        if (typedFirstLetter || gameMode !== 'vocab') {
-            currentInput = currentInput.slice(0, -1);
-        }
-    } else if (/^[a-z0-9\-' ]$/.test(key)) {
+        currentInput = currentInput.slice(0, -1);
+    } else if (/^[a-z0-9\-']$/.test(key)) {
         totalKeystrokes++;
-        if (gameMode === 'vocab' && !typedFirstLetter) {
-            typedFirstLetter = true;
-            currentInput = e.key;
-        } else {
-            currentInput += e.key;
-        }
+        currentInput += e.key;
         const activeWord = words.find(w => w.text.toLowerCase().startsWith(currentInput.toLowerCase()));
         if (activeWord) {
             correctKeystrokes++;
-        } else if (gameMode !== 'vocab') {
+        } else {
+            // Clear input if it doesn't match any word
             currentInput = '';
         }
     }
@@ -486,10 +447,9 @@ document.addEventListener('keydown', (e) => {
     words.forEach(word => {
         if (currentInput.toLowerCase() === word.text.toLowerCase()) {
             words = words.filter(w => w !== word);
-            score += word.text.replace(/\s/g, '').length * 10;
+            score += word.text.length * 10;
             wordsTyped++;
-            currentInput = gameMode === 'vocab' && words.length > 0 ? words[0].text[0] : '';
-            typedFirstLetter = gameMode === 'vocab';
+            currentInput = '';
             if (gameMode === 'training') {
                 addWord();
             }
@@ -497,6 +457,7 @@ document.addEventListener('keydown', (e) => {
     });
 });
 
+// Map keys to keyboard elements
 document.querySelectorAll('.key').forEach(key => {
     const text = key.textContent.toLowerCase();
     key.setAttribute('data-key', 
@@ -508,5 +469,3 @@ document.querySelectorAll('.key').forEach(key => {
         text === 'shift' ? 'shift' : text
     );
 });
-
-loadData();

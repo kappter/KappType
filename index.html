@@ -52,58 +52,74 @@
     </header>
 
     <div id="startScreen" class="start-screen">
-        <h2>Welcome to Typing Tempest!</h2>
-        <label for="deviceType">Device:</label>
+        <h2>Welcome to Typing Tempest</h2>
+        <label for="deviceType">Select Device Type:</label><br>
         <select id="deviceType">
             <option value="desktop">Desktop</option>
             <option value="tablet">Tablet</option>
-        </select>
-        <br>
-        <label for="gameMode">Mode:</label>
+        </select><br>
+        <label for="gameMode">Select Game Mode:</label><br>
         <select id="gameMode">
-            <option value="arcade">Arcade</option>
-            <option value="training">Training</option>
-            <option value="vocab">Vocab</option>
-        </select>
-        <br>
-        <label for="experienceLevel">Experience Level (1-10):</label>
-        <input type="number" id="experienceLevel" min="1" max="10" value="1">
-        <br>
+            <option value="arcade">Arcade Mode</option>
+            <option value="training">Training Mode</option>
+        </select><br>
+        <label for="experienceLevel">Select Experience Level (1 = Easy, 10 = Hard):</label><br>
+        <select id="experienceLevel">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+        </select><br>
         <button id="startGame">Start Game</button>
     </div>
 
     <div class="game-container hidden">
         <div class="info">
-            <p>Definition: <span id="definition" class="hidden"></span></p>
-            <p>Score: <span id="score">0</span></p>
-            <p><span id="waveLabel">Wave</span>: <span id="wave">1</span></p>
-            <p>Time: <span id="timer">30</span>s</p>
-            <p>Misses: <span id="misses">0</span></p>
-            <p>WPM: <span id="wpm">0</span></p>
+            <span>Score: <span id="score">0</span></span>
+            <span id="waveLabel">Wave</span>: <span id="wave">1</span>
+            <span>Time: <span id="timer">30</span>s</span>
+            <span>Misses: <span id="misses">0</span></span>
+            <span>WPM: <span id="wpm">0</span></span>
             <button id="stopGame">Stop</button>
         </div>
         <canvas id="gameCanvas"></canvas>
-        <div class="keyboard">
-            <div class="key">q</div><div class="key">w</div><div class="key">e</div><div class="key">r</div><div class="key">t</div>
-            <div class="key">y</div><div class="key">u</div><div class="key">i</div><div class="key">o</div><div class="key">p</div>
-            <div class="key">a</div><div class="key">s</div><div class="key">d</div><div class="key">f</div><div class="key">g</div>
-            <div class="key">h</div><div class="key">j</div><div class="key">k</div><div class="key">l</div>
-            <div class="key">z</div><div class="key">x</div><div class="key">c</div><div class="key">v</div><div class="key">b</div>
-            <div class="key">n</div><div class="key">m</div>
-            <div class="key" data-key="space">Space</div>
-            <div class="key" data-key="backspace">Backspace</div>
-        </div>
     </div>
 
     <div id="gameOver" class="game-over hidden">
-        <h2>Game Over!</h2>
-        <p>Final Score: <span id="finalScore">0</span></p>
-        <p>Words Typed: <span id="wordsTyped">0</span></p>
-        <p>WPM: <span id="wpm">0</span></p>
-        <label for="playerName">Enter Your Name:</label>
-        <input type="text" id="playerName" placeholder="Player Name">
-        <button id="downloadCertificate">Download Certificate</button>
+        <h2>Game Over</h2>
+        <p>Final Score: <span id="finalScore"></span></p>
+        <p>Words Typed: <span id="wordsTyped"></span></p>
+        <p>Typing Speed: <span id="wpm"></span> WPM</p>
+        <div class="certificate-form">
+            <label>Enter Your Name:</label>
+            <input type="text" id="playerName">
+            <button id="downloadCertificate">Download Certificate</button>
+        </div>
         <button id="restart">Restart</button>
+    </div>
+
+    <div class="keyboard">
+        <div class="row">
+            <span class="key">`</span><span class="key">1</span><span class="key">2</span><span class="key">3</span><span class="key">4</span><span class="key">5</span><span class="key">6</span><span class="key">7</span><span class="key">8</span><span class="key">9</span><span class="key">0</span><span class="key">-</span><span class="key">=</span><span class="key backspace">Backspace</span>
+        </div>
+        <div class="row">
+            <span class="key tab">Tab</span><span class="key">q</span><span class="key">w</span><span class="key">e</span><span class="key">r</span><span class="key">t</span><span class="key">y</span><span class="key">u</span><span class="key">i</span><span class="key">o</span><span class="key">p</span><span class="key">[</span><span class="key">]</span><span class="key">\</span>
+        </div>
+        <div class="row">
+            <span class="key caps">Caps</span><span class="key">a</span><span class="key">s</span><span class="key">d</span><span class="key">f</span><span class="key">g</span><span class="key">h</span><span class="key">j</span><span class="key">k</span><span class="key">l</span><span class="key">;</span><span class="key">'</span><span class="key enter">Enter</span>
+        </div>
+        <div class="row">
+            <span class="key shift">Shift</span><span class="key">z</span><span class="key">x</span><span class="key">c</span><span class="key">v</span><span class="key">b</span><span class="key">n</span><span class="key">m</span><span class="key">,</span><span class="key">.</span><span class="key">/</span><span class="key shift">Shift</span>
+        </div>
+        <div class="row">
+            <span class="key space">Space</span>
+        </div>
     </div>
 
     <footer>
