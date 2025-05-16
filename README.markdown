@@ -151,7 +151,7 @@ Please ensure code follows the existing style (e.g., Tailwind for CSS, vanilla J
 © 2025 KappType. All rights reserved. This project is proprietary, but contributions are welcome under the terms above.
 
 ## Contact
-For issues or suggestions, open an issue on [GitHub](https://github.com/kappter/KappType) or contact the maintainer at [your-email@example.com] (replace with actual contact).
+For issues or suggestions, open an issue on [GitHub](https://github.com/kappter/KappType) or contact Ken at [kkapptie@graniteschools.org].
 
 ---
 
