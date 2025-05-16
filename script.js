@@ -357,7 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function generateCertificate() {
     const name = prompt('Enter your name for the certificate:');
     if (!name) return;
-    const safeName = name.replace(/[\{\}\\\$%#&~_]/g, ''); // Sanitize input
+    const safeName = name.replace(/[^a-zA-Z0-9\s-]/g, ''); // Sanitize to alphanumeric, spaces, and hyphens
     const wpm = calculateWPM();
     const accuracy = calculateAccuracy();
     const promptTypeText = promptType === 'definition' ? 'Definition (Type Term)' : promptType === 'term' ? 'Term (Type Definition)' : 'Both (Random)';
@@ -412,7 +412,7 @@ document.addEventListener('DOMContentLoaded', () => {
     a.click();
     URL.revokeObjectURL(url);
 
-    alert('Certificate .tex file downloaded. Upload it to your Overleaf project (https://www.overleaf.com/project) to compile it into a PDF, or check your GitHub repository (https://github.com/kappter/KappType) for the synced version.');
+    alert('Certificate .tex file downloaded. Upload it to your Overleaf project (https://www.overleaf.com/project) to compile it into a PDF. If compilation fails, check for errors in Overleaf (e.g., missing packages or syntax issues) or ensure your GitHub repository (https://github.com/kappter/KappType) is synced with your Overleaf project under the "certificate.tex" file.');
   }
 
   function startGame() {
