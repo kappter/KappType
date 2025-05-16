@@ -1,4 +1,4 @@
-const canvas = document.getElementById(' partners');
+const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const userInput = document.getElementById('userInput');
 const scoreDisplay = document.getElementById('score');
@@ -210,6 +210,7 @@ function generateCertificate() {
 
 \\end{document}
   `;
+  // For now, download as .tex due to lack of client-side LaTeX compiler
   const blob = new Blob([certificateContent], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -217,6 +218,26 @@ function generateCertificate() {
   a.download = 'certificate.tex';
   a.click();
   URL.revokeObjectURL(url);
+  alert('Downloaded certificate.tex. Compile it with PDFLaTeX (e.g., Overleaf) to get a PDF. To enable direct PDF download, set up a server-side LaTeX compiler.');
+
+  // Example for server-side PDF generation (uncomment and configure if you have a server)
+  /*
+  fetch('https://your-latex-compiler-api.com/compile', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ latex: certificateContent })
+  })
+  .then(response => response.blob())
+  .then(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'certificate.pdf';
+    a.click();
+    URL.revokeObjectURL(url);
+  })
+  .catch(error => alert('Failed to generate PDF: ' + error));
+  */
 }
 
 function startGame() {
