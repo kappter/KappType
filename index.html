@@ -94,14 +94,27 @@
     </div>
     <canvas id="gameCanvas" class="border border-dark mb-4"></canvas>
     <input id="userInput" type="text" class="bg-light text-dark p-2 rounded w-full max-w-4xl mb-4" placeholder="Prompt will appear here...">
-    <div class="flex flex-wrap justify-center gap-2 mb-4">
-      <div class="key">Q</div><div class="key">W</div><div class="key">E</div><div class="key">R</div><div class="key">T</div>
-      <div class="key">Y</div><div class="key">U</div><div class="key">I</div><div class="key">O</div><div class="key">P</div>
-      <div class="key">A</div><div class="key">S</div><div class="key">D</div><div class="key">F</div><div class="key">G</div>
-      <div class="key">H</div><div class="key">J</div><div class="key">K</div><div class="key">L</div>
-      <div class="key">Z</div><div class="key">X</div><div class="key">C</div><div class="key">V</div><div class="key">B</div>
-      <div class="key">N</div><div class="key">M</div>
-      <div class="key space">Space</div>
+    <div class="flex flex-col items-center gap-1 mb-4">
+      <!-- Top Row: Numbers and Symbols -->
+      <div class="flex justify-center gap-1">
+        <div class="key w-8">`</div><div class="key w-8">1</div><div class="key w-8">2</div><div class="key w-8">3</div><div class="key w-8">4</div><div class="key w-8">5</div><div class="key w-8">6</div><div class="key w-8">7</div><div class="key w-8">8</div><div class="key w-8">9</div><div class="key w-8">0</div><div class="key w-8">-</div><div class="key w-8">=</div><div class="key w-12">Backspace</div>
+      </div>
+      <!-- Row 1: QWERTY -->
+      <div class="flex justify-center gap-1">
+        <div class="key w-12">Tab</div><div class="key w-8">Q</div><div class="key w-8">W</div><div class="key w-8">E</div><div class="key w-8">R</div><div class="key w-8">T</div><div class="key w-8">Y</div><div class="key w-8">U</div><div class="key w-8">I</div><div class="key w-8">O</div><div class="key w-8">P</div><div class="key w-8">[</div><div class="key w-8">]</div><div class="key w-8">\</div>
+      </div>
+      <!-- Row 2: ASDF -->
+      <div class="flex justify-center gap-1">
+        <div class="key w-16">Caps Lock</div><div class="key w-8">A</div><div class="key w-8">S</div><div class="key w-8">D</div><div class="key w-8">F</div><div class="key w-8">G</div><div class="key w-8">H</div><div class="key w-8">J</div><div class="key w-8">K</div><div class="key w-8">L</div><div class="key w-8">;</div><div class="key w-8">'</div><div class="key w-12">Enter</div>
+      </div>
+      <!-- Row 3: ZXCV -->
+      <div class="flex justify-center gap-1">
+        <div class="key w-16">Shift</div><div class="key w-8">Z</div><div class="key w-8">X</div><div class="key w-8">C</div><div class="key w-8">V</div><div class="key w-8">B</div><div class="key w-8">N</div><div class="key w-8">M</div><div class="key w-8">,</div><div class="key w-8">.</div><div class="key w-8">/</div><div class="key w-16">Shift</div>
+      </div>
+      <!-- Bottom Row: Modifiers and Space -->
+      <div class="flex justify-center gap-1">
+        <div class="key w-12">Ctrl</div><div class="key w-12">Win</div><div class="key w-12">Alt</div><div class="key space">Space</div><div class="key w-12">Alt</div><div class="key w-12">Win</div><div class="key w-12">Ctrl</div>
+      </div>
     </div>
     <button id="certificateButton" class="bg-accent text-dark px-4 py-2 rounded hover:bg-highlight">Download Certificate</button>
   </div>
