@@ -32,16 +32,31 @@ let totalChars = 0;
 let correctChars = 0;
 let lastFrameTime = performance.now();
 
+function validateCsvUrl(url) {
+  return url.includes('raw.githubusercontent.com') || url.endsWith('.csv');
+}
+
 function loadVocab(csvUrl) {
-  const defaultUrl = 'https://raw.githubusercontent.com/kappter/kappquiz/main/vocab-sets/psych_terms_1.csv';
-  const url = csvUrl || defaultUrl;
+  const defaultUrl = 'https://raw.githubusercontent.com/kappter/KappType/main/KappType/GrokType/Exploring_Computer_Science_Vocabulary.csv';
+  let url = csvUrl || defaultUrl;
+  
+  if (csvUrl && !validateCsvUrl(csvUrl)) {
+    alert('Invalid CSV URL. Please use a raw GitHub URL (e.g., https://raw.githubusercontent.com/.../file.csv) or a direct CSV file.');
+    url = defaultUrl;
+  }
+
   loadingIndicator.classList.remove('hidden');
   startButton.disabled = true;
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
 
   Papa.parse(url, {
     download: true,
     header: true,
+    signal: controller.signal,
     complete: function(results) {
+      clearTimeout(timeoutId);
       vocabData = results.data.filter(row => row.Term && row.Definition);
       loadingIndicator.classList.add('hidden');
       startButton.disabled = false;
@@ -49,8 +64,9 @@ function loadVocab(csvUrl) {
         alert('No valid terms found in the CSV. Ensure it has "Term" and "Definition" columns.');
       }
     },
-    error: function() {
-      alert(`Failed to load CSV at ${url}. Use a raw file URL (e.g., https://raw.githubusercontent.com/...). Falling back to local vocab.csv.`);
+    error: function(error) {
+      clearTimeout(timeoutId);
+      alert(`Failed to load CSV at ${url}. Use a raw file URL (e.g., https://raw.githubusercontent.com/.../file.csv). Falling back to local vocab.csv. Error: ${error.message}`);
       Papa.parse('vocab.csv', {
         download: true,
         header: true,
