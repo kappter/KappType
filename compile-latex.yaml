@@ -1,0 +1,29 @@
+name: Compile LaTeX Certificate
+
+on:
+  push:
+    paths:
+      - 'certificate.tex'
+
+jobs:
+  compile-latex:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up TeXlive
+        uses: tealatex/setup-texlive@v1
+        with:
+          packages: >
+            latexmk noto geometry titling
+
+      - name: Compile LaTeX
+        run: |
+          latexmk -pdf certificate.tex
+
+      - name: Upload PDF artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: certificate-pdf
+          path: certificate.pdf
