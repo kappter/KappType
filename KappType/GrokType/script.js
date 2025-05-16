@@ -90,9 +90,33 @@ const defaultVocabData = [
 
 function populateVocabDropdown() {
   const baseUrl = 'https://kappter.github.io/vocab-sets/';
+  const fallbackFiles = [
+    'Exploring_Computer_Science_Vocabulary',
+    'ARRL_Ham_Radio_Extra_License_Terms_Definitions',
+    'ARRL_Ham_Radio_General_License_Terms_Definitions',
+    'ARRL_Ham_Radio_Technician_License_Terms_Definitions',
+    'Computer_Programming_2_Terms_Definitions',
+    'Digital_Media_2_Terms_and_Definitions',
+    'ECS_Hardware_OS_DataStorage_Terms_Definitions',
+    'Game_Development_Fundamentals_2_Terms_Definitions',
+    'Game_Development_Fundamentals_1_Terms_Definitions',
+    'Music_Theory_Terms_Definitions',
+    'Short_Testing_Sample',
+    'Summer_Job_Preparation_Terms_Definitions',
+    'Utah_Computer_Programming_1_Terms_Definitions',
+    'Web_Development_Terms_Definitions',
+    'Yearbook_Staff_Editor_Skills_Terms_Definitions',
+    'advanced_computer_programming_vocab',
+    'psych_terms_1',
+    'psych_terms_2',
+    'psych_terms_3',
+    'psych_terms_4',
+    'utah_video_production_terms_Final'
+  ];
+
   fetch(baseUrl)
     .then(response => {
-      if (!response.ok) throw new Error('Network response was not ok');
+      if (!response.ok) throw new Error('Directory listing not available');
       return response.text();
     })
     .then(html => {
@@ -106,10 +130,25 @@ function populateVocabDropdown() {
         option.textContent = link.getAttribute('href').replace(/\.csv$/, '');
         select.appendChild(option);
       });
+      if (links.length === 0) {
+        console.warn('No CSV files found in directory listing. Using fallback list.');
+        fallbackFiles.forEach(file => {
+          const option = document.createElement('option');
+          option.value = baseUrl + file + '.csv';
+          option.textContent = file;
+          select.appendChild(option);
+        });
+      }
     })
     .catch(error => {
       console.error('Error fetching vocab files:', error);
-      // Fallback to embedded vocabulary if fetch fails
+      const select = document.getElementById('vocabSelect');
+      fallbackFiles.forEach(file => {
+        const option = document.createElement('option');
+        option.value = baseUrl + file + '.csv';
+        option.textContent = file;
+        select.appendChild(option);
+      });
     });
 }
 
