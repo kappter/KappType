@@ -67,6 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const startButton = document.getElementById('startButton');
   const levelInput = document.getElementById('levelInput');
   const modeSelect = document.getElementById('modeSelect');
+  const promptSelect = document.getElementById('promptSelect');
   const vocabSelect = document.getElementById('vocabSelect');
   const certificateButton = document.getElementById('certificateButton');
   const definitionDisplay = document.getElementById('definition');
@@ -82,6 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let timeLeft = 30;
   let gameActive = false;
   let mode = 'game';
+  let promptType = 'definition';
   let level = 1;
   let totalTime = 0;
   let missedWords = [];
@@ -210,8 +212,9 @@ document.addEventListener('DOMContentLoaded', () => {
     return vocabData[index];
   }
 
-  function getUnderscoreText(term) {
-    return term[0] + '_'.repeat(term.length - 1);
+  function getUnderscoreText(text) {
+    if (text.length > 50) text = text.slice(0, 47) + '...'; // Truncate long definitions
+    return text[0] + '_'.repeat(text.length - 1);
   }
 
   function spawnWord() {
@@ -219,13 +222,24 @@ document.addEventListener('DOMContentLoaded', () => {
       vocabData = defaultVocabData;
     }
     const vocab = getRandomVocab();
-    const term = vocab.Term;
-    const definition = vocab.Definition;
-    const x = mode === 'game' ? Math.random() * (canvas.width - ctx.measureText(getUnderscoreText(term)).width) : 50;
+    let prompt, typedInput, isTermPrompt;
+    if (promptType === 'both') {
+      isTermPrompt = Math.random() < 0.5;
+    } else {
+      isTermPrompt = promptType === 'term';
+    }
+    if (isTermPrompt) {
+      prompt = vocab.Term;
+      typedInput = vocab.Definition;
+    } else {
+      prompt = vocab.Definition;
+      typedInput = vocab.Term;
+    }
+    const x = mode === 'game' ? Math.random() * (canvas.width - ctx.measureText(getUnderscoreText(typedInput)).width) : 50;
     const y = 0;
     const speed = mode === 'game' ? 1 + wave * 0.5 * (level / 5) : 1 + level * 0.1;
-    words.push({ term, definition, displayText: getUnderscoreText(term), x, y, speed, matched: '' });
-    definitionDisplay.textContent = definition;
+    words.push({ term: vocab.Term, definition: vocab.Definition, prompt, typedInput, displayText: getUnderscoreText(typedInput), x, y, speed, matched: '' });
+    definitionDisplay.textContent = prompt;
   }
 
   function updateGame() {
@@ -245,14 +259,14 @@ document.addEventListener('DOMContentLoaded', () => {
     words.forEach(word => {
       word.y += word.speed;
       const typed = userInput.value.trim().toLowerCase();
-      word.matched = word.term.toLowerCase().startsWith(typed) ? typed : '';
+      word.matched = word.typedInput.toLowerCase().startsWith(typed) ? typed : '';
       ctx.fillStyle = 'red';
-      ctx.fillText(word.term.slice(0, word.matched.length), word.x, word.y);
+      ctx.fillText(word.typedInput.slice(0, word.matched.length), word.x, word.y);
       ctx.fillStyle = 'white';
-      ctx.fillText(word.displayText.slice(word.matched.length), word.x + ctx.measureText(word.term.slice(0, word.matched.length)).width, word.y);
+      ctx.fillText(word.displayText.slice(word.matched.length), word.x + ctx.measureText(word.typedInput.slice(0, word.matched.length)).width, word.y);
       if (word.y >= canvas.height) {
-        missedWords.push(word.term);
-        totalChars += word.term.length;
+        missedWords.push(word.typedInput);
+        totalChars += word.typedInput.length;
         words = [];
         if (mode === 'game') {
           gameActive = false;
@@ -295,13 +309,13 @@ document.addEventListener('DOMContentLoaded', () => {
   function handleInput(e) {
     const typed = userInput.value.trim().toLowerCase();
     words = words.filter(word => {
-      if (typed.length === 1 && word.term.toLowerCase().startsWith(typed)) {
-        word.displayText = word.term;
+      if (typed.length === 1 && word.typedInput.toLowerCase().startsWith(typed)) {
+        word.displayText = word.typedInput;
       }
-      if (word.term.toLowerCase() === typed) {
-        score += word.term.length;
-        correctChars += word.term.length;
-        totalChars += word.term.length;
+      if (word.typedInput.toLowerCase() === typed) {
+        score += word.typedInput.length;
+        correctChars += word.typedInput.length;
+        totalChars += word.typedInput.length;
         scoreDisplay.textContent = `Score: ${score}`;
         e.target.value = '';
         spawnWord();
@@ -328,6 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const safeName = name.replace(/[\{\}\\\$%#&~_]/g, ''); // Sanitize input
     const wpm = calculateWPM();
     const accuracy = calculateAccuracy();
+    const promptTypeText = promptType === 'definition' ? 'Definition (Type Term)' : promptType === 'term' ? 'Term (Type Definition)' : 'Both (Random)';
     const certificateContent = `
 \\documentclass[a4paper,12pt]{article}
 \\usepackage[utf8]{inputenc}
@@ -355,6 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
   \\normalsize{has successfully completed a session in KappType with the following results:}
   \\vspace{1cm}
   \\begin{tabular}{ll}
+    Prompt Type: & ${promptTypeText} \\\\
     Typing Speed: & ${wpm} WPM \\\\
     Accuracy: & ${accuracy}\\% \\\\
     Wave Reached: & ${wave} \\\\
@@ -402,6 +418,7 @@ document.addEventListener('DOMContentLoaded', () => {
   startButton.addEventListener('click', () => {
     level = Math.max(1, Math.min(10, parseInt(levelInput.value)));
     mode = modeSelect.value;
+    promptType = promptSelect.value;
     const csvUrl = vocabSelect.value || '';
     loadVocab(csvUrl);
     setTimeout(() => {
