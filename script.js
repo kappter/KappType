@@ -78,6 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const promptSelect = document.getElementById('promptSelect');
   const vocabSelect = document.getElementById('vocabSelect');
   const caseSelect = document.getElementById('caseSelect');
+  const vocabSetTitle = document.getElementById('vocabSetTitle');
   const certificateButton = document.getElementById('certificateButton');
   const loadingIndicator = document.getElementById('loadingIndicator');
 
@@ -86,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let words = [];
   let vocabData = [];
+  let vocabSetName = '';
   let score = 0;
   let wave = 1;
   let timeLeft = 30;
@@ -145,8 +147,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function loadVocab(csvUrl) {
+    vocabSetName = vocabSelect.options[vocabSelect.selectedIndex].textContent;
     if (!csvUrl) {
       vocabData = defaultVocabData;
+      vocabSetName = vocabSetName || 'Embedded Vocabulary - 53 Computer Science Terms';
       loadingIndicator.classList.add('hidden');
       startButton.disabled = false;
       return;
@@ -155,6 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.location.protocol === 'file:') {
       alert('Cannot load external CSV files when running via file://. Using embedded vocabulary (53 computer science terms). For external CSVs, run a local server (e.g., python -m http.server) and access http://localhost:8000.');
       vocabData = defaultVocabData;
+      vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
       loadingIndicator.classList.add('hidden');
       startButton.disabled = false;
       return;
@@ -163,6 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!validateCsvUrl(csvUrl)) {
       alert('Invalid CSV URL. Using embedded vocabulary.');
       vocabData = defaultVocabData;
+      vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
       loadingIndicator.classList.add('hidden');
       startButton.disabled = false;
       return;
@@ -171,6 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof Papa === 'undefined') {
       alert('Papa Parse library not loaded. Using embedded vocabulary. Ensure papaparse.min.js is in the repository root.');
       vocabData = defaultVocabData;
+      vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
       loadingIndicator.classList.add('hidden');
       startButton.disabled = false;
       return;
@@ -200,6 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (vocabData.length === 0) {
               alert(`No valid terms found in the CSV at ${csvUrl}. Ensure it has "Term" and "Definition" columns. Using embedded vocabulary.`);
               vocabData = defaultVocabData;
+              vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
             }
           },
           error: function(error) {
@@ -207,6 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(`Papa Parse error for ${csvUrl}:`, error);
             alert(`Failed to parse CSV at ${csvUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary.`);
             vocabData = defaultVocabData;
+            vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
             loadingIndicator.classList.add('hidden');
             startButton.disabled = false;
           }
@@ -217,6 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error(`Fetch error for ${csvUrl}:`, error);
         alert(`Failed to load CSV at ${csvUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary.`);
         vocabData = defaultVocabData;
+        vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
         loadingIndicator.classList.add('hidden');
         startButton.disabled = false;
       });
@@ -342,6 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
         scoreDisplay.textContent = `Score: ${score}`;
         e.target.value = '';
         e.target.placeholder = 'Prompt will appear here...';
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas immediately
         spawnWord();
         return false;
       }
@@ -448,6 +459,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.key').forEach(key => key.classList.remove('pressed'));
     });
     certificateButton.addEventListener('click', generateCertificate);
+    vocabSetTitle.textContent = vocabSetName;
     spawnWord();
     updateGame();
     updateTimer();
