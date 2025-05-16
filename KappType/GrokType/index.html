@@ -42,69 +42,62 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Typing Trainer</title>
+  <title>KappType</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/papaparse/5.3.2/papaparse.min.js"></script>
+  <script src="script.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <link rel="icon" type="image/x-icon" href="/favicon.ico">
 </head>
-<body class="bg-gray-900 text-white min-h-screen flex flex-col">
-  <header class="fixed top-0 w-full bg-gray-800 p-4 text-center">
-    <h1 class="text-3xl font-bold">Typing Trainer</h1>
-  </header>
-  <div class="flex-1 flex flex-col items-center justify-center mt-16 mb-16">
-    <div id="startScreen" class="absolute bg-gray-700 p-8 rounded-lg shadow-lg">
-      <h2 class="text-2xl mb-4">Welcome to Typing Trainer</h2>
+<body class="bg-secondary text-dark font-sans">
+  <div id="startScreen" class="flex flex-col items-center justify-center h-screen">
+    <h1 class="text-4xl font-bold mb-8">Welcome to KappType</h1>
+    <div class="bg-primary p-6 rounded-lg shadow-lg w-96">
       <div class="mb-4">
-        <label class="block mb-2">Experience Level (1-10):</label>
-        <input id="levelInput" type="number" min="1" max="10" value="1" class="bg-gray-800 p-2 rounded w-20">
+        <label class="block text-dark mb-2">Experience Level (1-10):</label>
+        <input id="levelInput" type="number" min="1" max="10" value="1" class="w-full p-2 rounded bg-light text-dark">
       </div>
       <div class="mb-4">
-        <label class="block mb-2">Mode:</label>
-        <select id="modeSelect" class="bg-gray-800 p-2 rounded">
+        <label class="block text-dark mb-2">Mode:</label>
+        <select id="modeSelect" class="w-full p-2 rounded bg-light text-dark">
           <option value="game">Game Mode</option>
           <option value="training">Training Mode</option>
         </select>
       </div>
       <div class="mb-4">
-        <label class="block mb-2">Vocabulary Set:</label>
-        <select id="vocabSelect" class="bg-gray-800 p-2 rounded w-full">
+        <label class="block text-dark mb-2">Vocabulary Set:</label>
+        <select id="vocabSelect" class="w-full p-2 rounded bg-light text-dark">
           <option value="">[Embedded Vocabulary - 53 Computer Science Terms]</option>
         </select>
-        <p class="text-sm text-gray-400 mt-1">Select a vocabulary set from the list or use the embedded default. For local testing, run a server (e.g., python -m http.server).</p>
+        <p class="text-sm text-dark mt-2">Select a vocabulary set from the list or use the embedded default. For local testing, run a server (e.g., python -m http.server).</p>
       </div>
-      <button id="startButton" class="bg-blue-500 hover:bg-blue-600 p-2 rounded">Start</button>
-      <p id="loadingIndicator" class="hidden text-yellow-400 mt-2">Loading vocabulary...</p>
-    </div>
-    <div id="gameContainer" class="hidden text-center">
-      <div class="mb-4">
-        <span id="score" class="text-xl">Score: 0</span> |
-        <span id="wave" class="text-xl">Wave: 1</span> |
-        <span id="timer" class="text-xl">Time: 30s</span> |
-        <span id="wpm" class="text-xl">WPM: 0</span>
-      </div>
-      <div id="definition" class="bg-gray-800 p-4 rounded max-w-2xl mx-auto mb-4 text-left"></div>
-      <canvas id="gameCanvas" class="border-2 border-white"></canvas>
-      <div id="inputContainer" class="mt-4">
-        <input id="userInput" type="text" class="bg-gray-800 text-white p-2 rounded" placeholder="Type the term to spawn the next...">
-        <button id="certificateButton" class="mt-4 bg-green-500 hover:bg-green-600 p-2 rounded">Download Certificate</button>
-        <div id="keyboard" class="mt-4">
-          <div class="flex justify-center flex-wrap gap-2">
-            <div class="key">Q</div><div class="key">W</div><div class="key">E</div><div class="key">R</div><div class="key">T</div>
-            <div class="key">Y</div><div class="key">U</div><div class="key">I</div><div class="key">O</div><div class="key">P</div>
-            <div class="key">A</div><div class="key">S</div><div class="key">D</div><div class="key">F</div><div class="key">G</div>
-            <div class="key">H</div><div class="key">J</div><div class="key">K</div><div class="key">L</div>
-            <div class="key">Z</div><div class="key">X</div><div class="key">C</div><div class="key">V</div><div class="key">B</div>
-            <div class="key">N</div><div class="key">M</div>
-            <div class="key space">Space</div>
-          </div>
-        </div>
-      </div>
+      <button id="startButton" class="bg-accent text-dark px-4 py-2 rounded w-full hover:bg-highlight">Start</button>
+      <p id="loadingIndicator" class="hidden text-dark mt-2">Loading vocabulary...</p>
     </div>
   </div>
-  <footer class="fixed bottom-0 w-full bg-gray-800 p-2 text-center">
+  <div id="gameContainer" class="hidden flex flex-col items-center h-screen">
+    <div class="flex justify-between w-full max-w-4xl mb-4">
+      <span id="score" class="text-dark">Score: 0</span> |
+      <span id="wave" class="text-dark">Wave: 1</span> |
+      <span id="timer" class="text-dark">Time: 30s</span> |
+      <span id="wpm" class="text-dark">WPM: 0</span>
+    </div>
+    <canvas id="gameCanvas" class="border border-dark"></canvas>
+    <div id="definition" class="bg-light text-dark p-4 rounded w-full max-w-4xl mt-4"></div>
+    <input id="userInput" type="text" class="bg-light text-dark p-2 rounded w-full max-w-4xl mt-4" placeholder="Type the word here">
+    <div class="flex flex-wrap justify-center gap-2 mt-4">
+      <div class="key">Q</div><div class="key">W</div><div class="key">E</div><div class="key">R</div><div class="key">T</div>
+      <div class="key">Y</div><div class="key">U</div><div class="key">I</div><div class="key">O</div><div class="key">P</div>
+      <div class="key">A</div><div class="key">S</div><div class="key">D</div><div class="key">F</div><div class="key">G</div>
+      <div class="key">H</div><div class="key">J</div><div class="key">K</div><div class="key">L</div>
+      <div class="key">Z</div><div class="key">X</div><div class="key">C</div><div class="key">V</div><div class="key">B</div>
+      <div class="key">N</div><div class="key">M</div>
+      <div class="key space">Space</div>
+    </div>
+    <button id="certificateButton" class="bg-accent text-dark px-4 py-2 rounded mt-4 hover:bg-highlight">Download Certificate</button>
+  </div>
+  <footer class="text-center text-dark py-4">
+    <p>© 2025 KappType. All rights reserved.</p>
     <p>Developed for Typing Mastery</p>
   </footer>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-  <script src="script.js"></script>
 </body>
 </html>

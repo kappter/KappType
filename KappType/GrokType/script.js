@@ -304,6 +304,7 @@ function highlightKeys(e) {
 function generateCertificate() {
   const name = prompt('Enter your name for the certificate:');
   if (!name) return;
+  const safeName = name.replace(/[\{\}\\\$%#&~_]/g, ''); // Sanitize input
   const wpm = calculateWPM();
   const accuracy = calculateAccuracy();
   const certificateContent = `
@@ -314,7 +315,7 @@ function generateCertificate() {
 \\usepackage{titling}
 \\usepackage{noto}
 
-\\title{Typing Trainer Certificate}
+\\title{KappType Certificate}
 \\author{}
 \\date{}
 
@@ -328,9 +329,9 @@ function generateCertificate() {
   \\vspace{1cm}
   \\normalsize{This certifies that}
   \\vspace{0.5cm}
-  \\Large{\\textbf{${name}}}
+  \\Large{\\textbf{${safeName}}}
   \\vspace{0.5cm}
-  \\normalsize{has successfully completed a session in Typing Trainer with the following results:}
+  \\normalsize{has successfully completed a session in KappType with the following results:}
   \\vspace{1cm}
   \\begin{tabular}{ll}
     Typing Speed: & ${wpm} WPM \\\\
@@ -376,7 +377,7 @@ function generateCertificate() {
     })
     .catch(error => {
       console.error('Error compiling PDF:', error);
-      alert('Failed to generate PDF. Downloading .tex file as fallback.');
+      alert('Failed to generate PDF. Downloading .tex file as fallback. Visit https://www.overleaf.com/ to compile it into a PDF.');
       // Fallback to downloading .tex file
       const blob = new Blob([certificateContent], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
