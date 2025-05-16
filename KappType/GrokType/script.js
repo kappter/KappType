@@ -32,27 +32,96 @@ let totalChars = 0;
 let correctChars = 0;
 let lastFrameTime = performance.now();
 
+// Embedded default vocabulary (from provided vocab.csv)
+const defaultVocabData = [
+  { Term: "Binary", Definition: "A numbering system that uses only 0s and 1s" },
+  { Term: "Algorithm", Definition: "A set of rules to be followed in calculations or other problem-solving operations" },
+  { Term: "Variable", Definition: "A named storage location in a program that can hold different values" },
+  { Term: "Computer Science", Definition: "The study of computers and computational systems including programming and problem-solving" },
+  { Term: "Computational Thinking", Definition: "A problem-solving approach using decomposition abstraction algorithms and data" },
+  { Term: "Decomposition", Definition: "Breaking a complex problem into smaller manageable parts" },
+  { Term: "Abstraction", Definition: "Simplifying a problem by focusing on essential details and ignoring irrelevant ones" },
+  { Term: "Career Pathway", Definition: "A sequence of courses and experiences preparing students for computer science careers" },
+  { Term: "Computer Scientist", Definition: "A professional who designs and develops computational systems or software" },
+  { Term: "Pseudocode", Definition: "A simplified human-readable description of a program’s logic" },
+  { Term: "Flowchart", Definition: "A visual diagram representing the steps of an algorithm or process" },
+  { Term: "Pattern Recognition", Definition: "Identifying similarities or trends in data to solve problems" },
+  { Term: "Iteration", Definition: "Repeating a process or set of instructions to achieve a goal" },
+  { Term: "Data", Definition: "Information processed or stored by a computer such as numbers or text" },
+  { Term: "Data Analysis", Definition: "The process of examining data to draw conclusions or identify patterns" },
+  { Term: "Binary Number", Definition: "A number system using only 0s and 1s used by computers" },
+  { Term: "Bit", Definition: "A single binary digit either 0 or 1" },
+  { Term: "Byte", Definition: "A group of 8 bits used to represent a character or number" },
+  { Term: "Spreadsheet", Definition: "A digital tool for organizing analyzing and visualizing data in rows and columns" },
+  { Term: "Data Visualization", Definition: "Representing data graphically such as in charts or graphs" },
+  { Term: "Data Type", Definition: "A classification of data such as integer string or boolean" },
+  { Term: "Integer", Definition: "A whole number data type without decimal points" },
+  { Term: "String", Definition: "A sequence of characters such as text used in programming" },
+  { Term: "Boolean", Definition: "A data type with only two values: true or false" },
+  { Term: "Operator", Definition: "A symbol that performs operations like addition (+) or comparison (==)" },
+  { Term: "Conditional Statement", Definition: "A programming construct like “if-then-else” that executes code based on a condition" },
+  { Term: "Loop", Definition: "A programming construct that repeats a block of code until a condition is met" },
+  { Term: "Function", Definition: "A reusable block of code that performs a specific task" },
+  { Term: "Debugging", Definition: "The process of finding and fixing errors in a program" },
+  { Term: "Syntax Error", Definition: "A mistake in the code’s structure that prevents it from running" },
+  { Term: "Logic Error", Definition: "A flaw in the program’s logic causing incorrect results" },
+  { Term: "Web Development", Definition: "The process of creating and maintaining websites" },
+  { Term: "HTML", Definition: "HyperText Markup Language used to structure content on the web" },
+  { Term: "Tag", Definition: "An HTML element like <p> or <div> used to define content structure" },
+  { Term: "Attribute", Definition: "Additional information in an HTML tag like “class” or “id”" },
+  { Term: "CSS", Definition: "Sheets used to style and format web content" },
+  { Term: "Web Browser", Definition: "A software application for accessing and viewing websites" },
+  { Term: "URL", Definition: "Uniform Resource Locator the address of a web resource" },
+  { Term: "Hyperlink", Definition: "A clickable link that connects one web page to another" },
+  { Term: "Digital Footprint", Definition: "The trail of data left by a user’s online activities" },
+  { Term: "Digital Citizenship", Definition: "Responsible and ethical behavior in the digital world" },
+  { Term: "Cybersecurity", Definition: "Protecting computers and data from unauthorized access or attacks" },
+  { Term: "Encryption", Definition: "Converting data into a coded form to protect it from unauthorized access" },
+  { Term: "Password", Definition: "A secret string of characters used to verify a user’s identity" },
+  { Term: "Ethics", Definition: "Moral principles guiding responsible use of technology" },
+  { Term: "Intellectual Property", Definition: "Creations like software or designs protected by law" },
+  { Term: "Copyright", Definition: "A legal right protecting original works from unauthorized use" },
+  { Term: "Fair Use", Definition: "A legal doctrine allowing limited use of copyrighted material without permission" },
+  { Term: "Social Impact", Definition: "The effect of computing technologies on society such as privacy or accessibility" },
+  { Term: "Accessibility", Definition: "Designing technology to be usable by people with diverse abilities" },
+  { Term: "Collaboration", Definition: "Working with others to solve problems or create projects in computer science" },
+  { Term: "Portfolio", Definition: "A collection of projects showcasing computer science skills and experience" }
+];
+
 function validateCsvUrl(url) {
   return url.includes('raw.githubusercontent.com') || url.endsWith('.csv') || url.startsWith('/');
 }
 
 function loadVocab(csvUrl) {
-  const defaultUrl = 'https://raw.githubusercontent.com/kappter/KappType/main/KappType/GrokType/Exploring_Computer_Science_Vocabulary.csv';
   const repoUrl = '/KappType/GrokType/Exploring_Computer_Science_Vocabulary.csv';
-  let url = csvUrl || defaultUrl;
+  const rawUrl = 'https://raw.githubusercontent.com/kappter/KappType/main/KappType/GrokType/Exploring_Computer_Science_Vocabulary.csv';
 
   if (window.location.protocol === 'file:') {
-    alert('Cannot load CSV files when running via file://. Please use a local server (e.g., run `python -m http.server` and access http://localhost:8000).');
+    alert('Cannot load CSV files when running via file://. Using embedded vocabulary. For external CSVs, run a local server (e.g., python -m http.server) and access http://localhost:8000.');
+    vocabData = defaultVocabData;
     loadingIndicator.classList.add('hidden');
     startButton.disabled = false;
     return;
   }
 
-  if (csvUrl && !validateCsvUrl(csvUrl)) {
-    alert('Invalid CSV URL. Use a raw GitHub URL (e.g., https://raw.githubusercontent.com/.../file.csv) or a repository path (e.g., /path/to/file.csv).');
-    url = defaultUrl;
-  } else if (!csvUrl && window.location.hostname.includes('github.io')) {
+  if (!csvUrl) {
+    vocabData = defaultVocabData; // Use embedded vocabulary if no URL provided
+    loadingIndicator.classList.add('hidden');
+    startButton.disabled = false;
+    return;
+  }
+
+  let url = csvUrl;
+  if (!validateCsvUrl(csvUrl)) {
+    alert('Invalid CSV URL. Use a raw GitHub URL (e.g., https://raw.githubusercontent.com/.../file.csv) or a repository path (e.g., /path/to/file.csv). Falling back to embedded vocabulary.');
+    vocabData = defaultVocabData;
+    loadingIndicator.classList.add('hidden');
+    startButton.disabled = false;
+    return;
+  } else if (csvUrl === 'repo' && window.location.hostname.includes('github.io')) {
     url = repoUrl; // Try repository-hosted CSV for GitHub Pages
+  } else if (csvUrl === 'raw') {
+    url = rawUrl; // Use raw GitHub URL
   }
 
   loadingIndicator.classList.remove('hidden');
@@ -71,12 +140,13 @@ function loadVocab(csvUrl) {
       loadingIndicator.classList.add('hidden');
       startButton.disabled = false;
       if (vocabData.length === 0) {
-        alert(`No valid terms found in the CSV at ${url}. Ensure it has "Term" and "Definition" columns.`);
+        alert(`No valid terms found in the CSV at ${url}. Ensure it has "Term" and "Definition" columns. Falling back to embedded vocabulary.`);
+        vocabData = defaultVocabData;
       }
     },
     error: function(error) {
       clearTimeout(timeoutId);
-      alert(`Failed to load CSV at ${url}. Use a raw file URL or repository path. Error: ${error.message}. Falling back to local vocab.csv.`);
+      alert(`Failed to load CSV at ${url}. Error: ${error.message}. Trying local vocab.csv.`);
       Papa.parse('vocab.csv', {
         download: true,
         header: true,
@@ -85,11 +155,13 @@ function loadVocab(csvUrl) {
           loadingIndicator.classList.add('hidden');
           startButton.disabled = false;
           if (vocabData.length === 0) {
-            alert('Default vocab.csv is invalid or missing. Ensure it’s in the project directory and has "Term" and "Definition" columns.');
+            alert('Default vocab.csv is invalid or missing. Using embedded vocabulary.');
+            vocabData = defaultVocabData;
           }
         },
         error: function(err) {
-          alert(`Failed to load local vocab.csv. Ensure it’s in the project directory. Error: ${err.message}`);
+          alert(`Failed to load local vocab.csv. Error: ${err.message}. Using embedded vocabulary.`);
+          vocabData = defaultVocabData;
           loadingIndicator.classList.add('hidden');
           startButton.disabled = false;
         }
@@ -270,8 +342,8 @@ function generateCertificate() {
 
 function startGame() {
   if (vocabData.length === 0) {
-    alert('No vocabulary loaded. Please restart and provide a valid CSV.');
-    return;
+    alert('No vocabulary loaded. Using embedded vocabulary.');
+    vocabData = defaultVocabData;
   }
   gameActive = true;
   userInput.focus();
