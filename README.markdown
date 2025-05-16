@@ -1,6 +1,6 @@
 # KappType
 
-KappType is an interactive vocabulary typing game designed to help users improve typing speed and accuracy while learning key terms and definitions. Originally developed as "Typing Trainer," it has been rebranded to KappType with a modernized color scheme, enhanced certificate generation, and a streamlined user experience. The app is hosted on GitHub Pages at [https://kappter.github.io/KappType/KappType/GrokType/](https://kappter.github.io/KappType/KappType/GrokType/) and is gaining popularity at our school for educational and competitive use.
+KappType is an interactive vocabulary typing game designed to help users improve typing speed and accuracy while learning key terms and definitions. Originally developed as "Typing Trainer," it has been rebranded to KappType with a modernized color scheme, enhanced certificate generation, and a streamlined user experience. The app is hosted on GitHub Pages at [https://kappter.github.io/KappType/](https://kappter.github.io/KappType/) and is gaining popularity at our school for educational and competitive use.
 
 ## Features
 
@@ -19,7 +19,7 @@ KappType is an interactive vocabulary typing game designed to help users improve
 
 ### Vocabulary Sets
 - **Embedded Vocabulary**: Includes 53 computer science terms by default (e.g., "Binary," "Algorithm").
-- **Custom Vocabulary**: Load external CSV files from [https://github.com/kappter/vocab-sets](https://github.com/kappter/vocab-sets) via a dropdown menu. Supported sets include:
+- **Custom Vocabulary**: Load external CSV files from [https://kappter.github.io/KappType/vocab-sets/](https://kappter.github.io/KappType/vocab-sets/) via a dropdown menu. Supported sets include:
   - Exploring Computer Science
   - ARRL Ham Radio Licenses
   - Psychology Terms
@@ -43,13 +43,13 @@ KappType is an interactive vocabulary typing game designed to help users improve
   - Total time
   - Missed terms
   - Score
-- **PDF Download (Planned)**: Sends LaTeX content to a server for PDF compilation (requires server setup).
-- **Fallback**: Downloads a `.tex` file if PDF compilation fails, with instructions to compile on [Overleaf](https://www.overleaf.com/).
+- **PDF Compilation**: Download a `.tex` file and compile it into a PDF using Overleaf (https://www.overleaf.com/).
+- **GitHub Sync**: Certificates are synced to [https://github.com/kappter/KappType](https://github.com/kappter/KappType) for version control.
 - **Security**: Sanitizes user input to prevent LaTeX injection.
 
 ### Recent Enhancements
 - **Rebranding to KappType** (May 2025):
-  - Updated app name from "Typing Trainer" to "KappType" in title, UI, and certificates.
+  - Updated app name to "KappType" in title, UI, and certificates.
   - Added copyright notice: "© 2025 KappType. All rights reserved." in the footer.
 - **New Color Theme**:
   - Primary: #21949E (teal) for backgrounds/buttons.
@@ -58,9 +58,8 @@ KappType is an interactive vocabulary typing game designed to help users improve
   - Highlight: #53D7C3 (cyan) for button hovers.
   - Light: #78AFB7 (light blue-gray) for secondary backgrounds/keys.
 - **Improved Certificate Handling**:
-  - Added LaTeX-based certificate generation with a modern layout.
-  - Implemented server-side PDF compilation logic (pending server setup).
-  - Enhanced fallback with Overleaf instructions for `.tex` files.
+  - LaTeX-based certificate generation with a modern layout.
+  - Synced with GitHub for easy Overleaf access.
 - **UI Polish**:
   - Streamlined start screen with a teal background.
   - Updated Tailwind classes to use custom color variables.
@@ -70,14 +69,14 @@ KappType is an interactive vocabulary typing game designed to help users improve
 
 ### Prerequisites
 - A modern web browser (Chrome, Firefox, Edge, etc.).
-- Internet access for loading external vocabulary CSVs and (optionally) PDF compilation.
+- Internet access for loading external vocabulary CSVs and Overleaf compilation.
 - For local testing: A simple HTTP server (e.g., `python -m http.server`) to avoid `file://` restrictions.
 
 ### Running Locally
 1. Clone the repository:
    ```bash
    git clone https://github.com/kappter/KappType.git
-   cd KappType/KappType/GrokType
+   cd KappType
    ```
 2. Start a local server:
    ```bash
@@ -86,41 +85,31 @@ KappType is an interactive vocabulary typing game designed to help users improve
 3. Open `http://localhost:8000` in your browser.
 
 ### Deploying to GitHub Pages
-1. Ensure files (`index.html`, `styles.css`, `script.js`) are in the `KappType/GrokType` directory.
+1. Ensure files (`index.html`, `styles.css`, `script.js`, `certificate.tex`, `favicon.ico`) are in the repository root.
 2. Push changes to the `main` branch:
    ```bash
    git add .
    git commit -m "Update KappType"
    git push origin main
    ```
-3. Verify the app at [https://kappter.github.io/KappType/KappType/GrokType/](https://kappter.github.io/KappType/KappType/GrokType/).
+3. Configure GitHub Pages:
+   - Go to **Settings** > **Pages** in the repository.
+   - Set **Source** to **Deploy from a branch**, select `main`, and choose `/ (root)`.
+   - Save and verify the app at [https://kappter.github.io/KappType/](https://kappter.github.io/KappType/).
 
-### Setting Up PDF Certificate Generation
-To enable direct PDF downloads:
-1. **Option 1: Use a LaTeX Compilation Service**:
-   - Find a service like [LaTeX Online](https://latexonline.cc/) or Overleaf’s API.
-   - Update `serverUrl` in `script.js` (line ~330) with the service’s API endpoint.
-2. **Option 2: Host a Custom Server**:
-   - Set up a Node.js or Python server with `pdflatex` installed.
-   - Example Node.js endpoint:
-     ```javascript
-     const express = require('express');
-     const { exec } = require('child_process');
-     const fs = require('fs');
-     const app = express();
-     app.use(express.json());
-     app.post('/api/compile', (req, res) => {
-       const latex = req.body.latex;
-       fs.writeFileSync('certificate.tex', latex);
-       exec('pdflatex certificate.tex', (err) => {
-         if (err) return res.status(500).send('Compilation failed');
-         res.sendFile('certificate.pdf', { root: __dirname });
-       });
-     });
-     app.listen(3000);
-     ```
-   - Deploy on Heroku/AWS and update `serverUrl` in `script.js`.
-3. **Fallback**: Users can compile `.tex` files on Overleaf if no server is set up.
+### Setting Up Overleaf for Certificates
+1. **Create an Overleaf Project**:
+   - Go to [https://www.overleaf.com/](https://www.overleaf.com/) and create a new project named `KappType-Certificate`.
+   - Add `certificate.tex` from the repository.
+   - Compile to verify it generates a PDF with placeholders.
+2. **Sync with GitHub**:
+   - In Overleaf, go to **Menu** > **Sync** > **GitHub**.
+   - Link to `https://github.com/kappter/KappType` and pull `certificate.tex`.
+   - Alternatively, manually upload `certificate.tex` to Overleaf.
+3. **Generate Certificates**:
+   - In the app, click **Download Certificate** after a session.
+   - Download the `.tex` file, upload it to Overleaf, and compile to PDF.
+   - Or update the synced `certificate.tex` in GitHub and pull to Overleaf.
 
 ## Usage
 1. **Start Screen**:
@@ -134,13 +123,17 @@ To enable direct PDF downloads:
    - In Game Mode, avoid letting words reach the bottom.
 3. **Certificate**:
    - Click "Download Certificate" after a session.
-   - Enter your name and download the PDF (or `.tex` if server isn’t set up).
+   - Enter your name and download the `.tex` file.
+   - Upload to Overleaf to compile into a PDF.
 4. **Local Testing Note**: Run a server for external CSV loading, as `file://` protocols block fetch requests.
 
 ## Project Structure
 - `index.html`: Main HTML file with UI structure.
 - `styles.css`: Custom CSS with Tailwind and color theme definitions.
 - `script.js`: Game logic, vocabulary loading, and certificate generation.
+- `certificate.tex`: LaTeX template for certificates.
+- `favicon.ico`: App icon.
+- `vocab-sets/`: Directory containing CSV vocabulary files.
 - External dependencies:
   - [Papa Parse](https://cdnjs.cloudflare.com/ajax/libs/papaparse/5.3.2/papaparse.min.js) for CSV parsing.
   - [Tailwind CSS](https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css) for styling.
