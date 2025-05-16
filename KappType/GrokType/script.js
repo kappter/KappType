@@ -139,8 +139,11 @@ function updateTimer() {
 }
 
 function handleInput(e) {
-  const typed = e.target.value.trim().toLowerCase();
+  const typed = userInput.value.trim().toLowerCase();
   words = words.filter(word => {
+    if (typed.length === 1 && word.term.toLowerCase().startsWith(typed)) {
+      word.displayText = word.term; // Reveal full term after first letter
+    }
     if (word.term.toLowerCase() === typed) {
       score += word.term.length;
       correctChars += word.term.length;
@@ -210,7 +213,7 @@ function generateCertificate() {
 
 \\end{document}
   `;
-  // For now, download as .tex due to lack of client-side LaTeX compiler
+  // Download as .tex (compile to PDF with Overleaf or PDFLaTeX)
   const blob = new Blob([certificateContent], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
