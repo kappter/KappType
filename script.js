@@ -54,6 +54,14 @@ const defaultVocabData = [
   { Term: "Portfolio", Definition: "A collection of projects showcasing computer science skills and experience" }
 ];
 
+// Theme toggle function (global so it can be called from HTML)
+function toggleTheme() {
+  const body = document.body;
+  body.classList.toggle('dark');
+  const isDark = body.classList.contains('dark');
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
@@ -70,7 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const promptSelect = document.getElementById('promptSelect');
   const vocabSelect = document.getElementById('vocabSelect');
   const certificateButton = document.getElementById('certificateButton');
-  const definitionDisplay = document.getElementById('definition');
   const loadingIndicator = document.getElementById('loadingIndicator');
 
   canvas.width = 800;
@@ -90,6 +97,12 @@ document.addEventListener('DOMContentLoaded', () => {
   let totalChars = 0;
   let correctChars = 0;
   let lastFrameTime = performance.now();
+
+  // Apply saved theme on load
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme === 'dark') {
+    document.body.classList.add('dark');
+  }
 
   function populateVocabDropdown() {
     const baseUrl = 'https://raw.githubusercontent.com/kappter/vocab-sets/main/';
@@ -239,7 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const y = 0;
     const speed = mode === 'game' ? 1 + wave * 0.5 * (level / 5) : 1 + level * 0.1;
     words.push({ term: vocab.Term, definition: vocab.Definition, prompt, typedInput, displayText: getUnderscoreText(typedInput), x, y, speed, matched: '' });
-    definitionDisplay.textContent = prompt;
+    userInput.placeholder = prompt;
   }
 
   function updateGame() {
@@ -318,6 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
         totalChars += word.typedInput.length;
         scoreDisplay.textContent = `Score: ${score}`;
         e.target.value = '';
+        e.target.placeholder = 'Prompt will appear here...';
         spawnWord();
         return false;
       }
