@@ -1,4 +1,4 @@
-const canvas = document.getElementById('gameCanvas');
+const canvas = document.getElementById(' partners');
 const ctx = canvas.getContext('2d');
 const userInput = document.getElementById('userInput');
 const scoreDisplay = document.getElementById('score');
@@ -29,8 +29,6 @@ let totalTime = 0;
 let missedWords = [];
 let totalChars = 0;
 let correctChars = 0;
-let lastWordX = 0;
-let currentDefinition = '';
 
 function loadVocab(csvUrl) {
   const url = csvUrl || 'vocab.csv';
@@ -76,28 +74,11 @@ function spawnWord() {
   const vocab = getRandomVocab();
   const term = vocab.Term;
   const definition = vocab.Definition;
-  let x, y, speed, dx;
-  if (mode === 'game') {
-    x = Math.random() * (canvas.width - ctx.measureText(getUnderscoreText(term)).width);
-    y = 0;
-    speed = 1 + wave * 0.5 * (level / 5);
-    dx = 0;
-  } else {
-    x = lastWordX;
-    y = 50;
-    speed = 0;
-    dx = 1 + level * 0.2;
-    if (x + ctx.measureText(getUnderscoreText(term)).width > canvas.width) {
-      x = 0;
-      y += 50;
-    }
-    lastWordX = x + ctx.measureText(getUnderscoreText(term)).width + 20;
-  }
-  words.push({ term, definition, displayText: getUnderscoreText(term), x, y, speed, dx, matched: '' });
-  if (words.length === 1) {
-    currentDefinition = definition;
-    definitionDisplay.textContent = currentDefinition;
-  }
+  const x = mode === 'game' ? Math.random() * (canvas.width - ctx.measureText(getUnderscoreText(term)).width) : 50;
+  const y = 0;
+  const speed = mode === 'game' ? 1 + wave * 0.5 * (level / 5) : 1 + level * 0.1;
+  words.push({ term, definition, displayText: getUnderscoreText(term), x, y, speed, matched: '' });
+  definitionDisplay.textContent = definition;
 }
 
 function updateGame() {
@@ -106,37 +87,29 @@ function updateGame() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.font = '20px Arial';
 
-  words = words.filter(word => mode === 'game' ? word.y < canvas.height : true);
+  words = words.filter(word => word.y < canvas.height);
   words.forEach(word => {
-    if (mode === 'game') {
-      word.y += word.speed;
-    } else {
-      word.x += word.dx;
-      if (word.x > canvas.width) {
-        missedWords.push(word.term);
-        totalChars += word.term.length;
-        if (words.indexOf(word) === 0) {
-          currentDefinition = words[1]?.definition || '';
-          definitionDisplay.textContent = currentDefinition;
-        }
-        return false;
-      }
-    }
+    word.y += word.speed;
     const typed = userInput.value.trim().toLowerCase();
     word.matched = word.term.toLowerCase().startsWith(typed) ? typed : '';
     ctx.fillStyle = 'red';
     ctx.fillText(word.term.slice(0, word.matched.length), word.x, word.y);
     ctx.fillStyle = 'white';
     ctx.fillText(word.displayText.slice(word.matched.length), word.x + ctx.measureText(word.term.slice(0, word.matched.length)).width, word.y);
-    if (mode === 'game' && word.y >= canvas.height) {
-      gameActive = false;
+    if (word.y >= canvas.height) {
       missedWords.push(word.term);
       totalChars += word.term.length;
-      alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
+      words = [];
+      if (mode === 'game') {
+        gameActive = false;
+        alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
+      } else {
+        spawnWord();
+      }
     }
   });
 
-  if (mode === 'game' && Math.random() < 0.02 * wave * (level / 5)) spawnWord();
+  if (words.length === 0) spawnWord();
   requestAnimationFrame(updateGame);
 }
 
@@ -160,10 +133,6 @@ function updateTimer() {
     timeLeft = 30;
     if (mode === 'game') {
       words.forEach(word => word.speed += 0.5);
-    } else {
-      words = [];
-      lastWordX = 0;
-      spawnWord();
     }
   }
   setTimeout(updateTimer, 1000);
@@ -178,14 +147,7 @@ function handleInput(e) {
       totalChars += word.term.length;
       scoreDisplay.textContent = `Score: ${score}`;
       e.target.value = '';
-      if (mode === 'training') {
-        lastWordX = word.x + ctx.measureText(word.displayText).width + 20;
-        spawnWord();
-      }
-      if (words.indexOf(word) === 0) {
-        currentDefinition = words[1]?.definition || '';
-        definitionDisplay.textContent = currentDefinition;
-      }
+      spawnWord();
       return false;
     }
     return true;
