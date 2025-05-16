@@ -31,10 +31,10 @@ footer {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center; /* Center content vertically */
-    min-height: calc(100vh - 120px); /* Adjust based on header/footer height */
-    margin-top: 60px; /* Add margin to avoid header overlap */
-    margin-bottom: 60px; /* Add margin to avoid footer overlap */
+    justify-content: center;
+    min-height: calc(100vh - 120px);
+    margin-top: 60px;
+    margin-bottom: 60px;
     width: 100%;
 }
 
@@ -87,16 +87,26 @@ footer {
     background-color: #218838;
 }
 
+#csv-file-input {
+    margin-top: 1em;
+}
+
+#csv-file-name {
+    margin-top: 0.5em;
+    font-size: 0.9em;
+    color: #555;
+}
+
 .game-container {
     background-color: #fff;
     padding: 30px;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     text-align: center;
-    display: none; /* Initially hidden */
-    margin-top: 20px; /* Add space above the game container */
+    display: none;
+    margin-top: 20px;
     flex-direction: column;
-    align-items: center; /* Center content horizontally */
+    align-items: center;
 }
 
 .game-area {
@@ -130,6 +140,15 @@ footer {
     align-items: center;
 }
 
+#definition-display {
+    font-size: 1.1em;
+    margin-bottom: 1em;
+    text-align: center;
+    width: 100%;
+    max-width: 400px;
+    min-height: 2.5em;
+}
+
 
 #typing-input {
     padding: 8px;
@@ -146,7 +165,6 @@ footer {
     width: 100%;
     text-align: center;
 }
-
 
 .keyboard-container {
     display: grid;
@@ -197,10 +215,9 @@ footer button:hover {
     left: -100px;
     white-space: nowrap;
     font-size: 1.2em;
-    transition: left 4s linear; /* Adjust for speed */
+    transition: left 4s linear;
 }
 
 .training-word.active {
     color: red;
 }
-
