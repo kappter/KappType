@@ -89,7 +89,7 @@ const defaultVocabData = [
 ];
 
 function populateVocabDropdown() {
-  const baseUrl = 'https://raw.githubusercontent.com/kappter/kappter.github.io/main/vocab-sets/';
+  const baseUrl = 'https://kappter.github.io/vocab-sets/';
   const files = [
     'Exploring_Computer_Science_Vocabulary',
     'ARRL_Ham_Radio_Extra_License_Terms_Definitions',
@@ -123,7 +123,7 @@ function populateVocabDropdown() {
 }
 
 function validateCsvUrl(url) {
-  return url.includes('raw.githubusercontent.com') || url.endsWith('.csv') || url.startsWith('/');
+  return url.includes('kappter.github.io') || url.endsWith('.csv') || url.startsWith('/');
 }
 
 function loadVocab(csvUrl) {
