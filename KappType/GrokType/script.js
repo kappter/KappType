@@ -172,7 +172,8 @@ function loadVocab(csvUrl) {
     },
     error: function(error) {
       clearTimeout(timeoutId);
-      alert(`Failed to load CSV at ${csvUrl}. Error: ${error.message}. Using embedded vocabulary.`);
+      console.error(`Failed to load CSV at ${csvUrl}. Detailed error:`, error); // Log detailed error
+      alert(`Failed to load CSV at ${csvUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary.`);
       vocabData = defaultVocabData;
       loadingIndicator.classList.add('hidden');
       startButton.disabled = false;
