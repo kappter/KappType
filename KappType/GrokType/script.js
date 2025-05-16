@@ -32,7 +32,7 @@ let totalChars = 0;
 let correctChars = 0;
 let lastFrameTime = performance.now();
 
-// Embedded default vocabulary (from provided vocab.csv)
+// Embedded default vocabulary (53 computer science terms)
 const defaultVocabData = [
   { Term: "Binary", Definition: "A numbering system that uses only 0s and 1s" },
   { Term: "Algorithm", Definition: "A set of rules to be followed in calculations or other problem-solving operations" },
@@ -93,9 +93,7 @@ function validateCsvUrl(url) {
 }
 
 function loadVocab(csvUrl) {
-  const rawUrl = 'https://raw.githubusercontent.com/kappter/KappType/main/KappType/GrokType/Exploring_Computer_Science_Vocabulary.csv';
-
-  // Use embedded vocabulary by default or if no valid URL provided
+  // Default to embedded vocabulary if no URL provided
   if (!csvUrl) {
     vocabData = defaultVocabData;
     loadingIndicator.classList.add('hidden');
@@ -103,6 +101,7 @@ function loadVocab(csvUrl) {
     return;
   }
 
+  // Prevent CSV loading in file:// protocol
   if (window.location.protocol === 'file:') {
     alert('Cannot load external CSV files when running via file://. Using embedded vocabulary (53 computer science terms). For external CSVs, run a local server (e.g., python -m http.server) and access http://localhost:8000.');
     vocabData = defaultVocabData;
@@ -111,15 +110,13 @@ function loadVocab(csvUrl) {
     return;
   }
 
-  let url = csvUrl;
+  // Validate CSV URL
   if (!validateCsvUrl(csvUrl)) {
     alert('Invalid CSV URL. Use a raw GitHub URL (e.g., https://raw.githubusercontent.com/.../file.csv) or a repository path (e.g., /path/to/file.csv). Using embedded vocabulary.');
     vocabData = defaultVocabData;
     loadingIndicator.classList.add('hidden');
     startButton.disabled = false;
     return;
-  } else if (csvUrl === 'raw') {
-    url = rawUrl; // Use raw GitHub URL
   }
 
   loadingIndicator.classList.remove('hidden');
@@ -128,7 +125,7 @@ function loadVocab(csvUrl) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-  Papa.parse(url, {
+  Papa.parse(csvUrl, {
     download: true,
     header: true,
     signal: controller.signal,
@@ -138,13 +135,13 @@ function loadVocab(csvUrl) {
       loadingIndicator.classList.add('hidden');
       startButton.disabled = false;
       if (vocabData.length === 0) {
-        alert(`No valid terms found in the CSV at ${url}. Ensure it has "Term" and "Definition" columns. Using embedded vocabulary.`);
+        alert(`No valid terms found in the CSV at ${csvUrl}. Ensure it has "Term" and "Definition" columns. Using embedded vocabulary.`);
         vocabData = defaultVocabData;
       }
     },
     error: function(error) {
       clearTimeout(timeoutId);
-      alert(`Failed to load CSV at ${url}. Error: ${error.message}. Trying local vocab.csv.`);
+      alert(`Failed to load CSV at ${csvUrl}. Error: ${error.message}. Trying local vocab.csv.`);
       Papa.parse('vocab.csv', {
         download: true,
         header: true,
@@ -153,7 +150,7 @@ function loadVocab(csvUrl) {
           loadingIndicator.classList.add('hidden');
           startButton.disabled = false;
           if (vocabData.length === 0) {
-            alert('Default vocab.csv is invalid or missing. Ensure it’s in the project directory and has "Term" and "Definition" columns. Using embedded vocabulary.');
+            alert('Local vocab.csv is invalid or missing. Ensure it’s in the project directory with "Term" and "Definition" columns. Using embedded vocabulary.');
             vocabData = defaultVocabData;
           }
         },
@@ -180,7 +177,6 @@ function getUnderscoreText(term) {
 function spawnWord() {
   if (vocabData.length === 0) {
     vocabData = defaultVocabData; // Ensure vocabData is never empty
-    return;
   }
   const vocab = getRandomVocab();
   const term = vocab.Term;
@@ -367,5 +363,5 @@ startButton.addEventListener('click', () => {
     startScreen.classList.add('hidden');
     gameContainer.classList.remove('hidden');
     startGame();
-  }, 500);
+  }, 100);
 });
