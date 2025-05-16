@@ -93,19 +93,19 @@ function validateCsvUrl(url) {
 }
 
 function loadVocab(csvUrl) {
-  const repoUrl = '/KappType/GrokType/Exploring_Computer_Science_Vocabulary.csv';
   const rawUrl = 'https://raw.githubusercontent.com/kappter/KappType/main/KappType/GrokType/Exploring_Computer_Science_Vocabulary.csv';
 
-  if (window.location.protocol === 'file:') {
-    alert('Cannot load CSV files when running via file://. Using embedded vocabulary. For external CSVs, run a local server (e.g., python -m http.server) and access http://localhost:8000.');
+  // Use embedded vocabulary by default or if no valid URL provided
+  if (!csvUrl) {
     vocabData = defaultVocabData;
     loadingIndicator.classList.add('hidden');
     startButton.disabled = false;
     return;
   }
 
-  if (!csvUrl) {
-    vocabData = defaultVocabData; // Use embedded vocabulary if no URL provided
+  if (window.location.protocol === 'file:') {
+    alert('Cannot load external CSV files when running via file://. Using embedded vocabulary (53 computer science terms). For external CSVs, run a local server (e.g., python -m http.server) and access http://localhost:8000.');
+    vocabData = defaultVocabData;
     loadingIndicator.classList.add('hidden');
     startButton.disabled = false;
     return;
@@ -113,13 +113,11 @@ function loadVocab(csvUrl) {
 
   let url = csvUrl;
   if (!validateCsvUrl(csvUrl)) {
-    alert('Invalid CSV URL. Use a raw GitHub URL (e.g., https://raw.githubusercontent.com/.../file.csv) or a repository path (e.g., /path/to/file.csv). Falling back to embedded vocabulary.');
+    alert('Invalid CSV URL. Use a raw GitHub URL (e.g., https://raw.githubusercontent.com/.../file.csv) or a repository path (e.g., /path/to/file.csv). Using embedded vocabulary.');
     vocabData = defaultVocabData;
     loadingIndicator.classList.add('hidden');
     startButton.disabled = false;
     return;
-  } else if (csvUrl === 'repo' && window.location.hostname.includes('github.io')) {
-    url = repoUrl; // Try repository-hosted CSV for GitHub Pages
   } else if (csvUrl === 'raw') {
     url = rawUrl; // Use raw GitHub URL
   }
@@ -140,7 +138,7 @@ function loadVocab(csvUrl) {
       loadingIndicator.classList.add('hidden');
       startButton.disabled = false;
       if (vocabData.length === 0) {
-        alert(`No valid terms found in the CSV at ${url}. Ensure it has "Term" and "Definition" columns. Falling back to embedded vocabulary.`);
+        alert(`No valid terms found in the CSV at ${url}. Ensure it has "Term" and "Definition" columns. Using embedded vocabulary.`);
         vocabData = defaultVocabData;
       }
     },
@@ -155,7 +153,7 @@ function loadVocab(csvUrl) {
           loadingIndicator.classList.add('hidden');
           startButton.disabled = false;
           if (vocabData.length === 0) {
-            alert('Default vocab.csv is invalid or missing. Using embedded vocabulary.');
+            alert('Default vocab.csv is invalid or missing. Ensure it’s in the project directory and has "Term" and "Definition" columns. Using embedded vocabulary.');
             vocabData = defaultVocabData;
           }
         },
@@ -180,7 +178,10 @@ function getUnderscoreText(term) {
 }
 
 function spawnWord() {
-  if (vocabData.length === 0) return;
+  if (vocabData.length === 0) {
+    vocabData = defaultVocabData; // Ensure vocabData is never empty
+    return;
+  }
   const vocab = getRandomVocab();
   const term = vocab.Term;
   const definition = vocab.Definition;
@@ -342,8 +343,7 @@ function generateCertificate() {
 
 function startGame() {
   if (vocabData.length === 0) {
-    alert('No vocabulary loaded. Using embedded vocabulary.');
-    vocabData = defaultVocabData;
+    vocabData = defaultVocabData; // Ensure vocabData is never empty
   }
   gameActive = true;
   userInput.focus();
@@ -364,10 +364,8 @@ startButton.addEventListener('click', () => {
   const csvUrl = csvInput.value.trim();
   loadVocab(csvUrl);
   setTimeout(() => {
-    if (vocabData.length > 0) {
-      startScreen.classList.add('hidden');
-      gameContainer.classList.remove('hidden');
-      startGame();
-    }
+    startScreen.classList.add('hidden');
+    gameContainer.classList.remove('hidden');
+    startGame();
   }, 500);
 });
