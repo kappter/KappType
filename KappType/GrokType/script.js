@@ -39,14 +39,23 @@ function loadVocab(csvUrl) {
     header: true,
     complete: function(results) {
       vocabData = results.data.filter(row => row.Term && row.Definition);
+      if (vocabData.length === 0) {
+        alert('No valid terms found in the CSV. Please ensure it has "Term" and "Definition" columns.');
+      }
     },
     error: function() {
-      alert('Failed to load vocabulary CSV. Using default file.');
+      alert('Failed to load CSV. Ensure you’re using a raw file URL (e.g., https://raw.githubusercontent.com/...). Falling back to default vocab.csv.');
       Papa.parse('vocab.csv', {
         download: true,
         header: true,
         complete: function(results) {
           vocabData = results.data.filter(row => row.Term && row.Definition);
+          if (vocabData.length === 0) {
+            alert('Default vocab.csv is invalid or missing. Please provide a valid CSV.');
+          }
+        },
+        error: function() {
+          alert('Default vocab.csv not found. Please include it in the project directory.');
         }
       });
     }
@@ -63,6 +72,7 @@ function getUnderscoreText(term) {
 }
 
 function spawnWord() {
+  if (vocabData.length === 0) return;
   const vocab = getRandomVocab();
   const term = vocab.Term;
   const definition = vocab.Definition;
@@ -243,13 +253,15 @@ function generateCertificate() {
   const a = document.createElement('a');
   a.href = url;
   a.download = 'certificate.tex';
-  a
-
-.click();
+  a.click();
   URL.revokeObjectURL(url);
 }
 
 function startGame() {
+  if (vocabData.length === 0) {
+    alert('No vocabulary loaded. Please restart and provide a valid CSV.');
+    return;
+  }
   gameActive = true;
   userInput.focus();
   userInput.addEventListener('input', handleInput);
@@ -269,10 +281,6 @@ startButton.addEventListener('click', () => {
   const csvUrl = csvInput.value.trim();
   loadVocab(csvUrl);
   setTimeout(() => {
-    if (vocabData.length === 0) {
-      alert('No valid vocabulary loaded. Please check the CSV file.');
-      return;
-    }
     startScreen.classList.add('hidden');
     gameContainer.classList.remove('hidden');
     startGame();
