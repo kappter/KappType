@@ -89,8 +89,8 @@ const defaultVocabData = [
 ];
 
 function populateVocabDropdown() {
-  const baseUrl = 'https://kappter.github.io/vocab-sets/';
-  const fallbackFiles = [
+  const baseUrl = 'https://raw.githubusercontent.com/kappter/kappter.github.io/main/vocab-sets/';
+  const files = [
     'Exploring_Computer_Science_Vocabulary',
     'ARRL_Ham_Radio_Extra_License_Terms_Definitions',
     'ARRL_Ham_Radio_General_License_Terms_Definitions',
@@ -113,43 +113,13 @@ function populateVocabDropdown() {
     'psych_terms_4',
     'utah_video_production_terms_Final'
   ];
-
-  fetch(baseUrl)
-    .then(response => {
-      if (!response.ok) throw new Error('Directory listing not available');
-      return response.text();
-    })
-    .then(html => {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, 'text/html');
-      const links = doc.querySelectorAll('a[href$=".csv"]');
-      const select = document.getElementById('vocabSelect');
-      links.forEach(link => {
-        const option = document.createElement('option');
-        option.value = baseUrl + link.getAttribute('href');
-        option.textContent = link.getAttribute('href').replace(/\.csv$/, '');
-        select.appendChild(option);
-      });
-      if (links.length === 0) {
-        console.warn('No CSV files found in directory listing. Using fallback list.');
-        fallbackFiles.forEach(file => {
-          const option = document.createElement('option');
-          option.value = baseUrl + file + '.csv';
-          option.textContent = file;
-          select.appendChild(option);
-        });
-      }
-    })
-    .catch(error => {
-      console.error('Error fetching vocab files:', error);
-      const select = document.getElementById('vocabSelect');
-      fallbackFiles.forEach(file => {
-        const option = document.createElement('option');
-        option.value = baseUrl + file + '.csv';
-        option.textContent = file;
-        select.appendChild(option);
-      });
-    });
+  const select = document.getElementById('vocabSelect');
+  files.forEach(file => {
+    const option = document.createElement('option');
+    option.value = baseUrl + file + '.csv';
+    option.textContent = file;
+    select.appendChild(option);
+  });
 }
 
 function validateCsvUrl(url) {
