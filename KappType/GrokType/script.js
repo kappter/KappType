@@ -41,6 +41,13 @@ function loadVocab(csvUrl) {
   const repoUrl = '/KappType/GrokType/Exploring_Computer_Science_Vocabulary.csv';
   let url = csvUrl || defaultUrl;
 
+  if (window.location.protocol === 'file:') {
+    alert('Cannot load CSV files when running via file://. Please use a local server (e.g., run `python -m http.server` and access http://localhost:8000).');
+    loadingIndicator.classList.add('hidden');
+    startButton.disabled = false;
+    return;
+  }
+
   if (csvUrl && !validateCsvUrl(csvUrl)) {
     alert('Invalid CSV URL. Use a raw GitHub URL (e.g., https://raw.githubusercontent.com/.../file.csv) or a repository path (e.g., /path/to/file.csv).');
     url = defaultUrl;
@@ -64,7 +71,7 @@ function loadVocab(csvUrl) {
       loadingIndicator.classList.add('hidden');
       startButton.disabled = false;
       if (vocabData.length === 0) {
-        alert('No valid terms found in the CSV. Ensure it has "Term" and "Definition" columns.');
+        alert(`No valid terms found in the CSV at ${url}. Ensure it has "Term" and "Definition" columns.`);
       }
     },
     error: function(error) {
@@ -78,11 +85,11 @@ function loadVocab(csvUrl) {
           loadingIndicator.classList.add('hidden');
           startButton.disabled = false;
           if (vocabData.length === 0) {
-            alert('Default vocab.csv is invalid or missing. Please provide a valid CSV.');
+            alert('Default vocab.csv is invalid or missing. Ensure it’s in the project directory and has "Term" and "Definition" columns.');
           }
         },
-        error: function() {
-          alert('Default vocab.csv not found. Please include it in the project directory.');
+        error: function(err) {
+          alert(`Failed to load local vocab.csv. Ensure it’s in the project directory. Error: ${err.message}`);
           loadingIndicator.classList.add('hidden');
           startButton.disabled = false;
         }
