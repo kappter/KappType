@@ -1,0 +1,51 @@
+Term,Definition
+Extra License,Highest FCC amateur license granting all frequency privileges
+Part 97,FCC rules governing amateur radio operations
+Emission Privilege,Authorization to use specific modulation types on allocated bands
+VE,"Volunteer Examiner, an Extra Class licensee administering exams"
+Grace Period,Two-year period to renew an expired amateur license
+Sequential Call Sign,FCC-assigned call sign based on license class and region
+Special Event Station,Station operating temporarily for a specific event
+Frequency Coordinator,Group assigning repeater frequencies to avoid interference
+RACES,"Radio Amateur Civil Emergency Service, for emergency support"
+Contest,Competitive event to maximize radio contacts within rules
+Logbook,"Record of contacts, required for contests or awards"
+UTC,"Coordinated Universal Time, standard for logging radio contacts"
+QSY,Q signal meaning to change frequency
+QRM,Q signal indicating interference from other signals
+Weak Signal,Low-power modes like JT65 for long-distance contacts
+Moonbounce,Communication by reflecting signals off the moon
+Meteor Scatter,Using meteor trails to reflect VHF/UHF signals
+Nets,Organized on-air gatherings for specific purposes
+Phase Modulation,Modulation varying the phase of the carrier signal
+Smith Chart,Graphical tool for solving transmission line and impedance problems
+Intermodulation,Unwanted signals from mixing two or more frequencies
+Noise Figure,Measure of a receiver’s sensitivity degradation
+Q Factor,Measure of a circuit’s resonance sharpness
+Toroid,"Donut-shaped core for inductors, reducing stray fields"
+S-Parameter,Scattering parameter describing signal behavior in RF circuits
+Mixer,Circuit combining two frequencies to produce sum and difference
+Dynamic Range,Receiver’s ability to handle strong and weak signals
+Log Periodic Antenna,Directional antenna with wide bandwidth
+Phased Array,Antenna system using phase shifts for directional control
+Rhombic Antenna,"Large, diamond-shaped antenna for HF long-distance"
+Velocity Factor,Ratio of signal speed in a cable to speed in free space
+Radiation Pattern,Graphical depiction of an antenna’s signal strength by direction
+Trap,LC circuit in an antenna to enable multiband operation
+Impedance Matching,Adjusting antenna and feedline for maximum power transfer
+NVIS,"Near Vertical Incidence Skywave, for short-range HF communication"
+Faraday Rotation,Ionospheric effect rotating signal polarization
+Gray Line,Twilight zone enhancing low-band propagation
+Sporadic E,Ionospheric layer enabling VHF long-distance contacts
+Tropospheric Ducting,Atmospheric condition extending VHF/UHF signals
+Auroral Propagation,Reflecting signals off auroras for VHF communication
+Critical Frequency,Highest frequency reflected by the ionosphere at vertical incidence
+LDE,"Long-Delayed Echo, unexplained delayed signal return"
+RF Safety,Protecting against harmful radio frequency exposure
+MPE,"Maximum Permissible Exposure, FCC limit for RF radiation"
+Duty Cycle,"Percentage of time a transmitter is active, affecting RF safety"
+Specific Absorption Rate,Measure of RF energy absorbed by the body
+Thermal Effect,Heating of tissue due to RF exposure
+Averaging Time,Period for calculating RF exposure compliance
+Control Point,Location where the station’s control operator is present
+Station Evaluation,Assessing RF exposure levels at a station
