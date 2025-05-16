@@ -25,3 +25,9 @@
 #certificateButton:hover {
   @apply bg-green-600;
 }
+
+#definition {
+  min-height: 60px;
+  max-height: 120px;
+  overflow-y: auto;
+}

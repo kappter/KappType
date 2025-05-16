@@ -10,13 +10,15 @@ const gameContainer = document.getElementById('gameContainer');
 const startButton = document.getElementById('startButton');
 const levelInput = document.getElementById('levelInput');
 const modeSelect = document.getElementById('modeSelect');
+const csvInput = document.getElementById('csvInput');
 const certificateButton = document.getElementById('certificateButton');
+const definitionDisplay = document.getElementById('definition');
 
 canvas.width = 800;
 canvas.height = 400;
 
 let words = [];
-let wordData = {};
+let vocabData = [];
 let score = 0;
 let wave = 1;
 let timeLeft = 30;
@@ -28,38 +30,45 @@ let missedWords = [];
 let totalChars = 0;
 let correctChars = 0;
 let lastWordX = 0;
+let currentDefinition = '';
 
-const categories = ['twoLetter', 'threeLetter', 'fourLetter', 'fiveLetter', 'sixLetter', 'sevenLetter', 'hyphenated', 'combo'];
-
-function loadWords() {
-  Papa.parse('words.csv', {
+function loadVocab(csvUrl) {
+  const url = csvUrl || 'vocab.csv';
+  Papa.parse(url, {
     download: true,
     header: true,
     complete: function(results) {
-      wordData = results.data.reduce((acc, row) => {
-        categories.forEach(cat => {
-          if (row[cat]) {
-            acc[cat] = acc[cat] || [];
-            acc[cat].push(row[cat]);
-          }
-        });
-        return acc;
-      }, {});
+      vocabData = results.data.filter(row => row.Term && row.Definition);
+    },
+    error: function() {
+      alert('Failed to load vocabulary CSV. Using default file.');
+      Papa.parse('vocab.csv', {
+        download: true,
+        header: true,
+        complete: function(results) {
+          vocabData = results.data.filter(row => row.Term && row.Definition);
+        }
+      });
     }
   });
 }
 
-function getRandomWord() {
-  const cat = categories[Math.floor(Math.random() * categories.length)];
-  const wordList = wordData[cat] || wordData.twoLetter;
-  return wordList[Math.floor(Math.random() * wordList.length)];
+function getRandomVocab() {
+  const index = Math.floor(Math.random() * vocabData.length);
+  return vocabData[index];
+}
+
+function getUnderscoreText(term) {
+  return term[0] + '_'.repeat(term.length - 1);
 }
 
 function spawnWord() {
-  const word = getRandomWord();
+  const vocab = getRandomVocab();
+  const term = vocab.Term;
+  const definition = vocab.Definition;
   let x, y, speed, dx;
   if (mode === 'game') {
-    x = Math.random() * (canvas.width - ctx.measureText(word).width);
+    x = Math.random() * (canvas.width - ctx.measureText(getUnderscoreText(term)).width);
     y = 0;
     speed = 1 + wave * 0.5 * (level / 5);
     dx = 0;
@@ -68,13 +77,17 @@ function spawnWord() {
     y = 50;
     speed = 0;
     dx = 1 + level * 0.2;
-    if (x + ctx.measureText(word).width > canvas.width) {
+    if (x + ctx.measureText(getUnderscoreText(term)).width > canvas.width) {
       x = 0;
       y += 50;
     }
-    lastWordX = x + ctx.measureText(word).width + 20;
+    lastWordX = x + ctx.measureText(getUnderscoreText(term)).width + 20;
   }
-  words.push({ text: word, x, y, speed, dx, matched: '' });
+  words.push({ term, definition, displayText: getUnderscoreText(term), x, y, speed, dx, matched: '' });
+  if (words.length === 1) {
+    currentDefinition = definition;
+    definitionDisplay.textContent = currentDefinition;
+  }
 }
 
 function updateGame() {
@@ -90,21 +103,25 @@ function updateGame() {
     } else {
       word.x += word.dx;
       if (word.x > canvas.width) {
-        missedWords.push(word.text);
-        totalChars += word.text.length;
+        missedWords.push(word.term);
+        totalChars += word.term.length;
+        if (words.indexOf(word) === 0) {
+          currentDefinition = words[1]?.definition || '';
+          definitionDisplay.textContent = currentDefinition;
+        }
         return false;
       }
     }
     const typed = userInput.value.trim().toLowerCase();
-    word.matched = word.text.toLowerCase().startsWith(typed) ? typed : '';
+    word.matched = word.term.toLowerCase().startsWith(typed) ? typed : '';
     ctx.fillStyle = 'red';
-    ctx.fillText(word.text.slice(0, word.matched.length), word.x, word.y);
+    ctx.fillText(word.term.slice(0, word.matched.length), word.x, word.y);
     ctx.fillStyle = 'white';
-    ctx.fillText(word.text.slice(word.matched.length), word.x + ctx.measureText(word.text.slice(0, word.matched.length)).width, word.y);
+    ctx.fillText(word.displayText.slice(word.matched.length), word.x + ctx.measureText(word.term.slice(0, word.matched.length)).width, word.y);
     if (mode === 'game' && word.y >= canvas.height) {
       gameActive = false;
-      missedWords.push(word.text);
-      totalChars += word.text.length;
+      missedWords.push(word.term);
+      totalChars += word.term.length;
       alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
     }
   });
@@ -145,15 +162,19 @@ function updateTimer() {
 function handleInput(e) {
   const typed = e.target.value.trim().toLowerCase();
   words = words.filter(word => {
-    if (word.text.toLowerCase() === typed) {
-      score += word.text.length;
-      correctChars += word.text.length;
-      totalChars += word.text.length;
+    if (word.term.toLowerCase() === typed) {
+      score += word.term.length;
+      correctChars += word.term.length;
+      totalChars += word.term.length;
       scoreDisplay.textContent = `Score: ${score}`;
       e.target.value = '';
       if (mode === 'training') {
-        lastWordX = word.x + ctx.measureText(word.text).width + 20;
+        lastWordX = word.x + ctx.measureText(word.displayText).width + 20;
         spawnWord();
+      }
+      if (words.indexOf(word) === 0) {
+        currentDefinition = words[1]?.definition || '';
+        definitionDisplay.textContent = currentDefinition;
       }
       return false;
     }
@@ -208,7 +229,7 @@ function generateCertificate() {
     Accuracy: & ${accuracy}\\% \\\\
     Wave Reached: & ${wave} \\\\
     Total Time: & ${totalTime} seconds \\\\
-    Missed Words: & ${missedWords.length > 0 ? missedWords.join(', ') : 'None'} \\\\
+    Missed Terms: & ${missedWords.length > 0 ? missedWords.join(', ') : 'None'} \\\\
     Score: & ${score} \\\\
   \\end{tabular}
   \\vspace{2cm}
@@ -222,7 +243,9 @@ function generateCertificate() {
   const a = document.createElement('a');
   a.href = url;
   a.download = 'certificate.tex';
-  a.click();
+  a
+
+.click();
   URL.revokeObjectURL(url);
 }
 
@@ -243,9 +266,15 @@ function startGame() {
 startButton.addEventListener('click', () => {
   level = Math.max(1, Math.min(10, parseInt(levelInput.value)));
   mode = modeSelect.value;
-  startScreen.classList.add('hidden');
-  gameContainer.classList.remove('hidden');
-  startGame();
+  const csvUrl = csvInput.value.trim();
+  loadVocab(csvUrl);
+  setTimeout(() => {
+    if (vocabData.length === 0) {
+      alert('No valid vocabulary loaded. Please check the CSV file.');
+      return;
+    }
+    startScreen.classList.add('hidden');
+    gameContainer.classList.remove('hidden');
+    startGame();
+  }, 1000);
 });
-
-loadWords();

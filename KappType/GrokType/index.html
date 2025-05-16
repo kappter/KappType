@@ -45,6 +45,7 @@
   <title>Typing Trainer</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
 </head>
 <body class="bg-gray-900 text-white min-h-screen flex flex-col">
   <header class="fixed top-0 w-full bg-gray-800 p-4 text-center">
@@ -64,6 +65,10 @@
           <option value="training">Training Mode</option>
         </select>
       </div>
+      <div class="mb-4">
+        <label class="block mb-2">Vocabulary CSV URL (optional):</label>
+        <input id="csvInput" type="text" class="bg-gray-800 p-2 rounded w-full" placeholder="e.g., https://example.com/vocab.csv">
+      </div>
       <button id="startButton" class="bg-blue-500 hover:bg-blue-600 p-2 rounded">Start</button>
     </div>
     <div id="gameContainer" class="hidden text-center">
@@ -73,9 +78,10 @@
         <span id="timer" class="text-xl">Time: 30s</span> |
         <span id="wpm" class="text-xl">WPM: 0</span>
       </div>
+      <div id="definition" class="bg-gray-800 p-4 rounded max-w-2xl mx-auto mb-4 text-left"></div>
       <canvas id="gameCanvas" class="border-2 border-white"></canvas>
       <div id="inputContainer" class="mt-4">
-        <input id="userInput" type="text" class="bg-gray-800 text-white p-2 rounded" placeholder="Type here...">
+        <input id="userInput" type="text" class="bg-gray-800 text-white p-2 rounded" placeholder="Type the term...">
         <button id="certificateButton" class="mt-4 bg-green-500 hover:bg-green-600 p-2 rounded">Download Certificate</button>
         <div id="keyboard" class="mt-4">
           <div class="flex justify-center flex-wrap gap-2">
