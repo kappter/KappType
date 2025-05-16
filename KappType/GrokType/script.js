@@ -346,14 +346,46 @@ function generateCertificate() {
 
 \\end{document}
   `;
-  const blob = new Blob([certificateContent], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'certificate.tex';
-  a.click();
-  URL.revokeObjectURL(url);
-  alert('Downloaded certificate.tex. Compile it with PDFLaTeX (e.g., Overleaf) to get a PDF. To enable direct PDF download, set up a server-side LaTeX compiler.');
+
+  // Send LaTeX content to a server for PDF compilation
+  const serverUrl = 'https://your-latex-compiler-service.com/api/compile'; // Replace with actual service URL
+  fetch(serverUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      latex: certificateContent,
+      filename: 'certificate.pdf',
+    }),
+  })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to compile LaTeX');
+      }
+      return response.blob();
+    })
+    .then(blob => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'certificate.pdf';
+      a.click();
+      URL.revokeObjectURL(url);
+      alert('Certificate PDF downloaded successfully!');
+    })
+    .catch(error => {
+      console.error('Error compiling PDF:', error);
+      alert('Failed to generate PDF. Downloading .tex file as fallback.');
+      // Fallback to downloading .tex file
+      const blob = new Blob([certificateContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'certificate.tex';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
 }
 
 function startGame() {
