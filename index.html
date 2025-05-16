@@ -40,94 +40,64 @@
         </script><!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Typing Tempest</title>
-    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KappType</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/papaparse/5.3.2/papaparse.min.js"></script>
+  <script src="script.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-    <header>
-        <h1>Typing Tempest</h1>
-    </header>
-
-    <div id="startScreen" class="start-screen">
-        <h2>Welcome to Typing Tempest</h2>
-        <label for="deviceType">Select Device Type:</label><br>
-        <select id="deviceType">
-            <option value="desktop">Desktop</option>
-            <option value="tablet">Tablet</option>
-        </select><br>
-        <label for="gameMode">Select Game Mode:</label><br>
-        <select id="gameMode">
-            <option value="arcade">Arcade Mode</option>
-            <option value="training">Training Mode</option>
-        </select><br>
-        <label for="experienceLevel">Select Experience Level (1 = Easy, 10 = Hard):</label><br>
-        <select id="experienceLevel">
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-            <option value="9">9</option>
-            <option value="10">10</option>
-        </select><br>
-        <button id="startGame">Start Game</button>
+<body class="bg-secondary text-dark font-sans">
+  <div id="startScreen" class="flex flex-col items-center justify-center h-screen">
+    <h1 class="text-4xl font-bold mb-8">Welcome to KappType</h1>
+    <div class="bg-primary p-6 rounded-lg shadow-lg w-96">
+      <div class="mb-4">
+        <label class="block text-dark mb-2">Experience Level (1-10):</label>
+        <input id="levelInput" type="number" min="1" max="10" value="1" class="w-full p-2 rounded bg-light text-dark">
+      </div>
+      <div class="mb-4">
+        <label class="block text-dark mb-2">Mode:</label>
+        <select id="modeSelect" class="w-full p-2 rounded bg-light text-dark">
+          <option value="game">Game Mode</option>
+          <option value="training">Training Mode</option>
+        </select>
+      </div>
+      <div class="mb-4">
+        <label class="block text-dark mb-2">Vocabulary Set:</label>
+        <select id="vocabSelect" class="w-full p-2 rounded bg-light text-dark">
+          <option value="">[Embedded Vocabulary - 53 Computer Science Terms]</option>
+        </select>
+        <p class="text-sm text-dark mt-2">Select a vocabulary set from the list or use the embedded default. For local testing, run a server (e.g., python -m http.server).</p>
+      </div>
+      <button id="startButton" class="bg-accent text-dark px-4 py-2 rounded w-full hover:bg-highlight">Start</button>
+      <p id="loadingIndicator" class="hidden text-dark mt-2">Loading vocabulary...</p>
     </div>
-
-    <div class="game-container hidden">
-        <div class="info">
-            <span>Score: <span id="score">0</span></span>
-            <span id="waveLabel">Wave</span>: <span id="wave">1</span>
-            <span>Time: <span id="timer">30</span>s</span>
-            <span>Misses: <span id="misses">0</span></span>
-            <span>WPM: <span id="wpm">0</span></span>
-            <button id="stopGame">Stop</button>
-        </div>
-        <canvas id="gameCanvas"></canvas>
+  </div>
+  <div id="gameContainer" class="hidden flex flex-col items-center h-screen">
+    <div class="flex justify-between w-full max-w-4xl mb-4">
+      <span id="score" class="text-dark">Score: 0</span> |
+      <span id="wave" class="text-dark">Wave: 1</span> |
+      <span id="timer" class="text-dark">Time: 30s</span> |
+      <span id="wpm" class="text-dark">WPM: 0</span>
     </div>
-
-    <div id="gameOver" class="game-over hidden">
-        <h2>Game Over</h2>
-        <p>Final Score: <span id="finalScore"></span></p>
-        <p>Words Typed: <span id="wordsTyped"></span></p>
-        <p>Typing Speed: <span id="wpm"></span> WPM</p>
-        <div class="certificate-form">
-            <label>Enter Your Name:</label>
-            <input type="text" id="playerName">
-            <button id="downloadCertificate">Download Certificate</button>
-        </div>
-        <button id="restart">Restart</button>
+    <canvas id="gameCanvas" class="border border-dark"></canvas>
+    <div id="definition" class="bg-light text-dark p-4 rounded w-full max-w-4xl mt-4"></div>
+    <input id="userInput" type="text" class="bg-light text-dark p-2 rounded w-full max-w-4xl mt-4" placeholder="Type the word here">
+    <div class="flex flex-wrap justify-center gap-2 mt-4">
+      <div class="key">Q</div><div class="key">W</div><div class="key">E</div><div class="key">R</div><div class="key">T</div>
+      <div class="key">Y</div><div class="key">U</div><div class="key">I</div><div class="key">O</div><div class="key">P</div>
+      <div class="key">A</div><div class="key">S</div><div class="key">D</div><div class="key">F</div><div class="key">G</div>
+      <div class="key">H</div><div class="key">J</div><div class="key">K</div><div class="key">L</div>
+      <div class="key">Z</div><div class="key">X</div><div class="key">C</div><div class="key">V</div><div class="key">B</div>
+      <div class="key">N</div><div class="key">M</div>
+      <div class="key space">Space</div>
     </div>
-
-    <div class="keyboard">
-        <div class="row">
-            <span class="key">`</span><span class="key">1</span><span class="key">2</span><span class="key">3</span><span class="key">4</span><span class="key">5</span><span class="key">6</span><span class="key">7</span><span class="key">8</span><span class="key">9</span><span class="key">0</span><span class="key">-</span><span class="key">=</span><span class="key backspace">Backspace</span>
-        </div>
-        <div class="row">
-            <span class="key tab">Tab</span><span class="key">q</span><span class="key">w</span><span class="key">e</span><span class="key">r</span><span class="key">t</span><span class="key">y</span><span class="key">u</span><span class="key">i</span><span class="key">o</span><span class="key">p</span><span class="key">[</span><span class="key">]</span><span class="key">\</span>
-        </div>
-        <div class="row">
-            <span class="key caps">Caps</span><span class="key">a</span><span class="key">s</span><span class="key">d</span><span class="key">f</span><span class="key">g</span><span class="key">h</span><span class="key">j</span><span class="key">k</span><span class="key">l</span><span class="key">;</span><span class="key">'</span><span class="key enter">Enter</span>
-        </div>
-        <div class="row">
-            <span class="key shift">Shift</span><span class="key">z</span><span class="key">x</span><span class="key">c</span><span class="key">v</span><span class="key">b</span><span class="key">n</span><span class="key">m</span><span class="key">,</span><span class="key">.</span><span class="key">/</span><span class="key shift">Shift</span>
-        </div>
-        <div class="row">
-            <span class="key space">Space</span>
-        </div>
-    </div>
-
-    <footer>
-        Typing Tempest © 2025
-    </footer>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="game.js"></script>
+    <button id="certificateButton" class="bg-accent text-dark px-4 py-2 rounded mt-4 hover:bg-highlight">Download Certificate</button>
+  </div>
+  <footer class="text-center text-dark py-4">
+    <p>© 2025 KappType. All rights reserved.</p>
+    <p>Developed for Typing Mastery</p>
+  </footer>
 </body>
 </html>
