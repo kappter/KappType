@@ -1,37 +1,3 @@
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const userInput = document.getElementById('userInput');
-const scoreDisplay = document.getElementById('score');
-const waveDisplay = document.getElementById('wave');
-const timerDisplay = document.getElementById('timer');
-const wpmDisplay = document.getElementById('wpm');
-const startScreen = document.getElementById('startScreen');
-const gameContainer = document.getElementById('gameContainer');
-const startButton = document.getElementById('startButton');
-const levelInput = document.getElementById('levelInput');
-const modeSelect = document.getElementById('modeSelect');
-const vocabSelect = document.getElementById('vocabSelect');
-const certificateButton = document.getElementById('certificateButton');
-const definitionDisplay = document.getElementById('definition');
-const loadingIndicator = document.getElementById('loadingIndicator');
-
-canvas.width = 800;
-canvas.height = 400;
-
-let words = [];
-let vocabData = [];
-let score = 0;
-let wave = 1;
-let timeLeft = 30;
-let gameActive = false;
-let mode = 'game';
-let level = 1;
-let totalTime = 0;
-let missedWords = [];
-let totalChars = 0;
-let correctChars = 0;
-let lastFrameTime = performance.now();
-
 // Embedded default vocabulary (53 computer science terms)
 const defaultVocabData = [
   { Term: "Binary", Definition: "A numbering system that uses only 0s and 1s" },
@@ -88,226 +54,261 @@ const defaultVocabData = [
   { Term: "Portfolio", Definition: "A collection of projects showcasing computer science skills and experience" }
 ];
 
-function populateVocabDropdown() {
-  const baseUrl = 'https://kappter.github.io/vocab-sets/';
-  const files = [
-    'Exploring_Computer_Science_Vocabulary',
-    'ARRL_Ham_Radio_Extra_License_Terms_Definitions',
-    'ARRL_Ham_Radio_General_License_Terms_Definitions',
-    'ARRL_Ham_Radio_Technician_License_Terms_Definitions',
-    'Computer_Programming_2_Terms_Definitions',
-    'Digital_Media_2_Terms_and_Definitions',
-    'ECS_Hardware_OS_DataStorage_Terms_Definitions',
-    'Game_Development_Fundamentals_2_Terms_Definitions',
-    'Game_Development_Fundamentals_1_Terms_Definitions',
-    'Music_Theory_Terms_Definitions',
-    'Short_Testing_Sample',
-    'Summer_Job_Preparation_Terms_Definitions',
-    'Utah_Computer_Programming_1_Terms_Definitions',
-    'Web_Development_Terms_Definitions',
-    'Yearbook_Staff_Editor_Skills_Terms_Definitions',
-    'advanced_computer_programming_vocab',
-    'psych_terms_1',
-    'psych_terms_2',
-    'psych_terms_3',
-    'psych_terms_4',
-    'utah_video_production_terms_Final'
-  ];
-  const select = document.getElementById('vocabSelect');
-  files.forEach(file => {
-    const option = document.createElement('option');
-    option.value = baseUrl + file + '.csv';
-    option.textContent = file;
-    select.appendChild(option);
-  });
-}
+document.addEventListener('DOMContentLoaded', () => {
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  const userInput = document.getElementById('userInput');
+  const scoreDisplay = document.getElementById('score');
+  const waveDisplay = document.getElementById('wave');
+  const timerDisplay = document.getElementById('timer');
+  const wpmDisplay = document.getElementById('wpm');
+  const startScreen = document.getElementById('startScreen');
+  const gameContainer = document.getElementById('gameContainer');
+  const startButton = document.getElementById('startButton');
+  const levelInput = document.getElementById('levelInput');
+  const modeSelect = document.getElementById('modeSelect');
+  const vocabSelect = document.getElementById('vocabSelect');
+  const certificateButton = document.getElementById('certificateButton');
+  const definitionDisplay = document.getElementById('definition');
+  const loadingIndicator = document.getElementById('loadingIndicator');
 
-function validateCsvUrl(url) {
-  return url.includes('kappter.github.io') || url.endsWith('.csv') || url.startsWith('/');
-}
+  canvas.width = 800;
+  canvas.height = 400;
 
-function loadVocab(csvUrl) {
-  if (!csvUrl) {
-    vocabData = defaultVocabData;
-    loadingIndicator.classList.add('hidden');
-    startButton.disabled = false;
-    return;
+  let words = [];
+  let vocabData = [];
+  let score = 0;
+  let wave = 1;
+  let timeLeft = 30;
+  let gameActive = false;
+  let mode = 'game';
+  let level = 1;
+  let totalTime = 0;
+  let missedWords = [];
+  let totalChars = 0;
+  let correctChars = 0;
+  let lastFrameTime = performance.now();
+
+  function populateVocabDropdown() {
+    const baseUrl = 'https://kappter.github.io/vocab-sets/';
+    const files = [
+      'Exploring_Computer_Science_Vocabulary',
+      'ARRL_Ham_Radio_Extra_License_Terms_Definitions',
+      'ARRL_Ham_Radio_General_License_Terms_Definitions',
+      'ARRL_Ham_Radio_Technician_License_Terms_Definitions',
+      'Computer_Programming_2_Terms_Definitions',
+      'Digital_Media_2_Terms_and_Definitions',
+      'ECS_Hardware_OS_DataStorage_Terms_Definitions',
+      'Game_Development_Fundamentals_2_Terms_Definitions',
+      'Game_Development_Fundamentals_1_Terms_Definitions',
+      'Music_Theory_Terms_Definitions',
+      'Short_Testing_Sample',
+      'Summer_Job_Preparation_Terms_Definitions',
+      'Utah_Computer_Programming_1_Terms_Definitions',
+      'Web_Development_Terms_Definitions',
+      'Yearbook_Staff_Editor_Skills_Terms_Definitions',
+      'advanced_computer_programming_vocab',
+      'psych_terms_1',
+      'psych_terms_2',
+      'psych_terms_3',
+      'psych_terms_4',
+      'utah_video_production_terms_Final'
+    ];
+    const select = document.getElementById('vocabSelect');
+    files.forEach(file => {
+      const option = document.createElement('option');
+      option.value = baseUrl + file + '.csv';
+      option.textContent = file;
+      select.appendChild(option);
+    });
   }
 
-  if (window.location.protocol === 'file:') {
-    alert('Cannot load external CSV files when running via file://. Using embedded vocabulary (53 computer science terms). For external CSVs, run a local server (e.g., python -m http.server) and access http://localhost:8000.');
-    vocabData = defaultVocabData;
-    loadingIndicator.classList.add('hidden');
-    startButton.disabled = false;
-    return;
+  function validateCsvUrl(url) {
+    return url.includes('kappter.github.io') || url.endsWith('.csv') || url.startsWith('/');
   }
 
-  if (!validateCsvUrl(csvUrl)) {
-    alert('Invalid CSV URL. Using embedded vocabulary.');
-    vocabData = defaultVocabData;
-    loadingIndicator.classList.add('hidden');
-    startButton.disabled = false;
-    return;
-  }
-
-  loadingIndicator.classList.remove('hidden');
-  startButton.disabled = true;
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-  Papa.parse(csvUrl, {
-    download: true,
-    header: true,
-    signal: controller.signal,
-    complete: function(results) {
-      clearTimeout(timeoutId);
-      vocabData = results.data.filter(row => row.Term && row.Definition);
-      loadingIndicator.classList.add('hidden');
-      startButton.disabled = false;
-      if (vocabData.length === 0) {
-        alert(`No valid terms found in the CSV at ${csvUrl}. Ensure it has "Term" and "Definition" columns. Using embedded vocabulary.`);
-        vocabData = defaultVocabData;
-      }
-    },
-    error: function(error) {
-      clearTimeout(timeoutId);
-      const xhr = error && error.xhr ? error.xhr : null;
-      const status = xhr ? xhr.status : 'Unknown';
-      const statusText = xhr ? xhr.statusText : 'No status';
-      console.error(`Failed to load CSV at ${csvUrl}. Detailed error:`, error, `Status: ${status} (${statusText})`);
-      alert(`Failed to load CSV at ${csvUrl}. Error: ${error.message || 'Unknown error'}. Status: ${status} (${statusText}). Using embedded vocabulary.`);
+  function loadVocab(csvUrl) {
+    if (!csvUrl) {
       vocabData = defaultVocabData;
       loadingIndicator.classList.add('hidden');
       startButton.disabled = false;
+      return;
     }
-  });
-}
 
-function getRandomVocab() {
-  const index = Math.floor(Math.random() * vocabData.length);
-  return vocabData[index];
-}
+    if (window.location.protocol === 'file:') {
+      alert('Cannot load external CSV files when running via file://. Using embedded vocabulary (53 computer science terms). For external CSVs, run a local server (e.g., python -m http.server) and access http://localhost:8000.');
+      vocabData = defaultVocabData;
+      loadingIndicator.classList.add('hidden');
+      startButton.disabled = false;
+      return;
+    }
 
-function getUnderscoreText(term) {
-  return term[0] + '_'.repeat(term.length - 1);
-}
+    if (!validateCsvUrl(csvUrl)) {
+      alert('Invalid CSV URL. Using embedded vocabulary.');
+      vocabData = defaultVocabData;
+      loadingIndicator.classList.add('hidden');
+      startButton.disabled = false;
+      return;
+    }
 
-function spawnWord() {
-  if (vocabData.length === 0) {
-    vocabData = defaultVocabData;
+    loadingIndicator.classList.remove('hidden');
+    startButton.disabled = true;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+    Papa.parse(csvUrl, {
+      download: true,
+      header: true,
+      signal: controller.signal,
+      complete: function(results) {
+        clearTimeout(timeoutId);
+        vocabData = results.data.filter(row => row.Term && row.Definition);
+        loadingIndicator.classList.add('hidden');
+        startButton.disabled = false;
+        if (vocabData.length === 0) {
+          alert(`No valid terms found in the CSV at ${csvUrl}. Ensure it has "Term" and "Definition" columns. Using embedded vocabulary.`);
+          vocabData = defaultVocabData;
+        }
+      },
+      error: function(error) {
+        clearTimeout(timeoutId);
+        const xhr = error && error.xhr ? error.xhr : null;
+        const status = xhr ? xhr.status : 'Unknown';
+        const statusText = xhr ? xhr.statusText : 'No status';
+        console.error(`Failed to load CSV at ${csvUrl}. Detailed error:`, error, `Status: ${status} (${statusText})`);
+        alert(`Failed to load CSV at ${csvUrl}. Error: ${error.message || 'Unknown error'}. Status: ${status} (${statusText}). Using embedded vocabulary.`);
+        vocabData = defaultVocabData;
+        loadingIndicator.classList.add('hidden');
+        startButton.disabled = false;
+      }
+    });
   }
-  const vocab = getRandomVocab();
-  const term = vocab.Term;
-  const definition = vocab.Definition;
-  const x = mode === 'game' ? Math.random() * (canvas.width - ctx.measureText(getUnderscoreText(term)).width) : 50;
-  const y = 0;
-  const speed = mode === 'game' ? 1 + wave * 0.5 * (level / 5) : 1 + level * 0.1;
-  words.push({ term, definition, displayText: getUnderscoreText(term), x, y, speed, matched: '' });
-  definitionDisplay.textContent = definition;
-}
 
-function updateGame() {
-  if (!gameActive) return;
+  function getRandomVocab() {
+    const index = Math.floor(Math.random() * vocabData.length);
+    return vocabData[index];
+  }
 
-  const now = performance.now();
-  if (now - lastFrameTime < 16.67) {
+  function getUnderscoreText(term) {
+    return term[0] + '_'.repeat(term.length - 1);
+  }
+
+  function spawnWord() {
+    if (vocabData.length === 0) {
+      vocabData = defaultVocabData;
+    }
+    const vocab = getRandomVocab();
+    const term = vocab.Term;
+    const definition = vocab.Definition;
+    const x = mode === 'game' ? Math.random() * (canvas.width - ctx.measureText(getUnderscoreText(term)).width) : 50;
+    const y = 0;
+    const speed = mode === 'game' ? 1 + wave * 0.5 * (level / 5) : 1 + level * 0.1;
+    words.push({ term, definition, displayText: getUnderscoreText(term), x, y, speed, matched: '' });
+    definitionDisplay.textContent = definition;
+  }
+
+  function updateGame() {
+    if (!gameActive) return;
+
+    const now = performance.now();
+    if (now - lastFrameTime < 16.67) {
+      requestAnimationFrame(updateGame);
+      return;
+    }
+    lastFrameTime = now;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.font = '20px Arial';
+
+    words = words.filter(word => word.y < canvas.height);
+    words.forEach(word => {
+      word.y += word.speed;
+      const typed = userInput.value.trim().toLowerCase();
+      word.matched = word.term.toLowerCase().startsWith(typed) ? typed : '';
+      ctx.fillStyle = 'red';
+      ctx.fillText(word.term.slice(0, word.matched.length), word.x, word.y);
+      ctx.fillStyle = 'white';
+      ctx.fillText(word.displayText.slice(word.matched.length), word.x + ctx.measureText(word.term.slice(0, word.matched.length)).width, word.y);
+      if (word.y >= canvas.height) {
+        missedWords.push(word.term);
+        totalChars += word.term.length;
+        words = [];
+        if (mode === 'game') {
+          gameActive = false;
+          alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
+        } else {
+          spawnWord();
+        }
+      }
+    });
+
+    if (words.length === 0) spawnWord();
     requestAnimationFrame(updateGame);
-    return;
   }
-  lastFrameTime = now;
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.font = '20px Arial';
+  function calculateWPM() {
+    return totalTime > 0 ? Math.round((totalChars / 5) / (totalTime / 60)) : 0;
+  }
 
-  words = words.filter(word => word.y < canvas.height);
-  words.forEach(word => {
-    word.y += word.speed;
-    const typed = userInput.value.trim().toLowerCase();
-    word.matched = word.term.toLowerCase().startsWith(typed) ? typed : '';
-    ctx.fillStyle = 'red';
-    ctx.fillText(word.term.slice(0, word.matched.length), word.x, word.y);
-    ctx.fillStyle = 'white';
-    ctx.fillText(word.displayText.slice(word.matched.length), word.x + ctx.measureText(word.term.slice(0, word.matched.length)).width, word.y);
-    if (word.y >= canvas.height) {
-      missedWords.push(word.term);
-      totalChars += word.term.length;
-      words = [];
+  function calculateAccuracy() {
+    return totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 100;
+  }
+
+  function updateTimer() {
+    if (!gameActive) return;
+    totalTime++;
+    timeLeft--;
+    timerDisplay.textContent = `Time: ${timeLeft}s`;
+    wpmDisplay.textContent = `WPM: ${calculateWPM()}`;
+    if (timeLeft <= 0) {
+      wave++;
+      waveDisplay.textContent = `Wave: ${wave}`;
+      timeLeft = 30;
       if (mode === 'game') {
-        gameActive = false;
-        alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
-      } else {
-        spawnWord();
+        words.forEach(word => word.speed += 0.5);
       }
     }
-  });
+    setTimeout(updateTimer, 1000);
+  }
 
-  if (words.length === 0) spawnWord();
-  requestAnimationFrame(updateGame);
-}
+  function handleInput(e) {
+    const typed = userInput.value.trim().toLowerCase();
+    words = words.filter(word => {
+      if (typed.length === 1 && word.term.toLowerCase().startsWith(typed)) {
+        word.displayText = word.term;
+      }
+      if (word.term.toLowerCase() === typed) {
+        score += word.term.length;
+        correctChars += word.term.length;
+        totalChars += word.term.length;
+        scoreDisplay.textContent = `Score: ${score}`;
+        e.target.value = '';
+        spawnWord();
+        return false;
+      }
+      return true;
+    });
+  }
 
-function calculateWPM() {
-  return totalTime > 0 ? Math.round((totalChars / 5) / (totalTime / 60)) : 0;
-}
-
-function calculateAccuracy() {
-  return totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 100;
-}
-
-function updateTimer() {
-  if (!gameActive) return;
-  totalTime++;
-  timeLeft--;
-  timerDisplay.textContent = `Time: ${timeLeft}s`;
-  wpmDisplay.textContent = `WPM: ${calculateWPM()}`;
-  if (timeLeft <= 0) {
-    wave++;
-    waveDisplay.textContent = `Wave: ${wave}`;
-    timeLeft = 30;
-    if (mode === 'game') {
-      words.forEach(word => word.speed += 0.5);
+  function highlightKeys(e) {
+    const keys = document.querySelectorAll('.key');
+    keys.forEach(key => key.classList.remove('pressed'));
+    if (e.key === ' ') {
+      document.querySelector('.space').classList.add('pressed');
+    } else {
+      const key = Array.from(keys).find(k => k.textContent.toLowerCase() === e.key.toLowerCase());
+      if (key) key.classList.add('pressed');
     }
   }
-  setTimeout(updateTimer, 1000);
-}
 
-function handleInput(e) {
-  const typed = userInput.value.trim().toLowerCase();
-  words = words.filter(word => {
-    if (typed.length === 1 && word.term.toLowerCase().startsWith(typed)) {
-      word.displayText = word.term;
-    }
-    if (word.term.toLowerCase() === typed) {
-      score += word.term.length;
-      correctChars += word.term.length;
-      totalChars += word.term.length;
-      scoreDisplay.textContent = `Score: ${score}`;
-      e.target.value = '';
-      spawnWord();
-      return false;
-    }
-    return true;
-  });
-}
-
-function highlightKeys(e) {
-  const keys = document.querySelectorAll('.key');
-  keys.forEach(key => key.classList.remove('pressed'));
-  if (e.key === ' ') {
-    document.querySelector('.space').classList.add('pressed');
-  } else {
-    const key = Array.from(keys).find(k => k.textContent.toLowerCase() === e.key.toLowerCase());
-    if (key) key.classList.add('pressed');
-  }
-}
-
-function generateCertificate() {
-  const name = prompt('Enter your name for the certificate:');
-  if (!name) return;
-  const safeName = name.replace(/[\{\}\\\$%#&~_]/g, ''); // Sanitize input
-  const wpm = calculateWPM();
-  const accuracy = calculateAccuracy();
-  const certificateContent = `
+  function generateCertificate() {
+    const name = prompt('Enter your name for the certificate:');
+    if (!name) return;
+    const safeName = name.replace(/[\{\}\\\$%#&~_]/g, ''); // Sanitize input
+    const wpm = calculateWPM();
+    const accuracy = calculateAccuracy();
+    const certificateContent = `
 \\documentclass[a4paper,12pt]{article}
 \\usepackage[utf8]{inputenc}
 \\usepackage{geometry}
@@ -346,67 +347,66 @@ function generateCertificate() {
 \\end{center}
 
 \\end{document}
-  `;
+    `;
 
-  // Send LaTeX content to a server for PDF compilation
-  const serverUrl = 'https://your-latex-compiler-service.com/api/compile'; // Replace with actual service URL
-  fetch(serverUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      latex: certificateContent,
-      filename: 'certificate.pdf',
-    }),
-  })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Failed to compile LaTeX');
-      }
-      return response.blob();
+    // Send LaTeX content to a server for PDF compilation
+    const serverUrl = 'https://your-latex-compiler-service.com/api/compile'; // Replace with actual service URL
+    fetch(serverUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        latex: certificateContent,
+        filename: 'certificate.pdf',
+      }),
     })
-    .then(blob => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'certificate.pdf';
-      a.click();
-      URL.revokeObjectURL(url);
-      alert('Certificate PDF downloaded successfully!');
-    })
-    .catch(error => {
-      console.error('Error compiling PDF:', error);
-      alert('Failed to generate PDF. Downloading .tex file as fallback. Visit https://www.overleaf.com/ to compile it into a PDF.');
-      // Fallback to downloading .tex file
-      const blob = new Blob([certificateContent], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'certificate.tex';
-      a.click();
-      URL.revokeObjectURL(url);
-    });
-}
-
-function startGame() {
-  if (vocabData.length === 0) {
-    vocabData = defaultVocabData;
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to compile LaTeX');
+        }
+        return response.blob();
+      })
+      .then(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'certificate.pdf';
+        a.click();
+        URL.revokeObjectURL(url);
+        alert('Certificate PDF downloaded successfully!');
+      })
+      .catch(error => {
+        console.error('Error compiling PDF:', error);
+        alert('Failed to generate PDF. Downloading .tex file as fallback. Visit https://www.overleaf.com/ to compile it into a PDF.');
+        // Fallback to downloading .tex file
+        const blob = new Blob([certificateContent], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'certificate.tex';
+        a.click();
+        URL.revokeObjectURL(url);
+      });
   }
-  gameActive = true;
-  userInput.focus();
-  userInput.addEventListener('input', handleInput);
-  document.addEventListener('keydown', highlightKeys);
-  document.addEventListener('keyup', () => {
-    document.querySelectorAll('.key').forEach(key => key.classList.remove('pressed'));
-  });
-  certificateButton.addEventListener('click', generateCertificate);
-  spawnWord();
-  updateGame();
-  updateTimer();
-}
 
-document.addEventListener('DOMContentLoaded', () => {
+  function startGame() {
+    if (vocabData.length === 0) {
+      vocabData = defaultVocabData;
+    }
+    gameActive = true;
+    userInput.focus();
+    userInput.addEventListener('input', handleInput);
+    document.addEventListener('keydown', highlightKeys);
+    document.addEventListener('keyup', () => {
+      document.querySelectorAll('.key').forEach(key => key.classList.remove('pressed'));
+    });
+    certificateButton.addEventListener('click', generateCertificate);
+    spawnWord();
+    updateGame();
+    updateTimer();
+  }
+
   populateVocabDropdown();
   startButton.addEventListener('click', () => {
     level = Math.max(1, Math.min(10, parseInt(levelInput.value)));
