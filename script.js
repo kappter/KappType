@@ -268,6 +268,10 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.font = '20px Arial';
 
+    // Get the current text color from CSS variable --text
+    const computedStyle = window.getComputedStyle(document.body);
+    const textColor = computedStyle.getPropertyValue('--text').trim();
+
     words = words.filter(word => word.y < canvas.height);
     words.forEach(word => {
       word.y += word.speed;
@@ -275,7 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
       word.matched = word.typedInput.toLowerCase().startsWith(typed) ? typed : '';
       ctx.fillStyle = 'red';
       ctx.fillText(word.typedInput.slice(0, word.matched.length), word.x, word.y);
-      ctx.fillStyle = 'white';
+      ctx.fillStyle = textColor; // Use dynamic text color for unmatched text
       ctx.fillText(word.displayText.slice(word.matched.length), word.x + ctx.measureText(word.typedInput.slice(0, word.matched.length)).width, word.y);
       if (word.y >= canvas.height) {
         missedWords.push(word.typedInput);
