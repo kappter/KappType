@@ -33,16 +33,19 @@ let correctChars = 0;
 let lastFrameTime = performance.now();
 
 function validateCsvUrl(url) {
-  return url.includes('raw.githubusercontent.com') || url.endsWith('.csv');
+  return url.includes('raw.githubusercontent.com') || url.endsWith('.csv') || url.startsWith('/');
 }
 
 function loadVocab(csvUrl) {
   const defaultUrl = 'https://raw.githubusercontent.com/kappter/KappType/main/KappType/GrokType/Exploring_Computer_Science_Vocabulary.csv';
+  const repoUrl = '/KappType/GrokType/Exploring_Computer_Science_Vocabulary.csv';
   let url = csvUrl || defaultUrl;
-  
+
   if (csvUrl && !validateCsvUrl(csvUrl)) {
-    alert('Invalid CSV URL. Please use a raw GitHub URL (e.g., https://raw.githubusercontent.com/.../file.csv) or a direct CSV file.');
+    alert('Invalid CSV URL. Use a raw GitHub URL (e.g., https://raw.githubusercontent.com/.../file.csv) or a repository path (e.g., /path/to/file.csv).');
     url = defaultUrl;
+  } else if (!csvUrl && window.location.hostname.includes('github.io')) {
+    url = repoUrl; // Try repository-hosted CSV for GitHub Pages
   }
 
   loadingIndicator.classList.remove('hidden');
@@ -66,7 +69,7 @@ function loadVocab(csvUrl) {
     },
     error: function(error) {
       clearTimeout(timeoutId);
-      alert(`Failed to load CSV at ${url}. Use a raw file URL (e.g., https://raw.githubusercontent.com/.../file.csv). Falling back to local vocab.csv. Error: ${error.message}`);
+      alert(`Failed to load CSV at ${url}. Use a raw file URL or repository path. Error: ${error.message}. Falling back to local vocab.csv.`);
       Papa.parse('vocab.csv', {
         download: true,
         header: true,
