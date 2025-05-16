@@ -66,9 +66,11 @@
         </select>
       </div>
       <div class="mb-4">
-        <label class="block mb-2">Vocabulary CSV URL (optional):</label>
-        <input id="csvInput" type="text" class="bg-gray-800 p-2 rounded w-full" placeholder="e.g., https://raw.githubusercontent.com/kappter/KappType/main/KappType/GrokType/Exploring_Computer_Science_Vocabulary.csv">
-        <p class="text-sm text-gray-400 mt-1">Uses embedded computer science vocabulary (53 terms) by default. Enter a raw GitHub URL for custom CSV. For local testing, run a server (e.g., python -m http.server).</p>
+        <label class="block mb-2">Vocabulary Set:</label>
+        <select id="vocabSelect" class="bg-gray-800 p-2 rounded w-full">
+          <option value="">[Embedded Vocabulary - 53 Computer Science Terms]</option>
+        </select>
+        <p class="text-sm text-gray-400 mt-1">Select a vocabulary set from the list or use the embedded default. For local testing, run a server (e.g., python -m http.server).</p>
       </div>
       <button id="startButton" class="bg-blue-500 hover:bg-blue-600 p-2 rounded">Start</button>
       <p id="loadingIndicator" class="hidden text-yellow-400 mt-2">Loading vocabulary...</p>

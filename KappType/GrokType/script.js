@@ -10,7 +10,7 @@ const gameContainer = document.getElementById('gameContainer');
 const startButton = document.getElementById('startButton');
 const levelInput = document.getElementById('levelInput');
 const modeSelect = document.getElementById('modeSelect');
-const csvInput = document.getElementById('csvInput');
+const vocabSelect = document.getElementById('vocabSelect');
 const certificateButton = document.getElementById('certificateButton');
 const definitionDisplay = document.getElementById('definition');
 const loadingIndicator = document.getElementById('loadingIndicator');
@@ -88,12 +88,36 @@ const defaultVocabData = [
   { Term: "Portfolio", Definition: "A collection of projects showcasing computer science skills and experience" }
 ];
 
+function populateVocabDropdown() {
+  const baseUrl = 'https://kappter.github.io/vocab-sets/';
+  fetch(baseUrl)
+    .then(response => {
+      if (!response.ok) throw new Error('Network response was not ok');
+      return response.text();
+    })
+    .then(html => {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const links = doc.querySelectorAll('a[href$=".csv"]');
+      const select = document.getElementById('vocabSelect');
+      links.forEach(link => {
+        const option = document.createElement('option');
+        option.value = baseUrl + link.getAttribute('href');
+        option.textContent = link.getAttribute('href').replace(/\.csv$/, '');
+        select.appendChild(option);
+      });
+    })
+    .catch(error => {
+      console.error('Error fetching vocab files:', error);
+      // Fallback to embedded vocabulary if fetch fails
+    });
+}
+
 function validateCsvUrl(url) {
   return url.includes('raw.githubusercontent.com') || url.endsWith('.csv') || url.startsWith('/');
 }
 
 function loadVocab(csvUrl) {
-  // Default to embedded vocabulary if no URL provided
   if (!csvUrl) {
     vocabData = defaultVocabData;
     loadingIndicator.classList.add('hidden');
@@ -101,7 +125,6 @@ function loadVocab(csvUrl) {
     return;
   }
 
-  // Prevent CSV loading in file:// protocol
   if (window.location.protocol === 'file:') {
     alert('Cannot load external CSV files when running via file://. Using embedded vocabulary (53 computer science terms). For external CSVs, run a local server (e.g., python -m http.server) and access http://localhost:8000.');
     vocabData = defaultVocabData;
@@ -110,9 +133,8 @@ function loadVocab(csvUrl) {
     return;
   }
 
-  // Validate CSV URL
   if (!validateCsvUrl(csvUrl)) {
-    alert('Invalid CSV URL. Use a raw GitHub URL (e.g., https://raw.githubusercontent.com/.../file.csv) or a repository path (e.g., /path/to/file.csv). Using embedded vocabulary.');
+    alert('Invalid CSV URL. Using embedded vocabulary.');
     vocabData = defaultVocabData;
     loadingIndicator.classList.add('hidden');
     startButton.disabled = false;
@@ -141,26 +163,10 @@ function loadVocab(csvUrl) {
     },
     error: function(error) {
       clearTimeout(timeoutId);
-      alert(`Failed to load CSV at ${csvUrl}. Error: ${error.message}. Trying local vocab.csv.`);
-      Papa.parse('vocab.csv', {
-        download: true,
-        header: true,
-        complete: function(results) {
-          vocabData = results.data.filter(row => row.Term && row.Definition);
-          loadingIndicator.classList.add('hidden');
-          startButton.disabled = false;
-          if (vocabData.length === 0) {
-            alert('Local vocab.csv is invalid or missing. Ensure it’s in the project directory with "Term" and "Definition" columns. Using embedded vocabulary.');
-            vocabData = defaultVocabData;
-          }
-        },
-        error: function(err) {
-          alert(`Failed to load local vocab.csv. Error: ${err.message}. Using embedded vocabulary.`);
-          vocabData = defaultVocabData;
-          loadingIndicator.classList.add('hidden');
-          startButton.disabled = false;
-        }
-      });
+      alert(`Failed to load CSV at ${csvUrl}. Error: ${error.message}. Using embedded vocabulary.`);
+      vocabData = defaultVocabData;
+      loadingIndicator.classList.add('hidden');
+      startButton.disabled = false;
     }
   });
 }
@@ -176,7 +182,7 @@ function getUnderscoreText(term) {
 
 function spawnWord() {
   if (vocabData.length === 0) {
-    vocabData = defaultVocabData; // Ensure vocabData is never empty
+    vocabData = defaultVocabData;
   }
   const vocab = getRandomVocab();
   const term = vocab.Term;
@@ -192,7 +198,7 @@ function updateGame() {
   if (!gameActive) return;
 
   const now = performance.now();
-  if (now - lastFrameTime < 16.67) { // Target 60 FPS
+  if (now - lastFrameTime < 16.67) {
     requestAnimationFrame(updateGame);
     return;
   }
@@ -256,7 +262,7 @@ function handleInput(e) {
   const typed = userInput.value.trim().toLowerCase();
   words = words.filter(word => {
     if (typed.length === 1 && word.term.toLowerCase().startsWith(typed)) {
-      word.displayText = word.term; // Reveal full term after first letter
+      word.displayText = word.term;
     }
     if (word.term.toLowerCase() === typed) {
       score += word.term.length;
@@ -339,7 +345,7 @@ function generateCertificate() {
 
 function startGame() {
   if (vocabData.length === 0) {
-    vocabData = defaultVocabData; // Ensure vocabData is never empty
+    vocabData = defaultVocabData;
   }
   gameActive = true;
   userInput.focus();
@@ -354,14 +360,17 @@ function startGame() {
   updateTimer();
 }
 
-startButton.addEventListener('click', () => {
-  level = Math.max(1, Math.min(10, parseInt(levelInput.value)));
-  mode = modeSelect.value;
-  const csvUrl = csvInput.value.trim();
-  loadVocab(csvUrl);
-  setTimeout(() => {
-    startScreen.classList.add('hidden');
-    gameContainer.classList.remove('hidden');
-    startGame();
-  }, 100);
+document.addEventListener('DOMContentLoaded', () => {
+  populateVocabDropdown();
+  startButton.addEventListener('click', () => {
+    level = Math.max(1, Math.min(10, parseInt(levelInput.value)));
+    mode = modeSelect.value;
+    const csvUrl = vocabSelect.value || '';
+    loadVocab(csvUrl);
+    setTimeout(() => {
+      startScreen.classList.add('hidden');
+      gameContainer.classList.remove('hidden');
+      startGame();
+    }, 100);
+  });
 });
