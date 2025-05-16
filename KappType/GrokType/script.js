@@ -13,6 +13,7 @@ const modeSelect = document.getElementById('modeSelect');
 const csvInput = document.getElementById('csvInput');
 const certificateButton = document.getElementById('certificateButton');
 const definitionDisplay = document.getElementById('definition');
+const loadingIndicator = document.getElementById('loadingIndicator');
 
 canvas.width = 800;
 canvas.height = 400;
@@ -29,31 +30,42 @@ let totalTime = 0;
 let missedWords = [];
 let totalChars = 0;
 let correctChars = 0;
+let lastFrameTime = performance.now();
 
 function loadVocab(csvUrl) {
-  const url = csvUrl || 'vocab.csv';
+  const defaultUrl = 'https://raw.githubusercontent.com/kappter/kappquiz/main/vocab-sets/psych_terms_1.csv';
+  const url = csvUrl || defaultUrl;
+  loadingIndicator.classList.remove('hidden');
+  startButton.disabled = true;
+
   Papa.parse(url, {
     download: true,
     header: true,
     complete: function(results) {
       vocabData = results.data.filter(row => row.Term && row.Definition);
+      loadingIndicator.classList.add('hidden');
+      startButton.disabled = false;
       if (vocabData.length === 0) {
-        alert('No valid terms found in the CSV. Please ensure it has "Term" and "Definition" columns.');
+        alert('No valid terms found in the CSV. Ensure it has "Term" and "Definition" columns.');
       }
     },
     error: function() {
-      alert('Failed to load CSV. Ensure you’re using a raw file URL (e.g., https://raw.githubusercontent.com/...). Falling back to default vocab.csv.');
+      alert(`Failed to load CSV at ${url}. Use a raw file URL (e.g., https://raw.githubusercontent.com/...). Falling back to local vocab.csv.`);
       Papa.parse('vocab.csv', {
         download: true,
         header: true,
         complete: function(results) {
           vocabData = results.data.filter(row => row.Term && row.Definition);
+          loadingIndicator.classList.add('hidden');
+          startButton.disabled = false;
           if (vocabData.length === 0) {
             alert('Default vocab.csv is invalid or missing. Please provide a valid CSV.');
           }
         },
         error: function() {
           alert('Default vocab.csv not found. Please include it in the project directory.');
+          loadingIndicator.classList.add('hidden');
+          startButton.disabled = false;
         }
       });
     }
@@ -83,6 +95,13 @@ function spawnWord() {
 
 function updateGame() {
   if (!gameActive) return;
+
+  const now = performance.now();
+  if (now - lastFrameTime < 16.67) { // Target 60 FPS
+    requestAnimationFrame(updateGame);
+    return;
+  }
+  lastFrameTime = now;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.font = '20px Arial';
@@ -213,7 +232,6 @@ function generateCertificate() {
 
 \\end{document}
   `;
-  // Download as .tex (compile to PDF with Overleaf or PDFLaTeX)
   const blob = new Blob([certificateContent], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -222,25 +240,6 @@ function generateCertificate() {
   a.click();
   URL.revokeObjectURL(url);
   alert('Downloaded certificate.tex. Compile it with PDFLaTeX (e.g., Overleaf) to get a PDF. To enable direct PDF download, set up a server-side LaTeX compiler.');
-
-  // Example for server-side PDF generation (uncomment and configure if you have a server)
-  /*
-  fetch('https://your-latex-compiler-api.com/compile', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ latex: certificateContent })
-  })
-  .then(response => response.blob())
-  .then(blob => {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'certificate.pdf';
-    a.click();
-    URL.revokeObjectURL(url);
-  })
-  .catch(error => alert('Failed to generate PDF: ' + error));
-  */
 }
 
 function startGame() {
@@ -267,8 +266,10 @@ startButton.addEventListener('click', () => {
   const csvUrl = csvInput.value.trim();
   loadVocab(csvUrl);
   setTimeout(() => {
-    startScreen.classList.add('hidden');
-    gameContainer.classList.remove('hidden');
-    startGame();
-  }, 1000);
+    if (vocabData.length > 0) {
+      startScreen.classList.add('hidden');
+      gameContainer.classList.remove('hidden');
+      startGame();
+    }
+  }, 500);
 });
