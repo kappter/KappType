@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let lastFrameTime = performance.now();
 
   function populateVocabDropdown() {
-    const baseUrl = 'https://kappter.github.io/KappType/vocab-sets/';
+    const baseUrl = 'https://raw.githubusercontent.com/kappter/vocab-sets/main/';
     const files = [
       'Exploring_Computer_Science_Vocabulary',
       'ARRL_Ham_Radio_Extra_License_Terms_Definitions',
@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function validateCsvUrl(url) {
-    return url.includes('kappter.github.io') || url.endsWith('.csv') || url.startsWith('/');
+    return url.includes('github.com') || url.endsWith('.csv') || url.startsWith('/');
   }
 
   function loadVocab(csvUrl) {
@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (typeof Papa === 'undefined') {
-      alert('Failed to load Papa Parse library. Using embedded vocabulary. Please check your internet connection or try again later.');
+      alert('Papa Parse library not loaded. Using embedded vocabulary. Ensure papaparse.min.js is in the repository root.');
       vocabData = defaultVocabData;
       loadingIndicator.classList.add('hidden');
       startButton.disabled = false;
@@ -165,32 +165,44 @@ document.addEventListener('DOMContentLoaded', () => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    Papa.parse(csvUrl, {
-      download: true,
-      header: true,
-      signal: controller.signal,
-      complete: function(results) {
-        clearTimeout(timeoutId);
-        vocabData = results.data.filter(row => row.Term && row.Definition);
-        loadingIndicator.classList.add('hidden');
-        startButton.disabled = false;
-        if (vocabData.length === 0) {
-          alert(`No valid terms found in the CSV at ${csvUrl}. Ensure it has "Term" and "Definition" columns. Using embedded vocabulary.`);
-          vocabData = defaultVocabData;
+    fetch(csvUrl, { signal: controller.signal })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status} (${response.statusText})`);
         }
-      },
-      error: function(error) {
+        return response.text();
+      })
+      .then(data => {
+        Papa.parse(data, {
+          header: true,
+          complete: function(results) {
+            clearTimeout(timeoutId);
+            vocabData = results.data.filter(row => row.Term && row.Definition);
+            loadingIndicator.classList.add('hidden');
+            startButton.disabled = false;
+            if (vocabData.length === 0) {
+              alert(`No valid terms found in the CSV at ${csvUrl}. Ensure it has "Term" and "Definition" columns. Using embedded vocabulary.`);
+              vocabData = defaultVocabData;
+            }
+          },
+          error: function(error) {
+            clearTimeout(timeoutId);
+            console.error(`Papa Parse error for ${csvUrl}:`, error);
+            alert(`Failed to parse CSV at ${csvUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary.`);
+            vocabData = defaultVocabData;
+            loadingIndicator.classList.add('hidden');
+            startButton.disabled = false;
+          }
+        });
+      })
+      .catch(error => {
         clearTimeout(timeoutId);
-        const xhr = error && error.xhr ? error.xhr : null;
-        const status = xhr ? xhr.status : 'Unknown';
-        const statusText = xhr ? xhr.statusText : 'No status';
-        console.error(`Failed to load CSV at ${csvUrl}. Detailed error:`, error, `Status: ${status} (${statusText})`);
-        alert(`Failed to load CSV at ${csvUrl}. Error: ${error.message || 'Unknown error'}. Status: ${status} (${statusText}). Using embedded vocabulary.`);
+        console.error(`Fetch error for ${csvUrl}:`, error);
+        alert(`Failed to load CSV at ${csvUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary.`);
         vocabData = defaultVocabData;
         loadingIndicator.classList.add('hidden');
         startButton.disabled = false;
-      }
-    });
+      });
   }
 
   function getRandomVocab() {
