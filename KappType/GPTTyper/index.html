@@ -1,26 +1,28 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Typing Storm</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing Storm - Vocab Mode</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        canvas { border: 1px solid black; display: block; margin: auto; }
+    </style>
 </head>
 <body>
-  <header><h1>Typing Storm - Skyline High School</h1><button id="download-certificate">Download Certificate</button></header>
-  <div id="start-screen">
-    <label for="experience">Experience Level (1-10):</label>
-    <input type="number" id="experience" value="1" min="1" max="10" />
-    <button id="start-normal">Start Game</button>
-    <button id="start-training">Training Mode</button>
-  </div>
-  <div id="game-container" style="display:none;">
-    <canvas id="game-canvas" width="800" height="400"></canvas>
-    <div id="keyboard"></div>
-  </div>
-  <footer>© Skyline High School</footer>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="game.js"></script>
+    <h1>Typing Storm</h1>
+    <label for="experience">Select Experience Level:</label>
+    <select id="experience">
+        <option value="0">Beginner</option>
+        <option value="1">Intermediate</option>
+        <option value="2">Advanced</option>
+    </select><br><br>
+    <button onclick="startGame('training')">Start Training Mode</button>
+    <button onclick="startGame('normal')">Start Normal Mode</button>
+    <button id="start-vocab">Start Vocabulary Mode</button>
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="game.js"></script>
 </body>
 </html>

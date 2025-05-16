@@ -1,4 +1,6 @@
-2,3,4,5,6,7,hyphenated,complex
-an,the,word,apple,banana,primary,well-known,co-op
-on,cat,dogs,tiger,window,freedom,part-time,e-mail
-in,pie,blue,shark,planet,journey,self-made,check-in
+Term,Definition
+Abstraction,Removing unnecessary details to focus on essential characteristics
+Algorithm,A step-by-step procedure for solving a problem
+Variable,A symbolic name that holds a value
+Function,A named section of a program that performs a specific task
+Loop,A sequence of instructions that repeats until a certain condition is met
