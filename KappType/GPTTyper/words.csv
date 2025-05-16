@@ -1,6 +1,3 @@
-Term,Definition
-Abstraction,Removing unnecessary details to focus on essential characteristics
-Algorithm,A step-by-step procedure for solving a problem
-Variable,A symbolic name that holds a value
-Function,A named section of a program that performs a specific task
-Loop,A sequence of instructions that repeats until a certain condition is met
+2,3,4
+if,try,byte
+do,for,int

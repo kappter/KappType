@@ -1,57 +1,12 @@
+
 body {
-  font-family: sans-serif;
+  font-family: Arial, sans-serif;
   text-align: center;
-  margin: 0;
-  padding: 0;
-}
-header, footer {
-  background-color: #002244;
-  color: white;
-  padding: 10px;
-  position: fixed;
-  width: 100%;
-  z-index: 1000;
-}
-header {
-  top: 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 20px;
-}
-footer {
-  bottom: 0;
-}
-#game-container {
-  margin-top: 70px;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  background: #f0f0f0;
 }
 canvas {
+  display: block;
+  margin: 20px auto;
+  background: white;
   border: 1px solid #ccc;
-  margin-bottom: 20px;
-}
-#keyboard {
-  display: flex;
-  flex-wrap: wrap;
-  width: 600px;
-  margin: 0 auto;
-}
-.key {
-  border: 1px solid #888;
-  border-radius: 4px;
-  width: 40px;
-  height: 40px;
-  line-height: 40px;
-  margin: 2px;
-  text-align: center;
-  font-weight: bold;
-  background-color: #eee;
-}
-.key.pressed {
-  background-color: #00ccff;
-}
-#start-screen {
-  margin-top: 100px;
 }
