@@ -8,6 +8,9 @@ const startScreen = document.getElementById('start-screen');
 const gameContainer = document.querySelector('.game-container');
 const difficultyLevels = document.getElementById('difficulty-levels');
 const trainingModeButton = document.getElementById('training-mode');
+const csvFileInput = document.getElementById('csv-file-input');
+const csvFileNameDisplay = document.getElementById('csv-file-name');
+const definitionDisplay = document.getElementById('definition-display');
 
 let wordsData = {};
 let currentWords = [];
@@ -22,12 +25,14 @@ let speedIncreaseRate = 0.1;
 let startTime;
 let endTime;
 let missedWords = 0;
-let gameMode = 'normal'; // 'normal' or 'training'
+let gameMode = 'normal';
 let difficultyLevel = 1;
 let trainingInterval;
 let trainingWords = [];
 let currentTrainingWordIndex = 0;
-let wordsPerMinuteGoal = 40; // Target WPM
+let wordsPerMinuteGoal = 40;
+let termDefinitions = []; // Array to hold term-definition objects
+let currentDefinitionIndex = 0;
 
 const keyboardLayout = [
     ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
@@ -36,6 +41,7 @@ const keyboardLayout = [
 ];
 
 function loadWords() {
+    // This function now handles only the default word list.
     fetch('words.csv')
         .then(response => response.text())
         .then(csvData => {
@@ -51,18 +57,32 @@ function loadWords() {
                     }
                 });
             }
-            // Don't start the game here, wait for difficulty selection
-            // startNewWave();
         });
 }
 
 function getRandomWord() {
-    const wordLengths = Object.keys(wordsData).filter(key => wordsData[key].length > 0);
-    if (wordLengths.length === 0) return null;
+    if (gameMode === 'normal' && termDefinitions.length === 0) {
+        const wordLengths = Object.keys(wordsData).filter(key => wordsData[key].length > 0);
+        if (wordLengths.length === 0) return null;
+        const randomLengthCategory = wordLengths[Math.floor(Math.random() * wordLengths.length)];
+        const randomIndex = Math.floor(Math.random() * wordsData[randomLengthCategory].length);
+        return wordsData[randomLengthCategory][randomIndex];
+    } else if (gameMode === 'normal' && termDefinitions.length > 0) {
+        //use the term from termDefinitions
+        if (currentDefinitionIndex >= termDefinitions.length) {
+            currentDefinitionIndex = 0; //restart
+        }
+        const term = termDefinitions[currentDefinitionIndex].term;
+        currentDefinitionIndex++; // Move to the next term for next time
+        return term;
 
-    const randomLengthCategory = wordLengths[Math.floor(Math.random() * wordLengths.length)];
-    const randomIndex = Math.floor(Math.random() * wordsData[randomLengthCategory].length);
-    return wordsData[randomLengthCategory][randomIndex];
+    } else { //training mode
+        const wordLengths = Object.keys(wordsData).filter(key => wordsData[key].length > 0);
+        if (wordLengths.length === 0) return null;
+        const randomLengthCategory = wordLengths[Math.floor(Math.random() * wordLengths.length)];
+        const randomIndex = Math.floor(Math.random() * wordsData[randomLengthCategory].length);
+        return wordsData[randomLengthCategory][randomIndex];
+    }
 }
 
 function createFallingWord() {
@@ -71,7 +91,11 @@ function createFallingWord() {
 
     const wordElement = document.createElement('div');
     wordElement.classList.add('word');
-    wordElement.innerHTML = wordText.split('').map(char => `<span>${char}</span>`).join('');
+    let displayWord = wordText;
+    if (gameMode == 'normal' && termDefinitions.length > 0) {
+        displayWord = wordText[0] + "_".repeat(wordText.length - 1);
+    }
+    wordElement.innerHTML = displayWord.split('').map(char => `<span>${char}</span>`).join('');
     const startPosition = Math.random() * (gameArea.offsetWidth - wordElement.offsetWidth);
     wordElement.style.left = `${startPosition}px`;
     gameArea.appendChild(wordElement);
@@ -98,15 +122,29 @@ function checkWord() {
     const typedText = typingInput.value.trim();
 
     currentWords.forEach(wordObj => {
-        if (wordObj.text.startsWith(typedText) && wordObj.element.dataset.typed !== 'true') {
-            const wordSpans = wordObj.element.querySelectorAll('span');
-            typedText.split('').forEach((char, index) => {
-                if (wordSpans[index] && char === wordObj.text[index].toLowerCase()) {
-                    wordSpans[index].classList.add('typed');
+        let wordToCheck = wordObj.text;
+        let elementText = wordObj.element.innerText;
+
+        if (gameMode == 'normal' && termDefinitions.length > 0) {
+            if (wordToCheck.toLowerCase().startsWith(typedText.toLowerCase())) {
+                const wordSpans = wordObj.element.querySelectorAll('span');
+                for (let i = 0; i < typedText.length; i++) {
+                    wordSpans[i].classList.add('typed');
                 }
-            });
+            }
         }
-        if (wordObj.text === typedText && wordObj.element.dataset.typed !== 'true') {
+        else {
+            if (wordObj.text.startsWith(typedText) && wordObj.element.dataset.typed !== 'true') {
+                const wordSpans = wordObj.element.querySelectorAll('span');
+                typedText.split('').forEach((char, index) => {
+                    if (wordSpans[index] && char === wordObj.text[index].toLowerCase()) {
+                        wordSpans[index].classList.add('typed');
+                    }
+                });
+            }
+        }
+
+        if (wordToCheck.toLowerCase() === typedText.toLowerCase() && wordObj.element.dataset.typed !== 'true') {
             score++;
             scoreDisplay.textContent = `Score: ${score}`;
             wordObj.element.dataset.typed = 'true';
@@ -120,7 +158,7 @@ function updateTimer() {
     waveTimerDisplay.textContent = `Wave ends in: ${timeLeft}`;
     if (timeLeft <= 0) {
         clearInterval(gameInterval);
-        clearInterval(waveInterval); // Clear the wave interval
+        clearInterval(waveInterval);
         endWave();
     }
 }
@@ -143,8 +181,17 @@ function startNewWave() {
     currentWords = [];
     timeLeft = waveDuration;
     waveTimerDisplay.textContent = `Wave ends in: ${timeLeft}`;
-    wordFallSpeed = 1 + (difficultyLevel - 1) * 0.2; // Adjust based on difficulty
+    wordFallSpeed = 1 + (difficultyLevel - 1) * 0.2;
     speedIncreaseRate = 0.1 + (difficultyLevel - 1) * 0.05;
+
+    if (termDefinitions.length > 0) {
+        const randomIndex = Math.floor(Math.random() * termDefinitions.length);
+        definitionDisplay.textContent = termDefinitions[randomIndex].definition;
+    }
+    else {
+        definitionDisplay.textContent = '';
+    }
+
 
     gameInterval = setInterval(() => {
         createFallingWord();
@@ -240,15 +287,14 @@ function startTrainingMode() {
     gameMode = 'training';
     gameContainer.style.display = 'flex';
     startScreen.style.display = 'none';
-    gameArea.innerHTML = ''; // Clear any existing words
+    gameArea.innerHTML = '';
     trainingWords = [];
     currentTrainingWordIndex = 0;
     timeLeft = 30;
     waveTimerDisplay.textContent = `Training: ${timeLeft}`;
 
-
     const wordList = [];
-    for (let i = 0; i < 10; i++) { // Generate 10 words for training
+    for (let i = 0; i < 10; i++) {
         wordList.push(getRandomWord());
     }
 
@@ -261,7 +307,7 @@ function startTrainingMode() {
         wordElement.style.top = '50px';
         gameArea.appendChild(wordElement);
         trainingWords.push({ element: wordElement, text: word });
-        xPos += 120; // Adjust spacing as needed
+        xPos += 120;
     });
 
     trainingInterval = setInterval(() => {
@@ -273,16 +319,14 @@ function startTrainingMode() {
         }
     }, 1000);
 
-
-    typingInput.addEventListener('input', checkTrainingWord); // Use a different check function
+    typingInput.addEventListener('input', checkTrainingWord);
     typingInput.value = '';
-
 }
 
 function checkTrainingWord() {
     const typedText = typingInput.value.trim();
 
-    if (trainingWords[currentTrainingWordIndex] && trainingWords[currentTrainingWordIndex].text === typedText) {
+    if (trainingWords[currentTrainingWordIndex] && trainingWords[currentTrainingWordIndex].text.toLowerCase() === typedText.toLowerCase()) {
         const currentWordElement = trainingWords[currentTrainingWordIndex].element;
         currentWordElement.classList.add('active');
         currentTrainingWordIndex++;
@@ -304,12 +348,43 @@ function endTrainingMode() {
     timeLeft = waveDuration;
     waveTimerDisplay.textContent = `Wave ends in: ${timeLeft}`;
     currentTrainingWordIndex = 0;
+    definitionDisplay.textContent = '';
 
 }
 
+function parseCSV(file) {
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        const csvData = event.target.result;
+        const lines = csvData.trim().split('\n');
+        const headers = lines[0].split(',');
+        if (headers.length < 2) {
+            alert("CSV file must contain at least two columns: Term and Definition.");
+            return;
+        }
+        termDefinitions = [];
+        for (let i = 1; i < lines.length; i++) {
+            const values = lines[i].split(',');
+            const term = values[0] ? values[0].trim() : '';
+            const definition = values[1] ? values[1].trim() : '';
+            if (term && definition) {
+                termDefinitions.push({ term, definition });
+            }
+        }
+        if (termDefinitions.length === 0) {
+            alert("No valid term and definition pairs found in the CSV file.");
+            return;
+        }
+        //console.log(termDefinitions);
+        //startNewWave(); //start the wave.
+    };
+    reader.onerror = function() {
+        alert("Error reading the CSV file.");
+    };
+    reader.readAsText(file);
+}
 
 // Event listeners
-// Make sure these are inside the window.onload function
 window.onload = function() {
     renderKeyboard();
     loadWords();
