@@ -77,6 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const modeSelect = document.getElementById('modeSelect');
   const promptSelect = document.getElementById('promptSelect');
   const vocabSelect = document.getElementById('vocabSelect');
+  const caseSelect = document.getElementById('caseSelect');
   const certificateButton = document.getElementById('certificateButton');
   const loadingIndicator = document.getElementById('loadingIndicator');
 
@@ -91,6 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let gameActive = false;
   let mode = 'game';
   let promptType = 'definition';
+  let caseSensitive = false;
   let level = 1;
   let totalTime = 0;
   let missedWords = [];
@@ -275,8 +277,10 @@ document.addEventListener('DOMContentLoaded', () => {
     words = words.filter(word => word.y < canvas.height);
     words.forEach(word => {
       word.y += word.speed;
-      const typed = userInput.value.trim().toLowerCase();
-      word.matched = word.typedInput.toLowerCase().startsWith(typed) ? typed : '';
+      const typed = userInput.value.trim();
+      const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
+      const input = caseSensitive ? typed : typed.toLowerCase();
+      word.matched = target.startsWith(input) ? typed : '';
       ctx.fillStyle = 'red';
       ctx.fillText(word.typedInput.slice(0, word.matched.length), word.x, word.y);
       ctx.fillStyle = textColor; // Use dynamic text color for unmatched text
@@ -324,12 +328,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function handleInput(e) {
-    const typed = userInput.value.trim().toLowerCase();
+    const typed = userInput.value.trim();
     words = words.filter(word => {
-      if (typed.length === 1 && word.typedInput.toLowerCase().startsWith(typed)) {
+      const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
+      const input = caseSensitive ? typed : typed.toLowerCase();
+      if (typed.length === 1 && target.startsWith(input)) {
         word.displayText = word.typedInput;
       }
-      if (word.typedInput.toLowerCase() === typed) {
+      if (target === input) {
         score += word.typedInput.length;
         correctChars += word.typedInput.length;
         totalChars += word.typedInput.length;
@@ -354,13 +360,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function escapeLatex(str) {
+    return str
+      .replace(/\\/g, '\\textbackslash{}')
+      .replace(/#/g, '\\#')
+      .replace(/%/g, '\\%')
+      .replace(/&/g, '\\&')
+      .replace(/_/g, '\\_')
+      .replace(/\$/g, '\\$')
+      .replace(/{/g, '\\{')
+      .replace(/}/g, '\\}')
+      .replace(/~/g, '\\textasciitilde{}')
+      .replace(/\^/g, '\\textasciicircum{}');
+  }
+
   function generateCertificate() {
     const name = prompt('Enter your name for the certificate:');
     if (!name) return;
-    const safeName = name.replace(/[^a-zA-Z0-9\s-]/g, ''); // Sanitize to alphanumeric, spaces, and hyphens
+    const safeName = escapeLatex(name.replace(/[^a-zA-Z0-9\s-]/g, '')); // Sanitize and escape
     const wpm = calculateWPM();
     const accuracy = calculateAccuracy();
-    const promptTypeText = promptType === 'definition' ? 'Definition (Type Term)' : promptType === 'term' ? 'Term (Type Definition)' : 'Both (Random)';
+    const promptTypeText = escapeLatex(promptType === 'definition' ? 'Definition (Type Term)' : promptType === 'term' ? 'Term (Type Definition)' : 'Both (Random)');
+    const missedTerms = missedWords.length > 0 ? escapeLatex(missedWords.join(', ')) : 'None';
     const certificateContent = `
 \\documentclass[a4paper,12pt]{article}
 \\usepackage[utf8]{inputenc}
@@ -393,7 +414,7 @@ document.addEventListener('DOMContentLoaded', () => {
     Accuracy: & ${accuracy}\\% \\\\
     Wave Reached: & ${wave} \\\\
     Total Time: & ${totalTime} seconds \\\\
-    Missed Terms: & ${missedWords.length > 0 ? missedWords.join(', ') : 'None'} \\\\
+    Missed Terms: & \\begin{minipage}[t]{0.6\\textwidth} ${missedTerms} \\end{minipage} \\\\
     Score: & ${score} \\\\
   \\end{tabular}
   \\vspace{2cm}
@@ -437,6 +458,7 @@ document.addEventListener('DOMContentLoaded', () => {
     level = Math.max(1, Math.min(10, parseInt(levelInput.value)));
     mode = modeSelect.value;
     promptType = promptSelect.value;
+    caseSensitive = caseSelect.value === 'sensitive';
     const csvUrl = vocabSelect.value || '';
     loadVocab(csvUrl);
     setTimeout(() => {
