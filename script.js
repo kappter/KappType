@@ -81,6 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const vocabSetTitle = document.getElementById('vocabSetTitle');
   const certificateButton = document.getElementById('certificateButton');
   const loadingIndicator = document.getElementById('loadingIndicator');
+  const timeIndicator = document.getElementById('timeIndicator');
 
   canvas.width = 800;
   canvas.height = 400;
@@ -308,6 +309,9 @@ document.addEventListener('DOMContentLoaded', () => {
       gameContainer.insertBefore(definitionBackground, gameContainer.firstChild);
     }
     definitionBackground.textContent = finalDefinition;
+
+    // Update time indicator
+    updateTimeIndicator();
   }
 
   function updateGame() {
@@ -412,6 +416,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       return true;
     });
+
+    updateTimeIndicator();
   }
 
   function highlightKeys(e) {
@@ -419,9 +425,20 @@ document.addEventListener('DOMContentLoaded', () => {
     keys.forEach(key => key.classList.remove('pressed'));
     if (e.key === ' ') {
       document.querySelector('.space').classList.add('pressed');
+    } else if (e.key === 'Backspace') {
+      document.querySelector('.backspace').classList.add('pressed');
     } else {
       const key = Array.from(keys).find(k => k.textContent.toLowerCase() === e.key.toLowerCase());
       if (key) key.classList.add('pressed');
+    }
+  }
+
+  function updateTimeIndicator() {
+    if (timeIndicator) {
+      timeIndicator.classList.remove('active');
+      if (wpmStartTime !== null) {
+        timeIndicator.classList.add('active');
+      }
     }
   }
 
