@@ -68,25 +68,6 @@ body.dark {
   z-index: -1; /* Behind all interactive elements */
 }
 
-.time-indicator {
-  position: fixed;
-  top: 40%; /* Slightly above the center of definition-background */
-  right: 5%;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  opacity: 0.5;
-  z-index: 0;
-}
-
-.time-indicator.inactive {
-  background-color: red;
-}
-
-.time-indicator.active {
-  background-color: green;
-}
-
 #userInput {
   position: relative;
   z-index: 1;

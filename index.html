@@ -43,73 +43,99 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KappType</title>
-  <link rel="stylesheet" href="styles.css">
-  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <link rel="icon" type="image/x-icon" href="./favicon.ico">
+  <script src="./papaparse.min.js" defer></script>
+  <script src="./script.js" defer></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
 </head>
-<body>
-  <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
-
-  <div id="startScreen">
-    <h1>KappType</h1>
-    <label for="levelInput">Level (1-10):</label>
-    <input type="number" id="levelInput" value="1" min="1" max="10">
-    <br>
-    <label for="modeSelect">Mode:</label>
-    <select id="modeSelect">
-      <option value="game">Game (Words Fall)</option>
-      <option value="practice">Practice (Static)</option>
-    </select>
-    <br>
-    <label for="promptSelect">Prompt Type:</label>
-    <select id="promptSelect">
-      <option value="definition">Definition (Type Term)</option>
-      <option value="term">Term (Type Definition)</option>
-      <option value="both">Both (Random)</option>
-    </select>
-    <br>
-    <label for="randomSelect">Word Order:</label>
-    <select id="randomSelect">
-      <option value="random">Random</option>
-      <option value="structured">Structured</option>
-    </select>
-    <br>
-    <label for="caseSelect">Case Sensitivity:</label>
-    <select id="caseSelect">
-      <option value="insensitive">Insensitive</option>
-      <option value="sensitive">Sensitive</option>
-    </select>
-    <br>
-    <label for="vocabSelect">Vocabulary Set:</label>
-    <select id="vocabSelect"></select>
-    <br>
-    <label for="amalgamateSelect">Amalgamate With:</label>
-    <select id="amalgamateSelect"></select>
-    <br>
-    <button id="startButton">Start</button>
-    <div id="loadingIndicator" class="hidden">Loading...</div>
-  </div>
-
-  <div id="gameContainer" class="hidden">
-    <h2 id="vocabSetTitle"></h2>
-    <div id="score">Score: 0</div>
-    <div id="wave">Wave: 1</div>
-    <div id="timer">Time: 30s</div>
-    <div id="wpm">WPM: 0</div>
-    <canvas id="gameCanvas"></canvas>
-    <input type="text" id="userInput" placeholder="Prompt will appear here...">
-    <button id="certificateButton">Generate Certificate</button>
-    <div id="keyboard">
-      <div class="key">Q</div><div class="key">W</div><div class="key">E</div><div class="key">R</div><div class="key">T</div>
-      <div class="key">Y</div><div class="key">U</div><div class="key">I</div><div class="key">O</div><div class="key">P</div>
-      <div class="key">A</div><div class="key">S</div><div class="key">D</div><div class="key">F</div><div class="key">G</div>
-      <div class="key">H</div><div class="key">J</div><div class="key">K</div><div class="key">L</div>
-      <div class="key">Z</div><div class="key">X</div><div class="key">C</div><div class="key">V</div><div class="key">B</div>
-      <div class="key">N</div><div class="key">M</div>
-      <div class="key space">Space</div>
+<body class="bg-secondary text-dark font-sans">
+  <div id="startScreen" class="flex flex-col items-center justify-center h-screen">
+    <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
+    <h1 class="text-4xl font-bold mb-8">Welcome to KappType</h1>
+    <div class="bg-primary p-6 rounded-lg shadow-lg w-96">
+      <div class="mb-4">
+        <label class="block text-dark mb-2">Experience Level (1-10):</label>
+        <input id="levelInput" type="number" min="1" max="10" value="1" class="w-full p-2 rounded bg-light text-dark">
+      </div>
+      <div class="mb-4">
+        <label class="block text-dark mb-2">Mode:</label>
+        <select id="modeSelect" class="w-full p-2 rounded bg-light text-dark">
+          <option value="game">Game Mode</option>
+          <option value="training">Training Mode</option>
+        </select>
+      </div>
+      <div class="mb-4">
+        <label class="block text-dark mb-2">Prompt Type:</label>
+        <select id="promptSelect" class="w-full p-2 rounded bg-light text-dark">
+          <option value="definition">Definition (Type Term)</option>
+          <option value="term">Term (Type Definition)</option>
+          <option value="both">Both (Random)</option>
+        </select>
+      </div>
+      <div class="mb-4">
+        <label class="block text-dark mb-2">Case Sensitivity:</label>
+        <select id="caseSelect" class="w-full p-2 rounded bg-light text-dark">
+          <option value="insensitive">Case Insensitive</option>
+          <option value="sensitive">Case Sensitive</option>
+        </select>
+      </div>
+      <div class="mb-4">
+        <label class="block text-dark mb-2">Vocabulary Set:</label>
+        <select id="vocabSelect" class="w-full p-2 rounded bg-light text-dark">
+          <option value="">[Embedded Vocabulary - 53 Computer Science Terms]</option>
+        </select>
+        <p class="text-sm text-dark mt-2">Select a vocabulary set from the list or use the embedded default. For local testing, run a server (e.g., python -m http.server).</p>
+      </div>
+      <div class="mb-4">
+        <label class="block text-dark mb-2">Amalgamate Set (Optional):</label>
+        <select id="amalgamateSelect" class="w-full p-2 rounded bg-light text-dark">
+          <option value="">[None]</option>
+        </select>
+        <p class="text-sm text-dark mt-2">Optionally combine with another set for two terms on screen.</p>
+      </div>
+      <button id="startButton" class="bg-accent text-dark px-4 py-2 rounded w-full hover:bg-highlight">Start</button>
+      <p id="loadingIndicator" class="hidden text-dark mt-2">Loading vocabulary...</p>
     </div>
   </div>
-
-  <script src="papaparse.min.js"></script>
-  <script src="script.js"></script>
+  <div id="gameContainer" class="hidden flex flex-col items-center h-screen">
+    <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
+    <h2 id="vocabSetTitle" class="text-2xl font-bold text-dark mb-4"></h2>
+    <div class="flex justify-between w-full max-w-4xl mb-4">
+      <span id="score" class="text-dark">Score: 0</span> |
+      <span id="wave" class="text-dark">Wave: 1</span> |
+      <span id="timer" class="text-dark">Time: 30s</span> |
+      <span id="wpm" class="text-dark">WPM: 0</span>
+    </div>
+    <canvas id="gameCanvas" class="border border-dark mb-4"></canvas>
+    <input id="userInput" type="text" class="bg-light text-dark p-2 rounded w-full max-w-4xl mb-4" placeholder="Prompt will appear here...">
+    <div class="flex flex-col items-center gap-1 mb-4">
+      <!-- Top Row: Numbers and Symbols -->
+      <div class="flex justify-center gap-1">
+        <div class="key w-8">`</div><div class="key w-8">1</div><div class="key w-8">2</div><div class="key w-8">3</div><div class="key w-8">4</div><div class="key w-8">5</div><div class="key w-8">6</div><div class="key w-8">7</div><div class="key w-8">8</div><div class="key w-8">9</div><div class="key w-8">0</div><div class="key w-8">-</div><div class="key w-8">=</div><div class="key w-12">Backspace</div>
+      </div>
+      <!-- Row 1: QWERTY -->
+      <div class="flex justify-center gap-1">
+        <div class="key w-12">Tab</div><div class="key w-8">Q</div><div class="key w-8">W</div><div class="key w-8">E</div><div class="key w-8">R</div><div class="key w-8">T</div><div class="key w-8">Y</div><div class="key w-8">U</div><div class="key w-8">I</div><div class="key w-8">O</div><div class="key w-8">P</div><div class="key w-8">[</div><div class="key w-8">]</div><div class="key w-8">\</div>
+      </div>
+      <!-- Row 2: ASDF -->
+      <div class="flex justify-center gap-1">
+        <div class="key w-16">Caps Lock</div><div class="key w-8">A</div><div class="key w-8">S</div><div class="key w-8">D</div><div class="key w-8">F</div><div class="key w-8">G</div><div class="key w-8">H</div><div class="key w-8">J</div><div class="key w-8">K</div><div class="key w-8">L</div><div class="key w-8">;</div><div class="key w-8">'</div><div class="key w-12">Enter</div>
+      </div>
+      <!-- Row 3: ZXCV -->
+      <div class="flex justify-center gap-1">
+        <div class="key w-16">Shift</div><div class="key w-8">Z</div><div class="key w-8">X</div><div class="key w-8">C</div><div class="key w-8">V</div><div class="key w-8">B</div><div class="key w-8">N</div><div class="key w-8">M</div><div class="key w-8">,</div><div class="key w-8">.</div><div class="key w-8">/</div><div class="key w-16">Shift</div>
+      </div>
+      <!-- Bottom Row: Modifiers and Space -->
+      <div class="flex justify-center gap-1">
+        <div class="key w-12">Ctrl</div><div class="key w-12">Win</div><div class="key w-12">Alt</div><div class="key space">Space</div><div class="key w-12">Alt</div><div class="key w-12">Win</div><div class="key w-12">Ctrl</div>
+      </div>
+    </div>
+    <button id="certificateButton" class="bg-accent text-dark px-4 py-2 rounded hover:bg-highlight">Download Certificate</button>
+  </div>
+  <footer class="text-center text-dark py-4">
+    <p>© 2025 KappType. All rights reserved.</p>
+    <p>Developed for Typing Mastery</p>
+  </footer>
 </body>
 </html>
