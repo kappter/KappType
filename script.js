@@ -78,6 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const promptSelect = document.getElementById('promptSelect');
   const vocabSelect = document.getElementById('vocabSelect');
   const caseSelect = document.getElementById('caseSelect');
+  const randomSelect = document.getElementById('randomSelect');
   const amalgamateSelect = document.getElementById('amalgamateSelect');
   const vocabSetTitle = document.getElementById('vocabSetTitle');
   const certificateButton = document.getElementById('certificateButton');
@@ -96,6 +97,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let gameActive = false;
   let mode = 'game';
   let promptType = 'definition';
+  let randomMode = 'random'; // New variable for random/structured mode
+  let wordIndex = 0; // Tracks position in vocab list for structured mode
   let caseSensitive = false;
   let level = 1;
   let totalTime = 0;
@@ -266,8 +269,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function getRandomVocab(sourceArray) {
-    const index = Math.floor(Math.random() * sourceArray.length);
-    return sourceArray[index];
+    if (randomMode === 'structured') {
+      const vocab = sourceArray[wordIndex];
+      wordIndex = (wordIndex + 1) % sourceArray.length; // Increment and loop back
+      return vocab;
+    } else {
+      const index = Math.floor(Math.random() * sourceArray.length);
+      return sourceArray[index];
+    }
   }
 
   function getUnderscoreText(text) {
@@ -573,6 +582,8 @@ document.addEventListener('DOMContentLoaded', () => {
     level = Math.max(1, Math.min(10, parseInt(levelInput.value)));
     mode = modeSelect.value;
     promptType = promptSelect.value;
+    randomMode = randomSelect.value; // Capture random/structured mode
+    wordIndex = 0; // Reset index for structured mode
     caseSensitive = caseSelect.value === 'sensitive';
     const csvUrl = vocabSelect.value || '';
     const amalgamateUrl = amalgamateSelect.value || '';

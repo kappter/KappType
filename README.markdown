@@ -12,6 +12,11 @@ KappType is a typing game designed to enhance vocabulary and typing skills, part
 ## Delayed WPM Calculation
 To support a learning-focused experience, WPM (Words Per Minute) calculation is delayed until the user makes their first keystroke after a word is cleared. This allows learners to study the definition and guess the word without impacting their typing speed score. Each new word acts as a fresh "session" where WPM begins tracking only after the initial input.
 
+## Random or Structured Word Order
+Teachers can choose between two modes for word presentation:
+- **Random**: Words are selected randomly from the vocabulary list (default).
+- **Structured**: Words are presented in the order they appear in the vocabulary list, looping back to the start when the list ends. This supports a scaffolded learning approach.
+
 ## Installation
 1. Clone the repository: `git clone https://github.com/kappter/KappType.git`
 2. Ensure `papaparse.min.js` is in the root directory for CSV parsing.
@@ -20,6 +25,7 @@ To support a learning-focused experience, WPM (Words Per Minute) calculation is 
 ## Usage
 - Select a vocabulary set and optional amalgamation set from the dropdowns.
 - Choose a prompt type (Term, Definition, or Both) and case sensitivity.
+- Select word order (Random or Structured) to control word presentation.
 - Adjust the level and start the game.
 - Type the prompted text to score points and progress through waves.
 
