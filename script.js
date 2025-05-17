@@ -311,16 +311,16 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // Concatenate terms and definitions for amalgamation
-    const finalTypedInput = amalgamateVocab.length > 0 ? typedInput1 + typedInput2 : typedInput1;
-    const finalPrompt = amalgamateVocab.length > 0 ? prompt1 + ', ' + prompt2 : prompt1;
-    const finalDefinition = amalgamateVocab.length > 0 ? (isTermPrompt1 ? vocab1.Definition : vocab1.Term) + ', ' + (isTermPrompt1 ? vocab2.Definition : vocab2.Term) : (isTermPrompt1 ? vocab1.Definition : vocab1.Term);
+    // Concatenate terms and definitions with a space for amalgamation
+    const finalTypedInput = amalgamateVocab.length > 0 ? typedInput1 + ' ' + typedInput2 : typedInput1;
+    const finalPrompt = amalgamateVocab.length > 0 ? prompt1 + ' ' + prompt2 : prompt1;
+    const finalDefinition = amalgamateVocab.length > 0 ? (isTermPrompt1 ? vocab1.Definition : vocab1.Term) + ' ' + (isTermPrompt1 ? vocab2.Definition : vocab2.Term) : (isTermPrompt1 ? vocab1.Definition : vocab1.Term);
 
     const x = mode === 'game' ? Math.random() * (canvas.width - ctx.measureText(getUnderscoreText(finalTypedInput)).width) : 50;
     const y = 0;
     const speed = mode === 'game' ? 0.5 + wave * 0.5 * (level / 5) : 0.5 + level * 0.1; // Reduced initial speed by half
     words.push({ prompt: finalPrompt, typedInput: finalTypedInput, displayText: getUnderscoreText(finalTypedInput), x, y, speed, matched: '', definition: finalDefinition });
-    userInput.placeholder = finalPrompt;
+    userInput.placeholder = finalPrompt; // Set placeholder, will clear on match
 
     // Set definition as background text
     let definitionBackground = document.querySelector('.definition-background');
@@ -416,7 +416,7 @@ document.addEventListener('DOMContentLoaded', () => {
         totalChars += word.typedInput.length;
         scoreDisplay.textContent = `Score: ${score}`;
         e.target.value = '';
-        e.target.placeholder = 'Prompt will appear here...';
+        e.target.placeholder = 'Prompt will appear here...'; // Clear placeholder on match
         ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas immediately
         spawnWord();
         return false;
