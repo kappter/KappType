@@ -48,7 +48,7 @@ body.dark {
   color: var(--light);
 }
 
-.space {
+.space, .backspace, .enter {
   width: 200px;
 }
 
@@ -69,14 +69,15 @@ body.dark {
 }
 
 .time-indicator {
-  position: fixed;
-  top: 40%; /* Slightly above the center of definition-background */
-  right: 5%;
+  position: absolute;
+  top: 50%;
+  left: calc(50% + 220px); /* Position to the right of Backspace (200px width + 10px gap + 10px padding) */
+  transform: translateY(-50%);
   width: 20px;
   height: 20px;
   border-radius: 50%;
   opacity: 0.5;
-  z-index: 0;
+  z-index: 3;
 }
 
 .time-indicator.inactive {

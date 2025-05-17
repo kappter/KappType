@@ -83,6 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const vocabSetTitle = document.getElementById('vocabSetTitle');
   const certificateButton = document.getElementById('certificateButton');
   const loadingIndicator = document.getElementById('loadingIndicator');
+  const keyboardContainer = document.getElementById('keyboard');
 
   canvas.width = 800;
   canvas.height = 400;
@@ -342,12 +343,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     definitionBackground.textContent = finalDefinition;
 
-    // Create or update time indicator
+    // Create or update time indicator, now inside keyboard container
     let timeIndicator = document.querySelector('.time-indicator');
     if (!timeIndicator) {
       timeIndicator = document.createElement('div');
       timeIndicator.className = 'time-indicator';
-      gameContainer.appendChild(timeIndicator);
+      keyboardContainer.appendChild(timeIndicator);
     }
     timeIndicator.classList.remove('active', 'inactive');
     timeIndicator.classList.add(wpmStartTime === null ? 'inactive' : 'active');
@@ -477,6 +478,10 @@ document.addEventListener('DOMContentLoaded', () => {
     keys.forEach(key => key.classList.remove('pressed'));
     if (e.key === ' ') {
       document.querySelector('.space').classList.add('pressed');
+    } else if (e.key === 'Backspace') {
+      document.querySelector('.backspace').classList.add('pressed');
+    } else if (e.key === 'Enter') {
+      document.querySelector('.enter').classList.add('pressed');
     } else {
       const key = Array.from(keys).find(k => k.textContent.toLowerCase() === e.key.toLowerCase());
       if (key) key.classList.add('pressed');
