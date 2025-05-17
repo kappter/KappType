@@ -23,7 +23,7 @@ const defaultVocabData = [
   { Term: "Data Type", Definition: "A classification of data such as integer string or boolean" },
   { Term: "Integer", Definition: "A whole number data type without decimal points" },
   { Term: "String", Definition: "A sequence of characters such as text used in programming" },
-  { Term: "Boolean", Definition: "A data type with only two values: true or false" },
+  { Term: "Boolean", Definition: "A data type with two values: true or false" },
   { Term: "Operator", Definition: "A symbol that performs operations like addition (+) or comparison (==)" },
   { Term: "Conditional Statement", Definition: "A programming construct like “if-then-else” that executes code based on a condition" },
   { Term: "Loop", Definition: "A programming construct that repeats a block of code until a condition is met" },
@@ -75,9 +75,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const startButton = document.getElementById('startButton');
   const levelInput = document.getElementById('levelInput');
   const modeSelect = document.getElementById('modeSelect');
-  const promptSelect = document.getElementById('promptSelect');
-  const vocabSelect = document.getElementById('vocabSelect');
   const caseSelect = document.getElementById('caseSelect');
+  const vocabSelect = document.getElementById('vocabSelect');
   const amalgamateSelect = document.getElementById('amalgamateSelect');
   const vocabSetTitle = document.getElementById('vocabSetTitle');
   const certificateButton = document.getElementById('certificateButton');
@@ -95,7 +94,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let timeLeft = 30;
   let gameActive = false;
   let mode = 'game';
-  let promptType = 'definition';
   let caseSensitive = false;
   let level = 1;
   let totalTime = 0;
@@ -280,42 +278,20 @@ document.addEventListener('DOMContentLoaded', () => {
       vocabData = [...defaultVocabData];
     }
     const vocab1 = getRandomVocab(vocabData);
-    let prompt1, typedInput1, isTermPrompt1;
-    if (promptType === 'both') {
-      isTermPrompt1 = Math.random() < 0.5;
-    } else {
-      isTermPrompt1 = promptType === 'term';
-    }
-    if (isTermPrompt1) {
-      prompt1 = vocab1.Term;
-      typedInput1 = vocab1.Definition;
-    } else {
-      prompt1 = vocab1.Definition;
-      typedInput1 = vocab1.Term;
-    }
+    let prompt1 = vocab1.Definition; // Default to Definition (Type Term)
+    let typedInput1 = vocab1.Term;
 
     let prompt2 = '', typedInput2 = '', vocab2 = null;
     if (amalgamateVocab.length > 0) {
       vocab2 = getRandomVocab(amalgamateVocab);
-      let isTermPrompt2;
-      if (promptType === 'both') {
-        isTermPrompt2 = Math.random() < 0.5;
-      } else {
-        isTermPrompt2 = promptType === 'term';
-      }
-      if (isTermPrompt2) {
-        prompt2 = vocab2.Term;
-        typedInput2 = vocab2.Definition;
-      } else {
-        prompt2 = vocab2.Definition;
-        typedInput2 = vocab2.Term;
-      }
+      prompt2 = vocab2.Definition;
+      typedInput2 = vocab2.Term;
     }
 
     // Concatenate terms and definitions with a space for amalgamation
     const finalTypedInput = amalgamateVocab.length > 0 ? typedInput1 + ' ' + typedInput2 : typedInput1;
     const finalPrompt = amalgamateVocab.length > 0 ? prompt1 + ' ' + prompt2 : prompt1;
-    const finalDefinition = amalgamateVocab.length > 0 ? (isTermPrompt1 ? vocab1.Definition : vocab1.Term) + ' ' + (isTermPrompt1 ? vocab2.Definition : vocab2.Term) : (isTermPrompt1 ? vocab1.Definition : vocab1.Term);
+    const finalDefinition = amalgamateVocab.length > 0 ? vocab1.Definition + ' ' + vocab2.Definition : vocab1.Definition;
 
     const x = mode === 'game' ? Math.random() * (canvas.width - ctx.measureText(getUnderscoreText(finalTypedInput)).width) : 50;
     const y = 0;
@@ -469,7 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const safeName = escapeLatex(name.replace(/[^a-zA-Z0-9\s-]/g, '')); // Sanitize and escape
     const wpm = calculateWPM();
     const accuracy = calculateAccuracy();
-    const promptTypeText = escapeLatex(promptType === 'definition' ? 'Definition (Type Term)' : promptType === 'term' ? 'Term (Type Definition)' : 'Both (Random)');
+    const promptTypeText = escapeLatex('Definition (Type Term)'); // Default prompt type
     const missedTerms = missedWords.length > 0 ? escapeLatex(missedWords.join(', ')) : 'None';
     const certificateContent = `
 \\documentclass[a4paper,12pt]{article}
@@ -547,7 +523,6 @@ document.addEventListener('DOMContentLoaded', () => {
   startButton.addEventListener('click', () => {
     level = Math.max(1, Math.min(10, parseInt(levelInput.value)));
     mode = modeSelect.value;
-    promptType = promptSelect.value;
     caseSensitive = caseSelect.value === 'sensitive';
     const csvUrl = vocabSelect.value || '';
     const amalgamateUrl = amalgamateSelect.value || '';
