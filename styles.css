@@ -44,6 +44,7 @@ body.dark {
   text-align: center;
   padding: 5px;
   border-radius: 3px;
+  margin: 2px;
 }
 
 .key.pressed {
@@ -52,7 +53,8 @@ body.dark {
 }
 
 .space, .backspace, .enter {
-  width: 200px;
+  width: 100px;
+  margin: 2px;
 }
 
 .definition-background {
@@ -68,13 +70,13 @@ body.dark {
   max-width: 800px;
   word-wrap: break-word;
   pointer-events: none;
-  z-index: -1; /* Behind all interactive elements */
+  z-index: -1;
 }
 
 .time-indicator {
   position: absolute;
   top: 50%;
-  left: calc(50% + 220px); /* Position to the right of Backspace (200px width + 10px gap + 10px padding) */
+  left: calc(50% + 110px); /* Adjusted for new Backspace width (100px + 5px gap + 5px padding) */
   transform: translateY(-50%);
   width: 20px;
   height: 20px;
@@ -93,28 +95,27 @@ body.dark {
 
 #gameContainer {
   position: relative;
-  min-height: 500px; /* Prevent collapsing */
+  min-height: 500px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  visibility: visible !important; /* Ensure visibility */
-  z-index: 0;
+  visibility: visible;
 }
 
 #gameCanvas {
   border: 1px solid var(--text);
-  visibility: visible !important;
+  visibility: visible;
 }
 
 #userInput {
   position: relative;
-  z-index: 10; /* Ensure it's above other elements */
+  z-index: 10;
   margin: 10px 0;
   padding: 5px;
   width: 80%;
   max-width: 800px;
   font-size: 16px;
-  visibility: visible !important;
+  visibility: visible;
 }
 
 #userInput:focus {
@@ -126,7 +127,7 @@ body.dark {
   bottom: 10px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 20; /* Above definition background */
+  z-index: 20;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -134,10 +135,14 @@ body.dark {
   padding: 10px;
   background-color: var(--secondary);
   border-radius: 5px;
-  visibility: visible !important;
+  visibility: visible;
 }
 
 #startScreen {
   text-align: center;
   padding: 20px;
+}
+
+.hidden {
+  display: none !important;
 }
