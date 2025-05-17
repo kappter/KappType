@@ -274,65 +274,57 @@ document.addEventListener('DOMContentLoaded', () => {
     return text[0] + '_'.repeat(text.length - 1);
   }
 
-  
-function spawnWord() {
-  if (vocabData.length === 0) {
-    vocabData = [...defaultVocabData];
-  }
-  const vocab1 = getRandomVocab(vocabData);
-  let prompt1, typedInput1, isTermPrompt1;
-  if (promptType === 'both') {
-    isTermPrompt1 = Math.random() < 0.5;
-  } else {
-    isTermPrompt1 = promptType === 'term';
-  }
-  if (isTermPrompt1) {
-    prompt1 = vocab1.Term;
-    typedInput1 = vocab1.Definition;
-  } else {
-    prompt1 = vocab1.Definition;
-    typedInput1 = vocab1.Term;
-  }
-
-  let prompt2 = '', typedInput2 = '';
-  if (amalgamateVocab.length > 0) {
-    const vocab2 = getRandomVocab(amalgamateVocab);
-    let isTermPrompt2;
+  function spawnWord() {
+    if (vocabData.length === 0) {
+      vocabData = [...defaultVocabData];
+    }
+    const vocab1 = getRandomVocab(vocabData);
+    let prompt1, typedInput1, isTermPrompt1;
     if (promptType === 'both') {
-      isTermPrompt2 = Math.random() < 0.5;
+      isTermPrompt1 = Math.random() < 0.5;
     } else {
-      isTermPrompt2 = promptType === 'term';
+      isTermPrompt1 = promptType === 'term';
     }
-    if (isTermPrompt2) {
-      prompt2 = vocab2.Term;
-      typedInput2 = vocab2.Definition;
+    if (isTermPrompt1) {
+      prompt1 = vocab1.Term;
+      typedInput1 = vocab1.Definition;
     } else {
-      prompt2 = vocab2.Definition;
-      typedInput2 = vocab2.Term;
+      prompt1 = vocab1.Definition;
+      typedInput1 = vocab1.Term;
     }
-  }
 
-  const x = mode === 'game' ? Math.random() * (canvas.width - ctx.measureText(getUnderscoreText(typedInput1 + (typedInput2 ? ' | ' + typedInput2 : '')).width) : 50;
-  const y = 0;
-  const speed = mode === 'game' ? 0.5 + wave * 0.5 * (level / 5) : 0.5 + level * 0.1; // Reduced initial speed by half
-  words.push({ term1: vocab1.Term, definition1: vocab1.Definition, prompt1, typedInput1, term2: amalgamateVocab.length ? vocab2.Term : '', definition2: amalgamateVocab.length ? vocab2.Definition : '', prompt2, typedInput2, displayText: getUnderscoreText(typedInput1 + (typedInput2 ? ' | ' + typedInput2 : '')), x, y, speed, matched: '' });
-  userInput.placeholder = prompt1 + (prompt2 ? ' | ' + prompt2 : '');
+    let prompt2 = '', typedInput2 = '';
+    if (amalgamateVocab.length > 0) {
+      const vocab2 = getRandomVocab(amalgamateVocab);
+      let isTermPrompt2;
+      if (promptType === 'both') {
+        isTermPrompt2 = Math.random() < 0.5;
+      } else {
+        isTermPrompt2 = promptType === 'term';
+      }
+      if (isTermPrompt2) {
+        prompt2 = vocab2.Term;
+        typedInput2 = vocab2.Definition;
+      } else {
+        prompt2 = vocab2.Definition;
+        typedInput2 = vocab2.Term;
+      }
+    }
 
-  // Set definition as background text
-  const definitionBackground = document.querySelector('.definition-background') || document.createElement('div');
-  if (!definitionBackground.className) {
-    definitionBackground.className = 'definition-background';
-    gameContainer.insertBefore(definitionBackground, userInput);
-  }
-  definitionBackground.textContent = (isTermPrompt1 ? vocab1.Definition : vocab1.Term) + (amalgamateVocab.length && prompt2 ? ' | ' + (isTermPrompt2 ? vocab2.Definition : vocab2.Term) : '');
-}
-
-
-    const x = mode === 'game' ? Math.random() * (canvas.width - ctx.measureText(getUnderscoreText(typedInput1 + (typedInput2 ? ' | ' + typedInput2 : '')).width) : 50;
+    const fullText = typedInput1 + (typedInput2 ? ' | ' + typedInput2 : '');
+    const x = mode === 'game' ? Math.random() * (canvas.width - ctx.measureText(getUnderscoreText(fullText)).width) : 50;
     const y = 0;
     const speed = mode === 'game' ? 0.5 + wave * 0.5 * (level / 5) : 0.5 + level * 0.1; // Reduced initial speed by half
-    words.push({ term1: vocab1.Term, definition1: vocab1.Definition, prompt1, typedInput1, term2: amalgamateVocab.length ? vocab2.Term : '', definition2: amalgamateVocab.length ? vocab2.Definition : '', prompt2, typedInput2, displayText: getUnderscoreText(typedInput1 + (typedInput2 ? ' | ' + typedInput2 : '')), x, y, speed, matched: '' });
+    words.push({ term1: vocab1.Term, definition1: vocab1.Definition, prompt1, typedInput1, term2: amalgamateVocab.length ? vocab2.Term : '', definition2: amalgamateVocab.length ? vocab2.Definition : '', prompt2, typedInput2, displayText: getUnderscoreText(fullText), x, y, speed, matched: '' });
     userInput.placeholder = prompt1 + (prompt2 ? ' | ' + prompt2 : '');
+
+    // Set definition as background text
+    const definitionBackground = document.querySelector('.definition-background') || document.createElement('div');
+    if (!definitionBackground.className) {
+      definitionBackground.className = 'definition-background';
+      gameContainer.insertBefore(definitionBackground, userInput);
+    }
+    definitionBackground.textContent = (isTermPrompt1 ? vocab1.Definition : vocab1.Term) + (amalgamateVocab.length && prompt2 ? ' | ' + (isTermPrompt2 ? vocab2.Definition : vocab2.Term) : '');
   }
 
   function updateGame() {
