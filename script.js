@@ -99,6 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let caseSensitive = false;
   let level = 1;
   let totalTime = 0;
+  let wpmStartTime = null; // Tracks when WPM calculation begins
   let missedWords = [];
   let totalChars = 0;
   let correctChars = 0;
@@ -321,6 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const speed = mode === 'game' ? 0.5 + wave * 0.5 * (level / 5) : 0.5 + level * 0.1; // Reduced initial speed by half
     words.push({ prompt: finalPrompt, typedInput: finalTypedInput, displayText: getUnderscoreText(finalTypedInput), x, y, speed, matched: '', definition: finalDefinition });
     userInput.placeholder = finalPrompt; // Set placeholder, will clear on match
+    wpmStartTime = null; // Reset WPM start time on new word
 
     // Set definition as background text
     let definitionBackground = document.querySelector('.definition-background');
@@ -374,11 +376,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (words.length === 0) spawnWord();
+    // Only increase speed if typing has started (wpmStartTime is set)
+    if (mode === 'game' && wpmStartTime !== null && timeLeft <= 0) {
+      wave++;
+      waveDisplay.textContent = `Wave: ${wave}`;
+      timeLeft = 30;
+      words.forEach(word => word.speed += 0.5);
+    }
     requestAnimationFrame(updateGame);
   }
 
   function calculateWPM() {
-    return totalTime > 0 ? Math.round((totalChars / 5) / (totalTime / 60)) : 0;
+    if (wpmStartTime === null) return 0; // Return 0 WPM until first keystroke
+    const elapsedTime = (performance.now() - wpmStartTime) / 1000 / 60; // Convert to minutes
+    return elapsedTime > 0 ? Math.round((totalChars / 5) / elapsedTime) : 0;
   }
 
   function calculateAccuracy() {
@@ -387,7 +398,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateTimer() {
     if (!gameActive) return;
-    totalTime++;
     timeLeft--;
     timerDisplay.textContent = `Time: ${timeLeft}s`;
     wpmDisplay.textContent = `WPM: ${calculateWPM()}`;
@@ -395,15 +405,15 @@ document.addEventListener('DOMContentLoaded', () => {
       wave++;
       waveDisplay.textContent = `Wave: ${wave}`;
       timeLeft = 30;
-      if (mode === 'game') {
-        words.forEach(word => word.speed += 0.5);
-      }
     }
     setTimeout(updateTimer, 1000);
   }
 
   function handleInput(e) {
     const typed = e.target.value;
+    if (wpmStartTime === null && typed.length > 0) {
+      wpmStartTime = performance.now(); // Start WPM timing on first keystroke
+    }
     words = words.filter(word => {
       const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
       const input = caseSensitive ? typed : typed.toLowerCase();
@@ -418,6 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.target.value = '';
         e.target.placeholder = 'Prompt will appear here...'; // Clear placeholder on match
         ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas immediately
+        wpmStartTime = null; // Reset WPM start time on word clear
         spawnWord();
         return false;
       }
