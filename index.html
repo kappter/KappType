@@ -87,6 +87,13 @@
         </select>
         <p class="text-sm text-dark mt-2">Select a vocabulary set from the list or use the embedded default. For local testing, run a server (e.g., python -m http.server).</p>
       </div>
+      <div class="mb-4">
+        <label class="block text-dark mb-2">Amalgamate Set (Optional):</label>
+        <select id="amalgamateSelect" class="w-full p-2 rounded bg-light text-dark">
+          <option value="">[None]</option>
+        </select>
+        <p class="text-sm text-dark mt-2">Optionally combine with another set for two terms on screen.</p>
+      </div>
       <button id="startButton" class="bg-accent text-dark px-4 py-2 rounded w-full hover:bg-highlight">Start</button>
       <p id="loadingIndicator" class="hidden text-dark mt-2">Loading vocabulary...</p>
     </div>
