@@ -23,7 +23,7 @@ const defaultVocabData = [
   { Term: "Data Type", Definition: "A classification of data such as integer string or boolean" },
   { Term: "Integer", Definition: "A whole number data type without decimal points" },
   { Term: "String", Definition: "A sequence of characters such as text used in programming" },
-  { Term: "Boolean", Definition: "A data type with two values: true or false" },
+  { Term: "Boolean", Definition: "A data type with only two values: true or false" },
   { Term: "Operator", Definition: "A symbol that performs operations like addition (+) or comparison (==)" },
   { Term: "Conditional Statement", Definition: "A programming construct like “if-then-else” that executes code based on a condition" },
   { Term: "Loop", Definition: "A programming construct that repeats a block of code until a condition is met" },
@@ -75,18 +75,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const startButton = document.getElementById('startButton');
   const levelInput = document.getElementById('levelInput');
   const modeSelect = document.getElementById('modeSelect');
-  const caseSelect = document.getElementById('caseSelect');
+  const promptSelect = document.getElementById('promptSelect');
   const vocabSelect = document.getElementById('vocabSelect');
+  const caseSelect = document.getElementById('caseSelect');
   const amalgamateSelect = document.getElementById('amalgamateSelect');
   const vocabSetTitle = document.getElementById('vocabSetTitle');
   const certificateButton = document.getElementById('certificateButton');
   const loadingIndicator = document.getElementById('loadingIndicator');
-  const timeIndicator = document.getElementById('timeIndicator');
-
-  if (!timeIndicator) {
-    console.error('Time indicator not found');
-    return;
-  }
 
   canvas.width = 800;
   canvas.height = 400;
@@ -100,10 +95,11 @@ document.addEventListener('DOMContentLoaded', () => {
   let timeLeft = 30;
   let gameActive = false;
   let mode = 'game';
+  let promptType = 'definition';
   let caseSensitive = false;
   let level = 1;
   let totalTime = 0;
-  let wpmStartTime = null;
+  let wpmStartTime = null; // Tracks when WPM calculation begins
   let missedWords = [];
   let totalChars = 0;
   let correctChars = 0;
@@ -165,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const targetArray = isAmalgamate ? amalgamateVocab : vocabData;
     vocabSetName = vocabSelect.options[vocabSelect.selectedIndex].textContent;
     if (!csvUrl) {
-      targetArray.length = 0;
+      targetArray.length = 0; // Clear the array
       if (!isAmalgamate) {
         vocabData = [...defaultVocabData];
         vocabSetName = vocabSetName || 'Embedded Vocabulary - 53 Computer Science Terms';
@@ -229,7 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
           header: true,
           complete: function(results) {
             clearTimeout(timeoutId);
-            targetArray.length = 0;
+            targetArray.length = 0; // Clear before adding new data
             targetArray.push(...results.data.filter(row => row.Term && row.Definition));
             loadingIndicator.classList.add('hidden');
             startButton.disabled = false;
@@ -275,7 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function getUnderscoreText(text) {
-    if (text.length > 50) text = text.slice(0, 47) + '...';
+    if (text.length > 50) text = text.slice(0, 47) + '...'; // Truncate long definitions
     return text[0] + '_'.repeat(text.length - 1);
   }
 
@@ -284,27 +280,51 @@ document.addEventListener('DOMContentLoaded', () => {
       vocabData = [...defaultVocabData];
     }
     const vocab1 = getRandomVocab(vocabData);
-    let prompt1 = vocab1.Definition;
-    let typedInput1 = vocab1.Term;
+    let prompt1, typedInput1, isTermPrompt1;
+    if (promptType === 'both') {
+      isTermPrompt1 = Math.random() < 0.5;
+    } else {
+      isTermPrompt1 = promptType === 'term';
+    }
+    if (isTermPrompt1) {
+      prompt1 = vocab1.Term;
+      typedInput1 = vocab1.Definition;
+    } else {
+      prompt1 = vocab1.Definition;
+      typedInput1 = vocab1.Term;
+    }
 
     let prompt2 = '', typedInput2 = '', vocab2 = null;
     if (amalgamateVocab.length > 0) {
       vocab2 = getRandomVocab(amalgamateVocab);
-      prompt2 = vocab2.Definition;
-      typedInput2 = vocab2.Term;
+      let isTermPrompt2;
+      if (promptType === 'both') {
+        isTermPrompt2 = Math.random() < 0.5;
+      } else {
+        isTermPrompt2 = promptType === 'term';
+      }
+      if (isTermPrompt2) {
+        prompt2 = vocab2.Term;
+        typedInput2 = vocab2.Definition;
+      } else {
+        prompt2 = vocab2.Definition;
+        typedInput2 = vocab2.Term;
+      }
     }
 
+    // Concatenate terms and definitions with a space for amalgamation
     const finalTypedInput = amalgamateVocab.length > 0 ? typedInput1 + ' ' + typedInput2 : typedInput1;
     const finalPrompt = amalgamateVocab.length > 0 ? prompt1 + ' ' + prompt2 : prompt1;
-    const finalDefinition = amalgamateVocab.length > 0 ? vocab1.Definition + ' ' + vocab2.Definition : vocab1.Definition;
+    const finalDefinition = amalgamateVocab.length > 0 ? (isTermPrompt1 ? vocab1.Definition : vocab1.Term) + ' ' + (isTermPrompt1 ? vocab2.Definition : vocab2.Term) : (isTermPrompt1 ? vocab1.Definition : vocab1.Term);
 
     const x = mode === 'game' ? Math.random() * (canvas.width - ctx.measureText(getUnderscoreText(finalTypedInput)).width) : 50;
     const y = 0;
-    const speed = mode === 'game' ? 0.5 + wave * 0.5 * (level / 5) : 0.5 + level * 0.1;
+    const speed = mode === 'game' ? 0.5 + wave * 0.5 * (level / 5) : 0.5 + level * 0.1; // Reduced initial speed by half
     words.push({ prompt: finalPrompt, typedInput: finalTypedInput, displayText: getUnderscoreText(finalTypedInput), x, y, speed, matched: '', definition: finalDefinition });
-    userInput.placeholder = finalPrompt;
-    wpmStartTime = null;
+    userInput.placeholder = finalPrompt; // Set placeholder, will clear on match
+    wpmStartTime = null; // Reset WPM start time on new word
 
+    // Set definition as background text
     let definitionBackground = document.querySelector('.definition-background');
     if (!definitionBackground) {
       definitionBackground = document.createElement('div');
@@ -312,8 +332,6 @@ document.addEventListener('DOMContentLoaded', () => {
       gameContainer.insertBefore(definitionBackground, gameContainer.firstChild);
     }
     definitionBackground.textContent = finalDefinition;
-
-    updateTimeIndicator();
   }
 
   function updateGame() {
@@ -326,9 +344,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     lastFrameTime = now;
 
+    // Clear the entire canvas to remove any stray renders
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     ctx.font = '20px Arial';
+
+    // Get the current text color from CSS variable --text
     const computedStyle = window.getComputedStyle(document.body);
     const textColor = computedStyle.getPropertyValue('--text').trim();
 
@@ -341,7 +362,7 @@ document.addEventListener('DOMContentLoaded', () => {
       word.matched = target.startsWith(input) ? typed : '';
       ctx.fillStyle = 'red';
       ctx.fillText(word.typedInput.slice(0, word.matched.length), word.x, word.y);
-      ctx.fillStyle = textColor;
+      ctx.fillStyle = textColor; // Use dynamic text color for unmatched text
       ctx.fillText(word.displayText.slice(word.matched.length), word.x + ctx.measureText(word.typedInput.slice(0, word.matched.length)).width, word.y);
       if (word.y >= canvas.height) {
         missedWords.push(word.typedInput);
@@ -357,6 +378,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (words.length === 0) spawnWord();
+    // Only increase speed if typing has started (wpmStartTime is set)
     if (mode === 'game' && wpmStartTime !== null && timeLeft <= 0) {
       wave++;
       waveDisplay.textContent = `Wave: ${wave}`;
@@ -367,8 +389,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function calculateWPM() {
-    if (wpmStartTime === null) return 0;
-    const elapsedTime = (performance.now() - wpmStartTime) / 1000 / 60;
+    if (wpmStartTime === null) return 0; // Return 0 WPM until first keystroke
+    const elapsedTime = (performance.now() - wpmStartTime) / 1000 / 60; // Convert to minutes
     return elapsedTime > 0 ? Math.round((totalChars / 5) / elapsedTime) : 0;
   }
 
@@ -392,7 +414,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function handleInput(e) {
     const typed = e.target.value;
     if (wpmStartTime === null && typed.length > 0) {
-      wpmStartTime = performance.now();
+      wpmStartTime = performance.now(); // Start WPM timing on first keystroke
     }
     words = words.filter(word => {
       const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
@@ -406,16 +428,14 @@ document.addEventListener('DOMContentLoaded', () => {
         totalChars += word.typedInput.length;
         scoreDisplay.textContent = `Score: ${score}`;
         e.target.value = '';
-        e.target.placeholder = 'Prompt will appear here...';
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        wpmStartTime = null;
+        e.target.placeholder = 'Prompt will appear here...'; // Clear placeholder on match
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas immediately
+        wpmStartTime = null; // Reset WPM start time on word clear
         spawnWord();
         return false;
       }
       return true;
     });
-
-    updateTimeIndicator();
   }
 
   function highlightKeys(e) {
@@ -423,20 +443,9 @@ document.addEventListener('DOMContentLoaded', () => {
     keys.forEach(key => key.classList.remove('pressed'));
     if (e.key === ' ') {
       document.querySelector('.space').classList.add('pressed');
-    } else if (e.key === 'Backspace') {
-      document.querySelector('.backspace').classList.add('pressed');
     } else {
       const key = Array.from(keys).find(k => k.textContent.toLowerCase() === e.key.toLowerCase());
       if (key) key.classList.add('pressed');
-    }
-  }
-
-  function updateTimeIndicator() {
-    if (timeIndicator) {
-      timeIndicator.classList.remove('active');
-      if (wpmStartTime !== null) {
-        timeIndicator.classList.add('active');
-      }
     }
   }
 
@@ -457,10 +466,10 @@ document.addEventListener('DOMContentLoaded', () => {
   function generateCertificate() {
     const name = prompt('Enter your name for the certificate:');
     if (!name) return;
-    const safeName = escapeLatex(name.replace(/[^a-zA-Z0-9\s-]/g, ''));
+    const safeName = escapeLatex(name.replace(/[^a-zA-Z0-9\s-]/g, '')); // Sanitize and escape
     const wpm = calculateWPM();
     const accuracy = calculateAccuracy();
-    const promptTypeText = escapeLatex('Definition (Type Term)');
+    const promptTypeText = escapeLatex(promptType === 'definition' ? 'Definition (Type Term)' : promptType === 'term' ? 'Term (Type Definition)' : 'Both (Random)');
     const missedTerms = missedWords.length > 0 ? escapeLatex(missedWords.join(', ')) : 'None';
     const certificateContent = `
 \\documentclass[a4paper,12pt]{article}
@@ -504,6 +513,7 @@ document.addEventListener('DOMContentLoaded', () => {
 \\end{document}
     `;
 
+    // Download .tex file as fallback
     const blob = new Blob([certificateContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -537,6 +547,7 @@ document.addEventListener('DOMContentLoaded', () => {
   startButton.addEventListener('click', () => {
     level = Math.max(1, Math.min(10, parseInt(levelInput.value)));
     mode = modeSelect.value;
+    promptType = promptSelect.value;
     caseSensitive = caseSelect.value === 'sensitive';
     const csvUrl = vocabSelect.value || '';
     const amalgamateUrl = amalgamateSelect.value || '';
