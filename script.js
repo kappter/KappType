@@ -78,6 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const promptSelect = document.getElementById('promptSelect');
   const vocabSelect = document.getElementById('vocabSelect');
   const caseSelect = document.getElementById('caseSelect');
+  const amalgamateSelect = document.getElementById('amalgamateSelect');
   const vocabSetTitle = document.getElementById('vocabSetTitle');
   const certificateButton = document.getElementById('certificateButton');
   const loadingIndicator = document.getElementById('loadingIndicator');
@@ -87,6 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let words = [];
   let vocabData = [];
+  let amalgamateVocab = [];
   let vocabSetName = '';
   let score = 0;
   let wave = 1;
@@ -133,12 +135,20 @@ document.addEventListener('DOMContentLoaded', () => {
       'psych_terms_4',
       'utah_video_production_terms_Final'
     ];
-    const select = document.getElementById('vocabSelect');
+    const vocabSelectElement = document.getElementById('vocabSelect');
+    const amalgamateSelectElement = document.getElementById('amalgamateSelect');
+    vocabSelectElement.innerHTML = '<option value="">[Embedded Vocabulary - 53 Computer Science Terms]</option>';
+    amalgamateSelectElement.innerHTML = '<option value="">[None]</option>';
     files.forEach(file => {
-      const option = document.createElement('option');
-      option.value = baseUrl + file + '.csv';
-      option.textContent = file;
-      select.appendChild(option);
+      const option1 = document.createElement('option');
+      option1.value = baseUrl + file + '.csv';
+      option1.textContent = file;
+      vocabSelectElement.appendChild(option1);
+
+      const option2 = document.createElement('option');
+      option2.value = baseUrl + file + '.csv';
+      option2.textContent = file;
+      amalgamateSelectElement.appendChild(option2);
     });
   }
 
@@ -146,11 +156,15 @@ document.addEventListener('DOMContentLoaded', () => {
     return url.includes('github.com') || url.endsWith('.csv') || url.startsWith('/');
   }
 
-  function loadVocab(csvUrl) {
+  function loadVocab(csvUrl, isAmalgamate = false) {
+    const targetArray = isAmalgamate ? amalgamateVocab : vocabData;
     vocabSetName = vocabSelect.options[vocabSelect.selectedIndex].textContent;
     if (!csvUrl) {
-      vocabData = defaultVocabData;
-      vocabSetName = vocabSetName || 'Embedded Vocabulary - 53 Computer Science Terms';
+      targetArray.length = 0; // Clear the array
+      if (!isAmalgamate) {
+        vocabData = [...defaultVocabData];
+        vocabSetName = vocabSetName || 'Embedded Vocabulary - 53 Computer Science Terms';
+      }
       loadingIndicator.classList.add('hidden');
       startButton.disabled = false;
       return;
@@ -158,8 +172,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (window.location.protocol === 'file:') {
       alert('Cannot load external CSV files when running via file://. Using embedded vocabulary (53 computer science terms). For external CSVs, run a local server (e.g., python -m http.server) and access http://localhost:8000.');
-      vocabData = defaultVocabData;
-      vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
+      targetArray.length = 0;
+      if (!isAmalgamate) {
+        vocabData = [...defaultVocabData];
+        vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
+      }
       loadingIndicator.classList.add('hidden');
       startButton.disabled = false;
       return;
@@ -167,8 +184,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!validateCsvUrl(csvUrl)) {
       alert('Invalid CSV URL. Using embedded vocabulary.');
-      vocabData = defaultVocabData;
-      vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
+      targetArray.length = 0;
+      if (!isAmalgamate) {
+        vocabData = [...defaultVocabData];
+        vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
+      }
       loadingIndicator.classList.add('hidden');
       startButton.disabled = false;
       return;
@@ -176,8 +196,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (typeof Papa === 'undefined') {
       alert('Papa Parse library not loaded. Using embedded vocabulary. Ensure papaparse.min.js is in the repository root.');
-      vocabData = defaultVocabData;
-      vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
+      targetArray.length = 0;
+      if (!isAmalgamate) {
+        vocabData = [...defaultVocabData];
+        vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
+      }
       loadingIndicator.classList.add('hidden');
       startButton.disabled = false;
       return;
@@ -201,21 +224,27 @@ document.addEventListener('DOMContentLoaded', () => {
           header: true,
           complete: function(results) {
             clearTimeout(timeoutId);
-            vocabData = results.data.filter(row => row.Term && row.Definition);
+            targetArray.length = 0; // Clear before adding new data
+            targetArray.push(...results.data.filter(row => row.Term && row.Definition));
             loadingIndicator.classList.add('hidden');
             startButton.disabled = false;
-            if (vocabData.length === 0) {
-              alert(`No valid terms found in the CSV at ${csvUrl}. Ensure it has "Term" and "Definition" columns. Using embedded vocabulary.`);
-              vocabData = defaultVocabData;
-              vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
+            if (targetArray.length === 0) {
+              alert(`No valid terms found in the CSV at ${csvUrl}. Ensure it has "Term" and "Definition" columns. Using embedded vocabulary for ${isAmalgamate ? 'amalgamation' : 'primary'}.`);
+              if (!isAmalgamate) {
+                vocabData = [...defaultVocabData];
+                vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
+              }
             }
           },
           error: function(error) {
             clearTimeout(timeoutId);
             console.error(`Papa Parse error for ${csvUrl}:`, error);
-            alert(`Failed to parse CSV at ${csvUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary.`);
-            vocabData = defaultVocabData;
-            vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
+            alert(`Failed to parse CSV at ${csvUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary for ${isAmalgamate ? 'amalgamation' : 'primary'}.`);
+            targetArray.length = 0;
+            if (!isAmalgamate) {
+              vocabData = [...defaultVocabData];
+              vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
+            }
             loadingIndicator.classList.add('hidden');
             startButton.disabled = false;
           }
@@ -224,17 +253,20 @@ document.addEventListener('DOMContentLoaded', () => {
       .catch(error => {
         clearTimeout(timeoutId);
         console.error(`Fetch error for ${csvUrl}:`, error);
-        alert(`Failed to load CSV at ${csvUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary.`);
-        vocabData = defaultVocabData;
-        vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
+        alert(`Failed to load CSV at ${csvUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary for ${isAmalgamate ? 'amalgamation' : 'primary'}.`);
+        targetArray.length = 0;
+        if (!isAmalgamate) {
+          vocabData = [...defaultVocabData];
+          vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
+        }
         loadingIndicator.classList.add('hidden');
         startButton.disabled = false;
       });
   }
 
-  function getRandomVocab() {
-    const index = Math.floor(Math.random() * vocabData.length);
-    return vocabData[index];
+  function getRandomVocab(sourceArray) {
+    const index = Math.floor(Math.random() * sourceArray.length);
+    return sourceArray[index];
   }
 
   function getUnderscoreText(text) {
@@ -244,27 +276,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function spawnWord() {
     if (vocabData.length === 0) {
-      vocabData = defaultVocabData;
+      vocabData = [...defaultVocabData];
     }
-    const vocab = getRandomVocab();
-    let prompt, typedInput, isTermPrompt;
+    const vocab1 = getRandomVocab(vocabData);
+    let prompt1, typedInput1, isTermPrompt1;
     if (promptType === 'both') {
-      isTermPrompt = Math.random() < 0.5;
+      isTermPrompt1 = Math.random() < 0.5;
     } else {
-      isTermPrompt = promptType === 'term';
+      isTermPrompt1 = promptType === 'term';
     }
-    if (isTermPrompt) {
-      prompt = vocab.Term;
-      typedInput = vocab.Definition;
+    if (isTermPrompt1) {
+      prompt1 = vocab1.Term;
+      typedInput1 = vocab1.Definition;
     } else {
-      prompt = vocab.Definition;
-      typedInput = vocab.Term;
+      prompt1 = vocab1.Definition;
+      typedInput1 = vocab1.Term;
     }
-    const x = mode === 'game' ? Math.random() * (canvas.width - ctx.measureText(getUnderscoreText(typedInput)).width) : 50;
+
+    let prompt2 = '', typedInput2 = '';
+    if (amalgamateVocab.length > 0) {
+      const vocab2 = getRandomVocab(amalgamateVocab);
+      let isTermPrompt2;
+      if (promptType === 'both') {
+        isTermPrompt2 = Math.random() < 0.5;
+      } else {
+        isTermPrompt2 = promptType === 'term';
+      }
+      if (isTermPrompt2) {
+        prompt2 = vocab2.Term;
+        typedInput2 = vocab2.Definition;
+      } else {
+        prompt2 = vocab2.Definition;
+        typedInput2 = vocab2.Term;
+      }
+    }
+
+    const x = mode === 'game' ? Math.random() * (canvas.width - ctx.measureText(getUnderscoreText(typedInput1 + (typedInput2 ? ' | ' + typedInput2 : '')).width) : 50;
     const y = 0;
-    const speed = mode === 'game' ? 1 + wave * 0.5 * (level / 5) : 1 + level * 0.1;
-    words.push({ term: vocab.Term, definition: vocab.Definition, prompt, typedInput, displayText: getUnderscoreText(typedInput), x, y, speed, matched: '' });
-    userInput.placeholder = prompt;
+    const speed = mode === 'game' ? 0.5 + wave * 0.5 * (level / 5) : 0.5 + level * 0.1; // Reduced initial speed by half
+    words.push({ term1: vocab1.Term, definition1: vocab1.Definition, prompt1, typedInput1, term2: amalgamateVocab.length ? vocab2.Term : '', definition2: amalgamateVocab.length ? vocab2.Definition : '', prompt2, typedInput2, displayText: getUnderscoreText(typedInput1 + (typedInput2 ? ' | ' + typedInput2 : '')), x, y, speed, matched: '' });
+    userInput.placeholder = prompt1 + (prompt2 ? ' | ' + prompt2 : '');
   }
 
   function updateGame() {
@@ -288,16 +339,16 @@ document.addEventListener('DOMContentLoaded', () => {
     words.forEach(word => {
       word.y += word.speed;
       const typed = userInput.value.trim();
-      const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
+      const target = caseSensitive ? (word.typedInput1 + (word.typedInput2 ? ' | ' + word.typedInput2 : '')) : (word.typedInput1 + (word.typedInput2 ? ' | ' + word.typedInput2 : '')).toLowerCase();
       const input = caseSensitive ? typed : typed.toLowerCase();
       word.matched = target.startsWith(input) ? typed : '';
       ctx.fillStyle = 'red';
-      ctx.fillText(word.typedInput.slice(0, word.matched.length), word.x, word.y);
+      ctx.fillText((word.typedInput1 + (word.typedInput2 ? ' | ' + word.typedInput2 : '')).slice(0, word.matched.length), word.x, word.y);
       ctx.fillStyle = textColor; // Use dynamic text color for unmatched text
-      ctx.fillText(word.displayText.slice(word.matched.length), word.x + ctx.measureText(word.typedInput.slice(0, word.matched.length)).width, word.y);
+      ctx.fillText(word.displayText.slice(word.matched.length), word.x + ctx.measureText((word.typedInput1 + (word.typedInput2 ? ' | ' + word.typedInput2 : '')).slice(0, word.matched.length)).width, word.y);
       if (word.y >= canvas.height) {
-        missedWords.push(word.typedInput);
-        totalChars += word.typedInput.length;
+        missedWords.push(word.typedInput1 + (word.typedInput2 ? ' | ' + word.typedInput2 : ''));
+        totalChars += (word.typedInput1 + (word.typedInput2 ? ' | ' + word.typedInput2 : '')).length;
         words = [];
         if (mode === 'game') {
           gameActive = false;
@@ -340,15 +391,15 @@ document.addEventListener('DOMContentLoaded', () => {
   function handleInput(e) {
     const typed = userInput.value.trim();
     words = words.filter(word => {
-      const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
+      const target = caseSensitive ? (word.typedInput1 + (word.typedInput2 ? ' | ' + word.typedInput2 : '')) : (word.typedInput1 + (word.typedInput2 ? ' | ' + word.typedInput2 : '')).toLowerCase();
       const input = caseSensitive ? typed : typed.toLowerCase();
       if (typed.length === 1 && target.startsWith(input)) {
-        word.displayText = word.typedInput;
+        word.displayText = word.typedInput1 + (word.typedInput2 ? ' | ' + word.typedInput2 : '');
       }
       if (target === input) {
-        score += word.typedInput.length;
-        correctChars += word.typedInput.length;
-        totalChars += word.typedInput.length;
+        score += (word.typedInput1 + (word.typedInput2 ? ' | ' + word.typedInput2 : '')).length;
+        correctChars += (word.typedInput1 + (word.typedInput2 ? ' | ' + word.typedInput2 : '')).length;
+        totalChars += (word.typedInput1 + (word.typedInput2 ? ' | ' + word.typedInput2 : '')).length;
         scoreDisplay.textContent = `Score: ${score}`;
         e.target.value = '';
         e.target.placeholder = 'Prompt will appear here...';
@@ -449,7 +500,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function startGame() {
     if (vocabData.length === 0) {
-      vocabData = defaultVocabData;
+      vocabData = [...defaultVocabData];
     }
     gameActive = true;
     userInput.focus();
@@ -459,7 +510,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.key').forEach(key => key.classList.remove('pressed'));
     });
     certificateButton.addEventListener('click', generateCertificate);
-    vocabSetTitle.textContent = vocabSetName;
+    vocabSetTitle.textContent = vocabSetName + (amalgamateVocab.length ? ' + Amalgamated Set' : '');
     spawnWord();
     updateGame();
     updateTimer();
@@ -472,7 +523,11 @@ document.addEventListener('DOMContentLoaded', () => {
     promptType = promptSelect.value;
     caseSensitive = caseSelect.value === 'sensitive';
     const csvUrl = vocabSelect.value || '';
+    const amalgamateUrl = amalgamateSelect.value || '';
     loadVocab(csvUrl);
+    if (amalgamateUrl) {
+      loadVocab(amalgamateUrl, true);
+    }
     setTimeout(() => {
       startScreen.classList.add('hidden');
       gameContainer.classList.remove('hidden');
