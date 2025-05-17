@@ -293,9 +293,9 @@ document.addEventListener('DOMContentLoaded', () => {
       typedInput1 = vocab1.Term;
     }
 
-    let prompt2 = '', typedInput2 = '';
+    let prompt2 = '', typedInput2 = '', vocab2 = null;
     if (amalgamateVocab.length > 0) {
-      const vocab2 = getRandomVocab(amalgamateVocab);
+      vocab2 = getRandomVocab(amalgamateVocab);
       let isTermPrompt2;
       if (promptType === 'both') {
         isTermPrompt2 = Math.random() < 0.5;
@@ -311,20 +311,25 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    const fullText = typedInput1 + (typedInput2 ? ' | ' + typedInput2 : '');
-    const x = mode === 'game' ? Math.random() * (canvas.width - ctx.measureText(getUnderscoreText(fullText)).width) : 50;
+    // Concatenate terms and definitions for amalgamation
+    const finalTypedInput = amalgamateVocab.length > 0 ? typedInput1 + typedInput2 : typedInput1;
+    const finalPrompt = amalgamateVocab.length > 0 ? prompt1 + ', ' + prompt2 : prompt1;
+    const finalDefinition = amalgamateVocab.length > 0 ? (isTermPrompt1 ? vocab1.Definition : vocab1.Term) + ', ' + (isTermPrompt1 ? vocab2.Definition : vocab2.Term) : (isTermPrompt1 ? vocab1.Definition : vocab1.Term);
+
+    const x = mode === 'game' ? Math.random() * (canvas.width - ctx.measureText(getUnderscoreText(finalTypedInput)).width) : 50;
     const y = 0;
     const speed = mode === 'game' ? 0.5 + wave * 0.5 * (level / 5) : 0.5 + level * 0.1; // Reduced initial speed by half
-    words.push({ term1: vocab1.Term, definition1: vocab1.Definition, prompt1, typedInput1, term2: amalgamateVocab.length ? vocab2.Term : '', definition2: amalgamateVocab.length ? vocab2.Definition : '', prompt2, typedInput2, displayText: getUnderscoreText(fullText), x, y, speed, matched: '' });
-    userInput.placeholder = prompt1 + (prompt2 ? ' | ' + prompt2 : '');
+    words.push({ prompt: finalPrompt, typedInput: finalTypedInput, displayText: getUnderscoreText(finalTypedInput), x, y, speed, matched: '', definition: finalDefinition });
+    userInput.placeholder = finalPrompt;
 
     // Set definition as background text
-    const definitionBackground = document.querySelector('.definition-background') || document.createElement('div');
-    if (!definitionBackground.className) {
+    let definitionBackground = document.querySelector('.definition-background');
+    if (!definitionBackground) {
+      definitionBackground = document.createElement('div');
       definitionBackground.className = 'definition-background';
-      gameContainer.insertBefore(definitionBackground, userInput);
+      gameContainer.insertBefore(definitionBackground, gameContainer.firstChild);
     }
-    definitionBackground.textContent = (isTermPrompt1 ? vocab1.Definition : vocab1.Term) + (amalgamateVocab.length && prompt2 ? ' | ' + (isTermPrompt2 ? vocab2.Definition : vocab2.Term) : '');
+    definitionBackground.textContent = finalDefinition;
   }
 
   function updateGame() {
@@ -347,17 +352,17 @@ document.addEventListener('DOMContentLoaded', () => {
     words = words.filter(word => word.y < canvas.height);
     words.forEach(word => {
       word.y += word.speed;
-      const typed = userInput.value.trim();
-      const target = caseSensitive ? (word.typedInput1 + (word.typedInput2 ? ' | ' + word.typedInput2 : '')) : (word.typedInput1 + (word.typedInput2 ? ' | ' + word.typedInput2 : '')).toLowerCase();
+      const typed = userInput.value;
+      const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
       const input = caseSensitive ? typed : typed.toLowerCase();
       word.matched = target.startsWith(input) ? typed : '';
       ctx.fillStyle = 'red';
-      ctx.fillText((word.typedInput1 + (word.typedInput2 ? ' | ' + word.typedInput2 : '')).slice(0, word.matched.length), word.x, word.y);
+      ctx.fillText(word.typedInput.slice(0, word.matched.length), word.x, word.y);
       ctx.fillStyle = textColor; // Use dynamic text color for unmatched text
-      ctx.fillText(word.displayText.slice(word.matched.length), word.x + ctx.measureText((word.typedInput1 + (word.typedInput2 ? ' | ' + word.typedInput2 : '')).slice(0, word.matched.length)).width, word.y);
+      ctx.fillText(word.displayText.slice(word.matched.length), word.x + ctx.measureText(word.typedInput.slice(0, word.matched.length)).width, word.y);
       if (word.y >= canvas.height) {
-        missedWords.push(word.typedInput1 + (word.typedInput2 ? ' | ' + word.typedInput2 : ''));
-        totalChars += (word.typedInput1 + (word.typedInput2 ? ' | ' + word.typedInput2 : '')).length;
+        missedWords.push(word.typedInput);
+        totalChars += word.typedInput.length;
         words = [];
         if (mode === 'game') {
           gameActive = false;
@@ -398,17 +403,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function handleInput(e) {
-    const typed = userInput.value.trim();
+    const typed = e.target.value;
     words = words.filter(word => {
-      const target = caseSensitive ? (word.typedInput1 + (word.typedInput2 ? ' | ' + word.typedInput2 : '')) : (word.typedInput1 + (word.typedInput2 ? ' | ' + word.typedInput2 : '')).toLowerCase();
+      const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
       const input = caseSensitive ? typed : typed.toLowerCase();
       if (typed.length === 1 && target.startsWith(input)) {
-        word.displayText = word.typedInput1 + (word.typedInput2 ? ' | ' + word.typedInput2 : '');
+        word.displayText = word.typedInput;
       }
       if (target === input) {
-        score += (word.typedInput1 + (word.typedInput2 ? ' | ' + word.typedInput2 : '')).length;
-        correctChars += (word.typedInput1 + (word.typedInput2 ? ' | ' + word.typedInput2 : '')).length;
-        totalChars += (word.typedInput1 + (word.typedInput2 ? ' | ' + word.typedInput2 : '')).length;
+        score += word.typedInput.length;
+        correctChars += word.typedInput.length;
+        totalChars += word.typedInput.length;
         scoreDisplay.textContent = `Score: ${score}`;
         e.target.value = '';
         e.target.placeholder = 'Prompt will appear here...';
