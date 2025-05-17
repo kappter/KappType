@@ -65,7 +65,26 @@ body.dark {
   max-width: 800px;
   word-wrap: break-word;
   pointer-events: none;
-  z-index: -1;
+  z-index: -1; /* Behind all interactive elements */
+}
+
+.time-indicator {
+  position: fixed;
+  top: 40%; /* Slightly above the center of definition-background */
+  right: 5%;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  opacity: 0.5;
+  z-index: 0;
+}
+
+.time-indicator.inactive {
+  background-color: red;
+}
+
+.time-indicator.active {
+  background-color: green;
 }
 
 #userInput {
@@ -76,4 +95,19 @@ body.dark {
 #gameContainer {
   position: relative;
   z-index: 0;
+}
+
+#keyboard {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2; /* Above definition background */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px;
+  padding: 10px;
+  background-color: var(--secondary);
+  border-radius: 5px;
 }

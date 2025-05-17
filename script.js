@@ -332,6 +332,16 @@ document.addEventListener('DOMContentLoaded', () => {
       gameContainer.insertBefore(definitionBackground, gameContainer.firstChild);
     }
     definitionBackground.textContent = finalDefinition;
+
+    // Create or update time indicator
+    let timeIndicator = document.querySelector('.time-indicator');
+    if (!timeIndicator) {
+      timeIndicator = document.createElement('div');
+      timeIndicator.className = 'time-indicator';
+      gameContainer.appendChild(timeIndicator);
+    }
+    timeIndicator.classList.remove('active', 'inactive');
+    timeIndicator.classList.add(wpmStartTime === null ? 'inactive' : 'active');
   }
 
   function updateGame() {
@@ -344,7 +354,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     lastFrameTime = now;
 
+    // Clear the entire canvas to remove any stray renders
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
     ctx.font = '20px Arial';
 
     // Get the current text color from CSS variable --text
@@ -376,6 +388,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (words.length === 0) spawnWord();
+
+    // Update time indicator
+    const timeIndicator = document.querySelector('.time-indicator');
+    if (timeIndicator) {
+      timeIndicator.classList.remove('active', 'inactive');
+      timeIndicator.classList.add(wpmStartTime === null ? 'inactive' : 'active');
+    }
+
     // Only increase speed if typing has started (wpmStartTime is set)
     if (mode === 'game' && wpmStartTime !== null && timeLeft <= 0) {
       wave++;
@@ -434,6 +454,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       return true;
     });
+
+    // Update time indicator on input
+    const timeIndicator = document.querySelector('.time-indicator');
+    if (timeIndicator) {
+      timeIndicator.classList.remove('active', 'inactive');
+      timeIndicator.classList.add(wpmStartTime === null ? 'inactive' : 'active');
+    }
   }
 
   function highlightKeys(e) {
