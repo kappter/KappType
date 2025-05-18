@@ -42,151 +42,73 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KappType</title>
+  <title>KappType - Typing Game</title>
   <link rel="stylesheet" href="styles.css">
-  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 </head>
 <body>
+  <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
   <div id="startScreen">
-    <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
-    <h1>Welcome to KappType</h1>
-    <div>
-      <label for="levelInput">Experience Level (1-10):</label>
-      <input type="number" id="levelInput" value="1" min="1" max="10">
-    </div>
-    <div>
+    <div class="start-card">
+      <h1>KappType</h1>
+      <label for="levelInput">Level (1-10):</label>
+      <input type="number" id="levelInput" min="1" max="10" value="1">
       <label for="modeSelect">Mode:</label>
       <select id="modeSelect">
-        <option value="game">Game Mode</option>
-        <option value="practice">Training Mode</option>
+        <option value="game">Game</option>
+        <option value="practice">Practice</option>
       </select>
-    </div>
-    <div>
       <label for="promptSelect">Prompt Type:</label>
       <select id="promptSelect">
-        <option value="definition">Definition (Type Term)</option>
-        <option value="term">Term (Type Definition)</option>
-        <option value="random">Both (Random)</option>
+        <option value="definition">Definition</option>
+        <option value="term">Term</option>
+        <option value="random">Random</option>
       </select>
-    </div>
-    <div>
       <label for="caseSelect">Case Sensitivity:</label>
       <select id="caseSelect">
-        <option value="insensitive">Case Insensitive</option>
-        <option value="sensitive">Case Sensitive</option>
+        <option value="insensitive">Insensitive</option>
+        <option value="sensitive">Sensitive</option>
       </select>
-    </div>
-    <div>
       <label for="vocabSelect">Vocabulary Set:</label>
-      <select id="vocabSelect">
-        <option value="">[Embedded Vocabulary - 53 Computer Science Terms]</option>
-      </select>
-      <p>Select a vocabulary set from the list or use the embedded default. For local testing, run a server (e.g., python -m http.server).</p>
+      <select id="vocabSelect"></select>
+      <label for="amalgamateSelect">Amalgamate Set:</label>
+      <select id="amalgamateSelect"></select>
+      <label for="customVocabInput">Custom Vocabulary (CSV):</label>
+      <input type="file" id="customVocabInput" accept=".csv">
+      <button id="startButton">Start Game</button>
+      <div id="loadingIndicator" class="hidden">Loading...</div>
     </div>
-    <div>
-      <label for="amalgamateSelect">Amalgamate Set (Optional):</label>
-      <select id="amalgamateSelect">
-        <option value="">[None]</option>
-      </select>
-      <p>Optionally combine with another set for two terms on screen.</p>
-    </div>
-    <button id="startButton">Start</button>
-    <div id="loadingIndicator" class="hidden">Loading vocabulary...</div>
   </div>
-
   <div id="gameContainer" class="hidden">
-    <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
-    <h2 id="vocabSetTitle">Basic Vocabulary</h2>
-    <div id="stats">
-      <span id="score">Score: 0</span> |
-      <span id="wave">Wave: 1</span> |
-      <span id="timer">Time: 30s</span> |
+    <h2 id="vocabSetTitle"></h2>
+    <canvas id="gameCanvas"></canvas>
+    <div class="stats">
+      <span id="score">Score: 0</span>
+      <span id="wave">Wave: 1</span>
+      <span id="timer">Time: 30s</span>
       <span id="wpm">WPM: 0</span>
     </div>
-    <canvas id="gameCanvas"></canvas>
-    <input type="text" id="userInput" placeholder="Prompt will appear here...">
-    <div id="keyboard">
+    <input type="text" id="userInput" placeholder="Prompt will appear here..." spellcheck="false">
+    <button id="certificateButton">Generate Certificate</button>
+    <div id="timeIndicator"></div>
+    <div class="keyboard">
       <div class="row">
-        <div class="key">`</div>
-        <div class="key">1</div>
-        <div class="key">2</div>
-        <div class="key">3</div>
-        <div class="key">4</div>
-        <div class="key">5</div>
-        <div class="key">6</div>
-        <div class="key">7</div>
-        <div class="key">8</div>
-        <div class="key">9</div>
-        <div class="key">0</div>
-        <div class="key">-</div>
-        <div class="key">=</div>
-        <div class="key backspace">Backspace</div>
+        <span class="key">~</span><span class="key">1</span><span class="key">2</span><span class="key">3</span><span class="key">4</span><span class="key">5</span><span class="key">6</span><span class="key">7</span><span class="key">8</span><span class="key">9</span><span class="key">0</span><span class="key">-</span><span class="key">=</span><span class="key backspace">Backspace</span>
       </div>
       <div class="row">
-        <div class="key tab">Tab</div>
-        <div class="key">Q</div>
-        <div class="key">W</div>
-        <div class="key">E</div>
-        <div class="key">R</div>
-        <div class="key">T</div>
-        <div class="key">Y</div>
-        <div class="key">U</div>
-        <div class="key">I</div>
-        <div class="key">O</div>
-        <div class="key">P</div>
-        <div class="key">[</div>
-        <div class="key">]</div>
-        <div class="key">\</div>
+        <span class="key tab">Tab</span><span class="key">q</span><span class="key">w</span><span class="key">e</span><span class="key">r</span><span class="key">t</span><span class="key">y</span><span class="key">u</span><span class="key">i</span><span class="key">o</span><span class="key">p</span><span class="key">[</span><span class="key">]</span><span class="key">\</span>
       </div>
       <div class="row">
-        <div class="key caps-lock">Caps Lock</div>
-        <div class="key">A</div>
-        <div class="key">S</div>
-        <div class="key">D</div>
-        <div class="key">F</div>
-        <div class="key">G</div>
-        <div class="key">H</div>
-        <div class="key">J</div>
-        <div class="key">K</div>
-        <div class="key">L</div>
-        <div class="key">;</div>
-        <div class="key">'</div>
-        <div class="key enter">Enter</div>
+        <span class="key caps-lock">Caps Lock</span><span class="key">a</span><span class="key">s</span><span class="key">d</span><span class="key">f</span><span class="key">g</span><span class="key">h</span><span class="key">j</span><span class="key">k</span><span class="key">l</span><span class="key">;</span><span class="key">'</span><span class="key enter">Enter</span>
       </div>
       <div class="row">
-        <div class="key shift">Shift</div>
-        <div class="key">Z</div>
-        <div class="key">X</div>
-        <div class="key">C</div>
-        <div class="key">V</div>
-        <div class="key">B</div>
-        <div class="key">N</div>
-        <div class="key">M</div>
-        <div class="key">,</div>
-        <div class="key">.</div>
-        <div class="key">/</div>
-        <div class="key shift">Shift</div>
+        <span class="key shift">Shift</span><span class="key">z</span><span class="key">x</span><span class="key">c</span><span class="key">v</span><span class="key">b</span><span class="key">n</span><span class="key">m</span><span class="key">,</span><span class="key">.</span><span class="key">/</span><span class="key shift">Shift</span>
       </div>
       <div class="row">
-        <div class="key ctrl">Ctrl</div>
-        <div class="key win">Win</div>
-        <div class="key alt">Alt</div>
-        <div class="key space">Space</div>
-        <div class="key alt">Alt</div>
-        <div class="key win">Win</div>
-        <div class="key ctrl">Ctrl</div>
-        <div id="timeIndicator"></div>
+        <span class="key ctrl">Ctrl</span><span class="key win">Win</span><span class="key alt">Alt</span><span class="key space">Space</span><span class="key alt">Alt</span><span class="key win">Win</span><span class="key ctrl">Ctrl</span>
       </div>
     </div>
-    <div id="certificateContainer">
-      <button id="certificateButton">Download Certificate</button>
-    </div>
-    <footer>
-      <p>© 2025 KappType. All rights reserved. Developed for Typing Mastery</p>
-    </footer>
   </div>
-
-  <script src="papaparse.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

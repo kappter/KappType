@@ -433,7 +433,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const finalDefinition = amalgamateVocab.length > 0 && vocab2 ? vocab1.Definition + ' ' + vocab2.Definition : vocab1.Definition;
 
     // Ensure word stays within canvas bounds with padding
-    const padding = 10; // Padding from canvas edges
+    const padding = 10;
     const textWidth = ctx.measureText(finalTypedInput).width;
     const maxX = canvas.width - textWidth - padding;
     const minX = padding;
@@ -442,7 +442,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const y = 0;
     const speed = mode === 'game' ? 0.5 + wave * 0.5 * (level / 5) : 0.5 + level * 0.1;
-    words.push({ prompt: finalPrompt, typedInput: finalTypedInput, displayText: getUnderscoreText(finalTypedInput), x, y, speed, matched: '', definition: finalDefinition });
+    const word = { prompt: finalPrompt, typedInput: finalTypedInput, displayText: getUnderscoreText(finalTypedInput), x, y, speed, matched: '', definition: finalDefinition, isExiting: false };
+    words.push(word);
     userInput.placeholder = finalPrompt;
     wpmStartTime = null;
 
@@ -461,14 +462,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw bottom warning line (dark gray stroke, rounded corners)
+    // Draw bottom warning line
     const rectHeight = 20;
     const rectY = canvas.height - rectHeight;
     ctx.beginPath();
-    ctx.roundRect(0, rectY, canvas.width, rectHeight, 10); // 10px radius for rounded corners
+    ctx.roundRect(0, rectY, canvas.width, rectHeight, 10);
     ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
     ctx.fill();
-    ctx.strokeStyle = '#333333'; // Dark gray stroke
+    ctx.strokeStyle = '#333333';
     ctx.lineWidth = 2;
     ctx.stroke();
 
@@ -503,11 +504,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Draw falling words
     ctx.font = '20px Arial';
-    ctx.textAlign = 'left'; // Ensure left alignment for words
+    ctx.textAlign = 'left';
     const computedStyle = window.getComputedStyle(document.body);
-    const textColor = computedStyle.getPropertyValue('--text').trim();
+    const textColor = computedStyle.getPropertyValue('--text')?.trim() || '#ffffff';
 
-    words = words.filter(word => word.y < canvas.height);
+    words = words.filter(word => word.y < canvas.height && !word.isExiting);
     words.forEach(word => {
       // Clear the area around the word to prevent overlap
       const textWidth = ctx.measureText(word.typedInput).width;
@@ -531,6 +532,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (word.y >= canvas.height) {
         missedWords.push(word.typedInput);
         totalChars += word.typedInput.length;
+        word.isExiting = true;
         words = [];
         if (mode === 'game') {
           gameActive = false;
@@ -594,6 +596,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.target.placeholder = 'Prompt will appear here...';
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         wpmStartTime = null;
+        word.isExiting = true; // Mark for exit animation
         spawnWord();
         return false;
       }
