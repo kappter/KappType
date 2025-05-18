@@ -720,8 +720,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const csvUrl = vocabSelect.value || '';
     const amalgamateUrl = amalgamateSelect.value || '';
 
-    // Handle custom uploaded vocab
-    if (customVocabInput.files.length > 0) {
+    // Debug and safety check for customVocabInput
+    console.log('customVocabInput:', customVocabInput);
+    if (customVocabInput && customVocabInput.files && customVocabInput.files.length > 0) {
       await loadCustomVocab(customVocabInput.files[0]);
     } else if (csvUrl) {
       await loadVocab(csvUrl);
@@ -733,7 +734,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Handle amalgamation if selected
     if (amalgamateUrl) {
       await loadVocab(amalgamateUrl, true);
-    } else if (customVocabInput.files.length > 1) {
+    } else if (customVocabInput && customVocabInput.files && customVocabInput.files.length > 1) {
       await loadCustomVocab(customVocabInput.files[1], true);
     }
 
