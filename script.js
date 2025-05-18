@@ -87,31 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const loadingIndicator = document.getElementById('loadingIndicator');
   const timeIndicator = document.getElementById('timeIndicator');
 
-  // Debug log all DOM elements
-  console.log('DOM Elements:', {
-    canvas,
-    ctx,
-    userInput,
-    scoreDisplay,
-    waveDisplay,
-    timerDisplay,
-    wpmDisplay,
-    startScreen,
-    gameContainer,
-    startButton,
-    levelInput,
-    modeSelect,
-    promptSelect,
-    caseSelect,
-    vocabSelect,
-    amalgamateSelect,
-    customVocabInput,
-    vocabSetTitle,
-    certificateButton,
-    loadingIndicator,
-    timeIndicator
-  });
-
   // Check for missing critical elements
   if (!canvas || !ctx || !userInput || !timeIndicator || !startButton) {
     console.error('Required elements not found:', { canvas, ctx, userInput, timeIndicator, startButton });
@@ -457,7 +432,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const finalPrompt = amalgamateVocab.length > 0 && vocab2 ? prompt1 + ' ' + prompt2 : prompt1;
     const finalDefinition = amalgamateVocab.length > 0 && vocab2 ? vocab1.Definition + ' ' + vocab2.Definition : vocab1.Definition;
 
-    const x = mode === 'game' ? Math.random() * (canvas.width - ctx.measureText(getUnderscoreText(finalTypedInput)).width) : 50;
+    // Ensure word stays within canvas bounds with padding
+    const padding = 10; // Padding from canvas edges
+    const textWidth = ctx.measureText(finalTypedInput).width;
+    const maxX = canvas.width - textWidth - padding;
+    const minX = padding;
+    const xRange = maxX - minX;
+    const x = mode === 'game' ? minX + Math.random() * (xRange > 0 ? xRange : 0) : 50;
+
     const y = 0;
     const speed = mode === 'game' ? 0.5 + wave * 0.5 * (level / 5) : 0.5 + level * 0.1;
     words.push({ prompt: finalPrompt, typedInput: finalTypedInput, displayText: getUnderscoreText(finalTypedInput), x, y, speed, matched: '', definition: finalDefinition });
@@ -479,9 +461,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw bottom warning line
+    // Draw bottom warning line (dark gray stroke, rounded corners)
+    const rectHeight = 20;
+    const rectY = canvas.height - rectHeight;
+    ctx.beginPath();
+    ctx.roundRect(0, rectY, canvas.width, rectHeight, 10); // 10px radius for rounded corners
     ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
-    ctx.fillRect(0, canvas.height - 20, canvas.width, 20);
+    ctx.fill();
+    ctx.strokeStyle = '#333333'; // Dark gray stroke
+    ctx.lineWidth = 2;
+    ctx.stroke();
 
     // Draw definition background text on the canvas
     if (words.length > 0) {
@@ -514,6 +503,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Draw falling words
     ctx.font = '20px Arial';
+    ctx.textAlign = 'left'; // Ensure left alignment for words
     const computedStyle = window.getComputedStyle(document.body);
     const textColor = computedStyle.getPropertyValue('--text').trim();
 
@@ -528,11 +518,16 @@ document.addEventListener('DOMContentLoaded', () => {
       const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
       const input = caseSensitive ? typed : typed.toLowerCase();
       word.matched = target.startsWith(input) ? typed : '';
+      
+      // Render matched portion in red
       ctx.fillStyle = 'red';
       ctx.fillText(word.matched, word.x, word.y);
-      ctx.fillStyle = textColor;
+      
+      // Render unmatched portion in the default text color
       const matchedWidth = ctx.measureText(word.matched).width;
+      ctx.fillStyle = textColor;
       ctx.fillText(word.displayText.slice(word.matched.length), word.x + matchedWidth, word.y);
+
       if (word.y >= canvas.height) {
         missedWords.push(word.typedInput);
         totalChars += word.typedInput.length;
@@ -559,7 +554,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function calculateWPM() {
     if (wpmStartTime === null) return 0;
     const elapsedTime = (performance.now() - wpmStartTime) / 1000 / 60;
-    return elapsedTime > 0 ? Math.round((total yolks / 5) / elapsedTime) : 0;
+    return elapsedTime > 0 ? Math.round((totalChars / 5) / elapsedTime) : 0;
   }
 
   function calculateAccuracy() {
