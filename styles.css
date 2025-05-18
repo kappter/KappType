@@ -13,6 +13,8 @@ body {
   margin: 0;
   padding: 0;
   font-family: Arial, sans-serif;
+  background-color: var(--primary);
+  color: var(--text);
 }
 
 body.dark {
@@ -42,19 +44,32 @@ body.dark {
   padding: 20px;
   position: relative;
   z-index: 1;
+  background-color: var(--primary);
+  min-height: 100vh;
+}
+
+#startScreen h1 {
+  color: var(--text);
+  margin-bottom: 20px;
 }
 
 #startScreen div {
-  margin: 10px 0;
+  margin: 15px 0;
 }
 
 #startScreen label {
   margin-right: 10px;
+  color: var(--text);
+  font-size: 16px;
 }
 
 #startScreen select, #startScreen input {
   padding: 5px;
   font-size: 16px;
+  border: 1px solid var(--dark);
+  border-radius: 4px;
+  background-color: var(--light);
+  color: var(--text);
 }
 
 #startScreen button {
@@ -65,6 +80,16 @@ body.dark {
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+#startScreen button:hover {
+  background-color: var(--highlight);
+}
+
+#startScreen p {
+  color: var(--text);
+  font-size: 14px;
 }
 
 #startScreen .hidden {
@@ -143,13 +168,28 @@ body.dark {
   padding: 5px;
   font-size: 16px;
   box-sizing: border-box;
+  background-color: var(--light);
+  color: var(--text);
+  border: 1px solid var(--dark);
+  border-radius: 4px;
 }
 
 #gameContainer {
   position: relative;
   z-index: 0;
   text-align: center;
-  padding-bottom: 100px; /* Ensure space below keyboard */
+  padding-bottom: 100px;
+  background-color: var(--primary);
+  min-height: 100vh;
+}
+
+#vocabSetTitle {
+  color: var(--text);
+}
+
+#stats {
+  color: var(--text);
+  margin: 10px 0;
 }
 
 #keyboard {
@@ -170,6 +210,28 @@ body.dark {
 .row {
   display: flex;
   gap: 5px;
+}
+
+#certificateContainer {
+  position: relative;
+  z-index: 3;
+  margin: 20px 0;
+  text-align: center;
+}
+
+#certificateButton {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: var(--accent);
+  color: var(--dark);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+#certificateButton:hover {
+  background-color: var(--highlight);
 }
 
 .hidden {

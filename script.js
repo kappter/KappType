@@ -96,6 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let vocabData = [];
   let amalgamateVocab = [];
   let vocabSetName = '';
+  let amalgamateSetName = '';
   let score = 0;
   let wave = 1;
   let timeLeft = 30;
@@ -164,111 +165,139 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function loadVocab(csvUrl, isAmalgamate = false) {
-    const targetArray = isAmalgamate ? amalgamateVocab : vocabData;
-    vocabSetName = vocabSelect.options[vocabSelect.selectedIndex].textContent;
+    return new Promise((resolve, reject) => {
+      const targetArray = isAmalgamate ? amalgamateVocab : vocabData;
+      const setName = isAmalgamate ? amalgamateSelect.options[amalgamateSelect.selectedIndex].textContent : vocabSelect.options[vocabSelect.selectedIndex].textContent;
 
-    // Clear the target array before loading new data
-    targetArray.length = 0;
+      // Clear the target array before loading new data
+      targetArray.length = 0;
 
-    if (!csvUrl) {
-      if (!isAmalgamate) {
-        vocabData = [...defaultVocabData];
-        vocabSetName = vocabSetName || 'Embedded Vocabulary - 53 Computer Science Terms';
-      }
-      loadingIndicator.classList.add('hidden');
-      startButton.disabled = false;
-      return;
-    }
-
-    if (window.location.protocol === 'file:') {
-      alert('Cannot load external CSV files when running via file://. Using embedded vocabulary (53 computer science terms). For external CSVs, run a local server (e.g., python -m http.server) and access http://localhost:8000.');
-      if (!isAmalgamate) {
-        vocabData = [...defaultVocabData];
-        vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
-      }
-      loadingIndicator.classList.add('hidden');
-      startButton.disabled = false;
-      return;
-    }
-
-    if (!validateCsvUrl(csvUrl)) {
-      alert('Invalid CSV URL. Using embedded vocabulary.');
-      if (!isAmalgamate) {
-        vocabData = [...defaultVocabData];
-        vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
-      }
-      loadingIndicator.classList.add('hidden');
-      startButton.disabled = false;
-      return;
-    }
-
-    if (typeof Papa === 'undefined') {
-      alert('Papa Parse library not loaded. Using embedded vocabulary. Ensure papaparse.min.js is in the repository root.');
-      if (!isAmalgamate) {
-        vocabData = [...defaultVocabData];
-        vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
-      }
-      loadingIndicator.classList.add('hidden');
-      startButton.disabled = false;
-      return;
-    }
-
-    loadingIndicator.classList.remove('hidden');
-    startButton.disabled = true;
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-    fetch(csvUrl, { signal: controller.signal })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status} (${response.statusText})`);
-        }
-        return response.text();
-      })
-      .then(data => {
-        Papa.parse(data, {
-          header: true,
-          complete: function(results) {
-            clearTimeout(timeoutId);
-            targetArray.length = 0; // Ensure the array is clear
-            const filteredData = results.data.filter(row => row.Term && row.Definition);
-            if (filteredData.length === 0) {
-              alert(`No valid terms found in the CSV at ${csvUrl}. Ensure it has "Term" and "Definition" columns. Using embedded vocabulary for ${isAmalgamate ? 'amalgamation' : 'primary'}.`);
-              if (!isAmalgamate) {
-                vocabData = [...defaultVocabData];
-                vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
-              }
-            } else {
-              targetArray.push(...filteredData);
-            }
-            loadingIndicator.classList.add('hidden');
-            startButton.disabled = false;
-          },
-          error: function(error) {
-            clearTimeout(timeoutId);
-            console.error(`Papa Parse error for ${csvUrl}:`, error);
-            alert(`Failed to parse CSV at ${csvUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary for ${isAmalgamate ? 'amalgamation' : 'primary'}.`);
-            if (!isAmalgamate) {
-              vocabData = [...defaultVocabData];
-              vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
-            }
-            loadingIndicator.classList.add('hidden');
-            startButton.disabled = false;
-          }
-        });
-      })
-      .catch(error => {
-        clearTimeout(timeoutId);
-        console.error(`Fetch error for ${csvUrl}:`, error);
-        alert(`Failed to load CSV at ${csvUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary for ${isAmalgamate ? 'amalgamation' : 'primary'}.`);
+      if (!csvUrl) {
         if (!isAmalgamate) {
           vocabData = [...defaultVocabData];
-          vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
+          vocabSetName = setName || 'Embedded Vocabulary - 53 Computer Science Terms';
+        } else {
+          amalgamateSetName = '';
         }
         loadingIndicator.classList.add('hidden');
         startButton.disabled = false;
-      });
+        resolve();
+        return;
+      }
+
+      if (window.location.protocol === 'file:') {
+        alert('Cannot load external CSV files when running via file://. Using embedded vocabulary (53 computer science terms). For external CSVs, run a local server (e.g., python -m http.server) and access http://localhost:8000.');
+        if (!isAmalgamate) {
+          vocabData = [...defaultVocabData];
+          vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
+        } else {
+          amalgamateSetName = '';
+        }
+        loadingIndicator.classList.add('hidden');
+        startButton.disabled = false;
+        resolve();
+        return;
+      }
+
+      if (!validateCsvUrl(csvUrl)) {
+        alert('Invalid CSV URL. Using embedded vocabulary.');
+        if (!isAmalgamate) {
+          vocabData = [...defaultVocabData];
+          vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
+        } else {
+          amalgamateSetName = '';
+        }
+        loadingIndicator.classList.add('hidden');
+        startButton.disabled = false;
+        resolve();
+        return;
+      }
+
+      if (typeof Papa === 'undefined') {
+        alert('Papa Parse library not loaded. Using embedded vocabulary. Ensure papaparse.min.js is in the repository root.');
+        if (!isAmalgamate) {
+          vocabData = [...defaultVocabData];
+          vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
+        } else {
+          amalgamateSetName = '';
+        }
+        loadingIndicator.classList.add('hidden');
+        startButton.disabled = false;
+        resolve();
+        return;
+      }
+
+      loadingIndicator.classList.remove('hidden');
+      startButton.disabled = true;
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      fetch(csvUrl, { signal: controller.signal })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status} (${response.statusText})`);
+          }
+          return response.text();
+        })
+        .then(data => {
+          Papa.parse(data, {
+            header: true,
+            complete: function(results) {
+              clearTimeout(timeoutId);
+              targetArray.length = 0; // Ensure the array is clear
+              const filteredData = results.data.filter(row => row.Term && row.Definition);
+              if (filteredData.length === 0) {
+                alert(`No valid terms found in the CSV at ${csvUrl}. Ensure it has "Term" and "Definition" columns. Using embedded vocabulary for ${isAmalgamate ? 'amalgamation' : 'primary'}.`);
+                if (!isAmalgamate) {
+                  vocabData = [...defaultVocabData];
+                  vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
+                } else {
+                  amalgamateSetName = '';
+                }
+              } else {
+                targetArray.push(...filteredData);
+                if (isAmalgamate) {
+                  amalgamateSetName = setName;
+                } else {
+                  vocabSetName = setName;
+                }
+              }
+              loadingIndicator.classList.add('hidden');
+              startButton.disabled = false;
+              resolve();
+            },
+            error: function(error) {
+              clearTimeout(timeoutId);
+              console.error(`Papa Parse error for ${csvUrl}:`, error);
+              alert(`Failed to parse CSV at ${csvUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary for ${isAmalgamate ? 'amalgamation' : 'primary'}.`);
+              if (!isAmalgamate) {
+                vocabData = [...defaultVocabData];
+                vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
+              } else {
+                amalgamateSetName = '';
+              }
+              loadingIndicator.classList.add('hidden');
+              startButton.disabled = false;
+              resolve();
+            }
+          });
+        })
+        .catch(error => {
+          clearTimeout(timeoutId);
+          console.error(`Fetch error for ${csvUrl}:`, error);
+          alert(`Failed to load CSV at ${csvUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary for ${isAmalgamate ? 'amalgamation' : 'primary'}.`);
+          if (!isAmalgamate) {
+            vocabData = [...defaultVocabData];
+            vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
+          } else {
+            amalgamateSetName = '';
+          }
+          loadingIndicator.classList.add('hidden');
+          startButton.disabled = false;
+          resolve();
+        });
+    });
   }
 
   function getRandomVocab(sourceArray) {
@@ -562,6 +591,7 @@ document.addEventListener('DOMContentLoaded', () => {
       vocabData = [...defaultVocabData];
       vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
     }
+    vocabSetTitle.textContent = vocabSetName + (amalgamateSetName ? ' + ' + amalgamateSetName : '');
     gameActive = true;
     userInput.focus();
     userInput.addEventListener('input', handleInput);
@@ -570,28 +600,28 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.key').forEach(key => key.classList.remove('pressed'));
     });
     certificateButton.addEventListener('click', generateCertificate);
-    vocabSetTitle.textContent = vocabSetName + (amalgamateVocab.length ? ' + Amalgamated Set' : '');
     spawnWord();
     updateGame();
     updateTimer();
   }
 
   populateVocabDropdown();
-  startButton.addEventListener('click', () => {
+  startButton.addEventListener('click', async () => {
     level = Math.max(1, Math.min(10, parseInt(levelInput.value)));
     mode = modeSelect.value;
     promptType = promptSelect.value;
     caseSensitive = caseSelect.value === 'sensitive';
     const csvUrl = vocabSelect.value || '';
     const amalgamateUrl = amalgamateSelect.value || '';
-    loadVocab(csvUrl);
+
+    // Ensure both vocab sets are loaded before starting the game
+    await loadVocab(csvUrl);
     if (amalgamateUrl) {
-      loadVocab(amalgamateUrl, true);
+      await loadVocab(amalgamateUrl, true);
     }
-    setTimeout(() => {
-      startScreen.classList.add('hidden');
-      gameContainer.classList.remove('hidden');
-      startGame();
-    }, 100);
+
+    startScreen.classList.add('hidden');
+    gameContainer.classList.remove('hidden');
+    startGame();
   });
 });
