@@ -37,6 +37,40 @@ body.dark {
   cursor: pointer;
 }
 
+#startScreen {
+  text-align: center;
+  padding: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+#startScreen div {
+  margin: 10px 0;
+}
+
+#startScreen label {
+  margin-right: 10px;
+}
+
+#startScreen select, #startScreen input {
+  padding: 5px;
+  font-size: 16px;
+}
+
+#startScreen button {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: var(--accent);
+  color: var(--dark);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#startScreen .hidden {
+  display: none;
+}
+
 .key {
   background-color: var(--light);
   color: var(--dark);
@@ -86,7 +120,7 @@ body.dark {
 
 .definition-background {
   position: absolute;
-  top: 20%; /* Moved up */
+  top: 20%;
   left: 50%;
   transform: translateX(-50%);
   font-size: 28px;
@@ -97,21 +131,25 @@ body.dark {
   max-width: 800px;
   word-wrap: break-word;
   pointer-events: none;
-  z-index: 1; /* Above keyboard (z-index 2) but below input */
+  z-index: 1;
 }
 
 #userInput {
   position: relative;
-  z-index: 3; /* Above everything */
+  z-index: 3;
   width: 80%;
   margin: 10px auto;
   display: block;
+  padding: 5px;
+  font-size: 16px;
+  box-sizing: border-box;
 }
 
 #gameContainer {
   position: relative;
   z-index: 0;
   text-align: center;
+  padding-bottom: 100px; /* Ensure space below keyboard */
 }
 
 #keyboard {
@@ -134,11 +172,6 @@ body.dark {
   gap: 5px;
 }
 
-#startScreen {
-  text-align: center;
-  padding: 20px;
-}
-
 .hidden {
   display: none;
 }
@@ -147,4 +180,6 @@ footer {
   text-align: center;
   margin-top: 20px;
   color: var(--text);
+  position: relative;
+  z-index: 1;
 }
