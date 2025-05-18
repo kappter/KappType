@@ -146,10 +146,6 @@ body.dark {
 }
 
 .definition-background {
-  position: absolute;
-  top: 20%;
-  left: 50%;
-  transform: translateX(-50%);
   font-size: 28px;
   color: var(--text);
   opacity: 0.15;
@@ -158,12 +154,10 @@ body.dark {
   max-width: 800px;
   word-wrap: break-word;
   pointer-events: none;
-  z-index: 1;
+  margin: 10px 0;
 }
 
 #userInput {
-  position: relative;
-  z-index: 3;
   width: 80%;
   margin: 10px auto;
   padding: 5px;
@@ -200,11 +194,6 @@ body.dark {
 }
 
 #keyboard {
-  position: absolute;
-  bottom: 80px; /* Offset from bottom: screen height - (title 40px + stats 20px + userInput 40px + definition 100px + keyboard 100px + cert button 40px + footer 40px) */
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -212,6 +201,7 @@ body.dark {
   padding: 10px;
   background-color: var(--secondary);
   border-radius: 5px;
+  margin: 20px 0;
   max-width: 90%;
 }
 
@@ -221,10 +211,7 @@ body.dark {
 }
 
 #certificateContainer {
-  position: relative;
-  z-index: 3;
   margin: 20px 0;
-  text-align: center;
 }
 
 #certificateButton {
@@ -252,6 +239,4 @@ footer {
   margin-top: 20px;
   padding: 10px 0;
   width: 100%;
-  position: relative;
-  z-index: 1;
 }
