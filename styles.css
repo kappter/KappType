@@ -15,6 +15,8 @@ body {
   font-family: Arial, sans-serif;
   background-color: var(--primary);
   color: var(--text);
+  height: 100vh;
+  overflow-y: auto;
 }
 
 body.dark {
@@ -164,7 +166,6 @@ body.dark {
   z-index: 3;
   width: 80%;
   margin: 10px auto;
-  display: block;
   padding: 5px;
   font-size: 16px;
   box-sizing: border-box;
@@ -176,25 +177,31 @@ body.dark {
 
 #gameContainer {
   position: relative;
-  z-index: 0;
   text-align: center;
-  padding-bottom: 100px;
   background-color: var(--primary);
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 20px 0;
 }
 
 #vocabSetTitle {
   color: var(--text);
+  margin: 10px 0;
+  font-size: 24px;
 }
 
 #stats {
   color: var(--text);
   margin: 10px 0;
+  font-size: 16px;
 }
 
 #keyboard {
   position: absolute;
-  bottom: 10px;
+  bottom: 80px; /* Offset from bottom: screen height - (title 40px + stats 20px + userInput 40px + definition 100px + keyboard 100px + cert button 40px + footer 40px) */
   left: 50%;
   transform: translateX(-50%);
   z-index: 2;
@@ -205,6 +212,7 @@ body.dark {
   padding: 10px;
   background-color: var(--secondary);
   border-radius: 5px;
+  max-width: 90%;
 }
 
 .row {
@@ -240,8 +248,10 @@ body.dark {
 
 footer {
   text-align: center;
-  margin-top: 20px;
   color: var(--text);
+  margin-top: 20px;
+  padding: 10px 0;
+  width: 100%;
   position: relative;
   z-index: 1;
 }
