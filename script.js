@@ -63,7 +63,14 @@ function toggleTheme() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOM fully loaded and parsed');
+  
   const canvas = document.getElementById('gameCanvas');
+  if (!canvas) {
+    console.error('Canvas element with id "gameCanvas" not found in the DOM');
+    return;
+  }
+  
   const ctx = canvas.getContext('2d');
   const userInput = document.getElementById('userInput');
   const scoreDisplay = document.getElementById('score');
@@ -85,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const timeIndicator = document.getElementById('timeIndicator');
 
   if (!canvas || !ctx || !userInput || !timeIndicator) {
-    console.error('Required elements not found');
+    console.error('Required elements not found:', { canvas, ctx, userInput, timeIndicator });
     return;
   }
 
@@ -366,7 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!definitionBackground) {
       definitionBackground = document.createElement('div');
       definitionBackground.className = 'definition-background';
-      gameContainer.insertBefore(definitionBackground, gameContainer.firstChild);
+      gameContainer.insertBefore(definitionBackground, gameContainer.querySelector('#keyboard'));
     }
     definitionBackground.textContent = finalDefinition;
 
