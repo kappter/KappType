@@ -31,9 +31,9 @@ body.dark {
 
 .theme-toggle {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  padding: 5px 10px;
+  top: 5px;
+  right: 5px;
+  padding: 3px 8px;
   background-color: var(--accent);
   color: var(--dark);
   border: none;
@@ -43,7 +43,7 @@ body.dark {
 
 #startScreen {
   text-align: center;
-  padding: 20px;
+  padding: 10px;
   position: relative;
   z-index: 1;
   background-color: var(--primary);
@@ -52,22 +52,23 @@ body.dark {
 
 #startScreen h1 {
   color: var(--text);
-  margin-bottom: 20px;
+  margin-bottom: 10px;
+  font-size: 24px;
 }
 
 #startScreen div {
-  margin: 15px 0;
+  margin: 10px 0;
 }
 
 #startScreen label {
-  margin-right: 10px;
+  margin-right: 5px;
   color: var(--text);
-  font-size: 16px;
+  font-size: 14px;
 }
 
 #startScreen select, #startScreen input {
-  padding: 5px;
-  font-size: 16px;
+  padding: 3px;
+  font-size: 14px;
   border: 1px solid var(--dark);
   border-radius: 4px;
   background-color: var(--light);
@@ -75,8 +76,8 @@ body.dark {
 }
 
 #startScreen button {
-  padding: 10px 20px;
-  font-size: 16px;
+  padding: 8px 16px;
+  font-size: 14px;
   background-color: var(--accent);
   color: var(--dark);
   border: none;
@@ -91,7 +92,7 @@ body.dark {
 
 #startScreen p {
   color: var(--text);
-  font-size: 14px;
+  font-size: 12px;
 }
 
 #startScreen .hidden {
@@ -103,12 +104,13 @@ body.dark {
   color: var(--dark);
   border: 1px solid var(--dark);
   text-align: center;
-  padding: 5px;
+  padding: 3px;
   border-radius: 3px;
-  margin: 2px;
-  width: 30px;
-  height: 30px;
-  line-height: 30px;
+  margin: 1px;
+  width: 25px;
+  height: 25px;
+  line-height: 25px;
+  font-size: 12px;
 }
 
 .key.pressed {
@@ -117,26 +119,26 @@ body.dark {
 }
 
 .backspace {
-  width: 80px;
+  width: 70px;
 }
 
 .tab, .caps-lock, .shift, .enter {
-  width: 60px;
+  width: 50px;
 }
 
 .ctrl, .win, .alt {
-  width: 40px;
+  width: 35px;
 }
 
 .space {
-  width: 200px;
+  width: 180px;
 }
 
 #timeIndicator {
-  width: 20px;
-  height: 20px;
+  width: 15px;
+  height: 15px;
   border-radius: 50%;
-  margin: 5px;
+  margin: 3px;
   background-color: red;
   transition: background-color 0.3s;
 }
@@ -146,26 +148,27 @@ body.dark {
 }
 
 .definition-background {
-  font-size: 28px;
+  font-size: 24px;
   color: var(--text);
   opacity: 0.15;
   text-align: center;
   width: 90%;
-  max-width: 800px;
+  max-width: 700px;
   word-wrap: break-word;
   pointer-events: none;
-  margin: 10px 0;
+  margin: 5px 0;
 }
 
 #userInput {
   width: 80%;
-  margin: 10px auto;
+  margin: 5px auto;
   padding: 5px;
-  font-size: 16px;
+  font-size: 14px;
   box-sizing: border-box;
   background-color: var(--light);
   color: var(--text);
-  border: 1px solid var(--dark);
+  border: 2px solid;
+  border-image: linear-gradient(to right, #CCCCDD, #A476A9, #83A1C2, #4C254A, #3C2701) 1;
   border-radius: 4px;
 }
 
@@ -173,50 +176,50 @@ body.dark {
   position: relative;
   text-align: center;
   background-color: var(--primary);
-  min-height: 100vh;
+  min-height: calc(100vh - 40px);
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
-  padding: 20px 0;
+  padding: 10px 0;
 }
 
 #vocabSetTitle {
   color: var(--text);
-  margin: 10px 0;
-  font-size: 24px;
+  margin: 5px 0;
+  font-size: 20px;
 }
 
 #stats {
   color: var(--text);
-  margin: 10px 0;
-  font-size: 16px;
+  margin: 5px 0;
+  font-size: 14px;
 }
 
 #keyboard {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
-  padding: 10px;
+  gap: 3px;
+  padding: 5px;
   background-color: var(--secondary);
   border-radius: 5px;
-  margin: 20px 0;
+  margin: 10px 0;
   max-width: 90%;
 }
 
 .row {
   display: flex;
-  gap: 5px;
+  gap: 3px;
 }
 
 #certificateContainer {
-  margin: 20px 0;
+  margin: 10px 0;
 }
 
 #certificateButton {
-  padding: 10px 20px;
-  font-size: 16px;
+  padding: 8px 16px;
+  font-size: 14px;
   background-color: var(--accent);
   color: var(--dark);
   border: none;
@@ -236,7 +239,12 @@ body.dark {
 footer {
   text-align: center;
   color: var(--text);
-  margin-top: 20px;
-  padding: 10px 0;
+  padding: 5px 0;
   width: 100%;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  background-color: var(--primary);
+  font-size: 12px;
+  line-height: 1;
 }
