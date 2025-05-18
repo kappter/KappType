@@ -66,12 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('DOM fully loaded and parsed');
   
   const canvas = document.getElementById('gameCanvas');
-  if (!canvas) {
-    console.error('Canvas element with id "gameCanvas" not found in the DOM');
-    return;
-  }
-  
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas ? canvas.getContext('2d') : null;
   const userInput = document.getElementById('userInput');
   const scoreDisplay = document.getElementById('score');
   const waveDisplay = document.getElementById('wave');
@@ -92,9 +87,41 @@ document.addEventListener('DOMContentLoaded', () => {
   const loadingIndicator = document.getElementById('loadingIndicator');
   const timeIndicator = document.getElementById('timeIndicator');
 
-  if (!canvas || !ctx || !userInput || !timeIndicator) {
-    console.error('Required elements not found:', { canvas, ctx, userInput, timeIndicator });
+  // Debug log all DOM elements
+  console.log('DOM Elements:', {
+    canvas,
+    ctx,
+    userInput,
+    scoreDisplay,
+    waveDisplay,
+    timerDisplay,
+    wpmDisplay,
+    startScreen,
+    gameContainer,
+    startButton,
+    levelInput,
+    modeSelect,
+    promptSelect,
+    caseSelect,
+    vocabSelect,
+    amalgamateSelect,
+    customVocabInput,
+    vocabSetTitle,
+    certificateButton,
+    loadingIndicator,
+    timeIndicator
+  });
+
+  // Check for missing critical elements
+  if (!canvas || !ctx || !userInput || !timeIndicator || !startButton) {
+    console.error('Required elements not found:', { canvas, ctx, userInput, timeIndicator, startButton });
+    alert('Critical elements are missing from the page. Please check the HTML structure and try again.');
     return;
+  }
+
+  // Warn if customVocabInput is missing
+  if (!customVocabInput) {
+    console.warn('customVocabInput element not found. Custom vocabulary upload will be disabled.');
   }
 
   canvas.width = 800;
@@ -532,7 +559,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function calculateWPM() {
     if (wpmStartTime === null) return 0;
     const elapsedTime = (performance.now() - wpmStartTime) / 1000 / 60;
-    return elapsedTime > 0 ? Math.round((totalChars / 5) / elapsedTime) : 0;
+    return elapsedTime > 0 ? Math.round((total yolks / 5) / elapsedTime) : 0;
   }
 
   function calculateAccuracy() {
@@ -720,22 +747,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const csvUrl = vocabSelect.value || '';
     const amalgamateUrl = amalgamateSelect.value || '';
 
-    // Debug and safety check for customVocabInput
-    console.log('customVocabInput:', customVocabInput);
-    if (customVocabInput && customVocabInput.files && customVocabInput.files.length > 0) {
-      await loadCustomVocab(customVocabInput.files[0]);
-    } else if (csvUrl) {
-      await loadVocab(csvUrl);
+    // Handle custom vocabulary upload
+    if (customVocabInput) {
+      if (customVocabInput.files && customVocabInput.files.length > 0) {
+        await loadCustomVocab(customVocabInput.files[0]);
+      }
+      // Handle amalgamation if a second file is uploaded
+      if (customVocabInput.files && customVocabInput.files.length > 1) {
+        await loadCustomVocab(customVocabInput.files[1], true);
+      }
     } else {
+      console.warn('Skipping custom vocabulary upload since customVocabInput is not available.');
+    }
+
+    // Load from URL if no custom file is uploaded
+    if (csvUrl && (!customVocabInput || !customVocabInput.files || customVocabInput.files.length === 0)) {
+      await loadVocab(csvUrl);
+    } else if (!customVocabInput || !customVocabInput.files || customVocabInput.files.length === 0) {
       vocabData = [...defaultVocabData];
       vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
     }
 
-    // Handle amalgamation if selected
-    if (amalgamateUrl) {
+    // Handle amalgamation URL if no second file is uploaded
+    if (amalgamateUrl && (!customVocabInput || !customVocabInput.files || customVocabInput.files.length <= 1)) {
       await loadVocab(amalgamateUrl, true);
-    } else if (customVocabInput && customVocabInput.files && customVocabInput.files.length > 1) {
-      await loadCustomVocab(customVocabInput.files[1], true);
     }
 
     startScreen.classList.add('hidden');
