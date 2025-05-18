@@ -75,12 +75,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const startButton = document.getElementById('startButton');
   const levelInput = document.getElementById('levelInput');
   const modeSelect = document.getElementById('modeSelect');
+  const promptSelect = document.getElementById('promptSelect');
   const caseSelect = document.getElementById('caseSelect');
   const vocabSelect = document.getElementById('vocabSelect');
   const amalgamateSelect = document.getElementById('amalgamateSelect');
   const vocabSetTitle = document.getElementById('vocabSetTitle');
   const certificateButton = document.getElementById('certificateButton');
   const loadingIndicator = document.getElementById('loadingIndicator');
+  const timeIndicator = document.getElementById('timeIndicator');
+
+  if (!canvas || !ctx || !userInput || !timeIndicator) {
+    console.error('Required elements not found');
+    return;
+  }
 
   canvas.width = 800;
   canvas.height = 400;
@@ -94,10 +101,11 @@ document.addEventListener('DOMContentLoaded', () => {
   let timeLeft = 30;
   let gameActive = false;
   let mode = 'game';
+  let promptType = 'definition';
   let caseSensitive = false;
   let level = 1;
   let totalTime = 0;
-  let wpmStartTime = null; // Tracks when WPM calculation begins
+  let wpmStartTime = null;
   let missedWords = [];
   let totalChars = 0;
   let correctChars = 0;
@@ -158,8 +166,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function loadVocab(csvUrl, isAmalgamate = false) {
     const targetArray = isAmalgamate ? amalgamateVocab : vocabData;
     vocabSetName = vocabSelect.options[vocabSelect.selectedIndex].textContent;
+
+    // Clear the target array before loading new data
+    targetArray.length = 0;
+
     if (!csvUrl) {
-      targetArray.length = 0; // Clear the array
       if (!isAmalgamate) {
         vocabData = [...defaultVocabData];
         vocabSetName = vocabSetName || 'Embedded Vocabulary - 53 Computer Science Terms';
@@ -171,7 +182,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (window.location.protocol === 'file:') {
       alert('Cannot load external CSV files when running via file://. Using embedded vocabulary (53 computer science terms). For external CSVs, run a local server (e.g., python -m http.server) and access http://localhost:8000.');
-      targetArray.length = 0;
       if (!isAmalgamate) {
         vocabData = [...defaultVocabData];
         vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
@@ -183,7 +193,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!validateCsvUrl(csvUrl)) {
       alert('Invalid CSV URL. Using embedded vocabulary.');
-      targetArray.length = 0;
       if (!isAmalgamate) {
         vocabData = [...defaultVocabData];
         vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
@@ -195,7 +204,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (typeof Papa === 'undefined') {
       alert('Papa Parse library not loaded. Using embedded vocabulary. Ensure papaparse.min.js is in the repository root.');
-      targetArray.length = 0;
       if (!isAmalgamate) {
         vocabData = [...defaultVocabData];
         vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
@@ -223,23 +231,24 @@ document.addEventListener('DOMContentLoaded', () => {
           header: true,
           complete: function(results) {
             clearTimeout(timeoutId);
-            targetArray.length = 0; // Clear before adding new data
-            targetArray.push(...results.data.filter(row => row.Term && row.Definition));
-            loadingIndicator.classList.add('hidden');
-            startButton.disabled = false;
-            if (targetArray.length === 0) {
+            targetArray.length = 0; // Ensure the array is clear
+            const filteredData = results.data.filter(row => row.Term && row.Definition);
+            if (filteredData.length === 0) {
               alert(`No valid terms found in the CSV at ${csvUrl}. Ensure it has "Term" and "Definition" columns. Using embedded vocabulary for ${isAmalgamate ? 'amalgamation' : 'primary'}.`);
               if (!isAmalgamate) {
                 vocabData = [...defaultVocabData];
                 vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
               }
+            } else {
+              targetArray.push(...filteredData);
             }
+            loadingIndicator.classList.add('hidden');
+            startButton.disabled = false;
           },
           error: function(error) {
             clearTimeout(timeoutId);
             console.error(`Papa Parse error for ${csvUrl}:`, error);
             alert(`Failed to parse CSV at ${csvUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary for ${isAmalgamate ? 'amalgamation' : 'primary'}.`);
-            targetArray.length = 0;
             if (!isAmalgamate) {
               vocabData = [...defaultVocabData];
               vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
@@ -253,7 +262,6 @@ document.addEventListener('DOMContentLoaded', () => {
         clearTimeout(timeoutId);
         console.error(`Fetch error for ${csvUrl}:`, error);
         alert(`Failed to load CSV at ${csvUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary for ${isAmalgamate ? 'amalgamation' : 'primary'}.`);
-        targetArray.length = 0;
         if (!isAmalgamate) {
           vocabData = [...defaultVocabData];
           vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
@@ -264,43 +272,67 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function getRandomVocab(sourceArray) {
+    if (sourceArray.length === 0) return null;
     const index = Math.floor(Math.random() * sourceArray.length);
     return sourceArray[index];
   }
 
   function getUnderscoreText(text) {
-    if (text.length > 50) text = text.slice(0, 47) + '...'; // Truncate long definitions
+    if (text.length > 50) text = text.slice(0, 47) + '...';
     return text[0] + '_'.repeat(text.length - 1);
   }
 
   function spawnWord() {
     if (vocabData.length === 0) {
       vocabData = [...defaultVocabData];
+      vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
     }
+
     const vocab1 = getRandomVocab(vocabData);
-    let prompt1 = vocab1.Definition; // Default to Definition (Type Term)
-    let typedInput1 = vocab1.Term;
+    if (!vocab1) return;
+
+    let prompt1, typedInput1;
+    if (promptType === 'definition') {
+      prompt1 = vocab1.Definition;
+      typedInput1 = vocab1.Term;
+    } else if (promptType === 'term') {
+      prompt1 = vocab1.Term;
+      typedInput1 = vocab1.Definition;
+    } else {
+      const randomType = Math.random() < 0.5 ? 'definition' : 'term';
+      prompt1 = randomType === 'definition' ? vocab1.Definition : vocab1.Term;
+      typedInput1 = randomType === 'definition' ? vocab1.Term : vocab1.Definition;
+    }
 
     let prompt2 = '', typedInput2 = '', vocab2 = null;
     if (amalgamateVocab.length > 0) {
       vocab2 = getRandomVocab(amalgamateVocab);
-      prompt2 = vocab2.Definition;
-      typedInput2 = vocab2.Term;
+      if (vocab2) {
+        if (promptType === 'definition') {
+          prompt2 = vocab2.Definition;
+          typedInput2 = vocab2.Term;
+        } else if (promptType === 'term') {
+          prompt2 = vocab2.Term;
+          typedInput2 = vocab2.Definition;
+        } else {
+          const randomType = Math.random() < 0.5 ? 'definition' : 'term';
+          prompt2 = randomType === 'definition' ? vocab2.Definition : vocab2.Term;
+          typedInput2 = randomType === 'definition' ? vocab2.Term : vocab2.Definition;
+        }
+      }
     }
 
-    // Concatenate terms and definitions with a space for amalgamation
-    const finalTypedInput = amalgamateVocab.length > 0 ? typedInput1 + ' ' + typedInput2 : typedInput1;
-    const finalPrompt = amalgamateVocab.length > 0 ? prompt1 + ' ' + prompt2 : prompt1;
-    const finalDefinition = amalgamateVocab.length > 0 ? vocab1.Definition + ' ' + vocab2.Definition : vocab1.Definition;
+    const finalTypedInput = amalgamateVocab.length > 0 && vocab2 ? typedInput1 + ' ' + typedInput2 : typedInput1;
+    const finalPrompt = amalgamateVocab.length > 0 && vocab2 ? prompt1 + ' ' + prompt2 : prompt1;
+    const finalDefinition = amalgamateVocab.length > 0 && vocab2 ? vocab1.Definition + ' ' + vocab2.Definition : vocab1.Definition;
 
     const x = mode === 'game' ? Math.random() * (canvas.width - ctx.measureText(getUnderscoreText(finalTypedInput)).width) : 50;
     const y = 0;
-    const speed = mode === 'game' ? 0.5 + wave * 0.5 * (level / 5) : 0.5 + level * 0.1; // Reduced initial speed by half
+    const speed = mode === 'game' ? 0.5 + wave * 0.5 * (level / 5) : 0.5 + level * 0.1;
     words.push({ prompt: finalPrompt, typedInput: finalTypedInput, displayText: getUnderscoreText(finalTypedInput), x, y, speed, matched: '', definition: finalDefinition });
-    userInput.placeholder = finalPrompt; // Set placeholder, will clear on match
-    wpmStartTime = null; // Reset WPM start time on new word
+    userInput.placeholder = finalPrompt;
+    wpmStartTime = null;
 
-    // Set definition as background text
     let definitionBackground = document.querySelector('.definition-background');
     if (!definitionBackground) {
       definitionBackground = document.createElement('div');
@@ -308,6 +340,8 @@ document.addEventListener('DOMContentLoaded', () => {
       gameContainer.insertBefore(definitionBackground, gameContainer.firstChild);
     }
     definitionBackground.textContent = finalDefinition;
+
+    updateTimeIndicator();
   }
 
   function updateGame() {
@@ -320,12 +354,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     lastFrameTime = now;
 
-    // Clear the entire canvas to remove any stray renders
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     ctx.font = '20px Arial';
-
-    // Get the current text color from CSS variable --text
     const computedStyle = window.getComputedStyle(document.body);
     const textColor = computedStyle.getPropertyValue('--text').trim();
 
@@ -338,7 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
       word.matched = target.startsWith(input) ? typed : '';
       ctx.fillStyle = 'red';
       ctx.fillText(word.typedInput.slice(0, word.matched.length), word.x, word.y);
-      ctx.fillStyle = textColor; // Use dynamic text color for unmatched text
+      ctx.fillStyle = textColor;
       ctx.fillText(word.displayText.slice(word.matched.length), word.x + ctx.measureText(word.typedInput.slice(0, word.matched.length)).width, word.y);
       if (word.y >= canvas.height) {
         missedWords.push(word.typedInput);
@@ -354,7 +385,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (words.length === 0) spawnWord();
-    // Only increase speed if typing has started (wpmStartTime is set)
     if (mode === 'game' && wpmStartTime !== null && timeLeft <= 0) {
       wave++;
       waveDisplay.textContent = `Wave: ${wave}`;
@@ -365,8 +395,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function calculateWPM() {
-    if (wpmStartTime === null) return 0; // Return 0 WPM until first keystroke
-    const elapsedTime = (performance.now() - wpmStartTime) / 1000 / 60; // Convert to minutes
+    if (wpmStartTime === null) return 0;
+    const elapsedTime = (performance.now() - wpmStartTime) / 1000 / 60;
     return elapsedTime > 0 ? Math.round((totalChars / 5) / elapsedTime) : 0;
   }
 
@@ -390,7 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function handleInput(e) {
     const typed = e.target.value;
     if (wpmStartTime === null && typed.length > 0) {
-      wpmStartTime = performance.now(); // Start WPM timing on first keystroke
+      wpmStartTime = performance.now();
     }
     words = words.filter(word => {
       const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
@@ -404,14 +434,16 @@ document.addEventListener('DOMContentLoaded', () => {
         totalChars += word.typedInput.length;
         scoreDisplay.textContent = `Score: ${score}`;
         e.target.value = '';
-        e.target.placeholder = 'Prompt will appear here...'; // Clear placeholder on match
-        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas immediately
-        wpmStartTime = null; // Reset WPM start time on word clear
+        e.target.placeholder = 'Prompt will appear here...';
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        wpmStartTime = null;
         spawnWord();
         return false;
       }
       return true;
     });
+
+    updateTimeIndicator();
   }
 
   function highlightKeys(e) {
@@ -419,9 +451,34 @@ document.addEventListener('DOMContentLoaded', () => {
     keys.forEach(key => key.classList.remove('pressed'));
     if (e.key === ' ') {
       document.querySelector('.space').classList.add('pressed');
+    } else if (e.key === 'Backspace') {
+      document.querySelector('.backspace').classList.add('pressed');
+    } else if (e.key === 'Tab') {
+      document.querySelector('.tab').classList.add('pressed');
+    } else if (e.key === 'CapsLock') {
+      document.querySelector('.caps-lock').classList.add('pressed');
+    } else if (e.key === 'Enter') {
+      document.querySelector('.enter').classList.add('pressed');
+    } else if (e.key === 'Shift') {
+      document.querySelectorAll('.shift').forEach(shift => shift.classList.add('pressed'));
+    } else if (e.key === 'Control') {
+      document.querySelectorAll('.ctrl').forEach(ctrl => ctrl.classList.add('pressed'));
+    } else if (e.key === 'Alt') {
+      document.querySelectorAll('.alt').forEach(alt => alt.classList.add('pressed'));
+    } else if (e.key === 'Meta') {
+      document.querySelectorAll('.win').forEach(win => win.classList.add('pressed'));
     } else {
       const key = Array.from(keys).find(k => k.textContent.toLowerCase() === e.key.toLowerCase());
       if (key) key.classList.add('pressed');
+    }
+  }
+
+  function updateTimeIndicator() {
+    if (timeIndicator) {
+      timeIndicator.classList.remove('active');
+      if (wpmStartTime !== null) {
+        timeIndicator.classList.add('active');
+      }
     }
   }
 
@@ -442,10 +499,10 @@ document.addEventListener('DOMContentLoaded', () => {
   function generateCertificate() {
     const name = prompt('Enter your name for the certificate:');
     if (!name) return;
-    const safeName = escapeLatex(name.replace(/[^a-zA-Z0-9\s-]/g, '')); // Sanitize and escape
+    const safeName = escapeLatex(name.replace(/[^a-zA-Z0-9\s-]/g, ''));
     const wpm = calculateWPM();
     const accuracy = calculateAccuracy();
-    const promptTypeText = escapeLatex('Definition (Type Term)'); // Default prompt type
+    const promptTypeText = escapeLatex(promptSelect.options[promptSelect.selectedIndex].text);
     const missedTerms = missedWords.length > 0 ? escapeLatex(missedWords.join(', ')) : 'None';
     const certificateContent = `
 \\documentclass[a4paper,12pt]{article}
@@ -489,7 +546,6 @@ document.addEventListener('DOMContentLoaded', () => {
 \\end{document}
     `;
 
-    // Download .tex file as fallback
     const blob = new Blob([certificateContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -504,6 +560,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function startGame() {
     if (vocabData.length === 0) {
       vocabData = [...defaultVocabData];
+      vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
     }
     gameActive = true;
     userInput.focus();
@@ -523,6 +580,7 @@ document.addEventListener('DOMContentLoaded', () => {
   startButton.addEventListener('click', () => {
     level = Math.max(1, Math.min(10, parseInt(levelInput.value)));
     mode = modeSelect.value;
+    promptType = promptSelect.value;
     caseSensitive = caseSelect.value === 'sensitive';
     const csvUrl = vocabSelect.value || '';
     const amalgamateUrl = amalgamateSelect.value || '';

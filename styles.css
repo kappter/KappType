@@ -10,6 +10,9 @@
 
 body {
   transition: background-color 0.3s, color 0.3s;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
 }
 
 body.dark {
@@ -41,6 +44,10 @@ body.dark {
   text-align: center;
   padding: 5px;
   border-radius: 3px;
+  margin: 2px;
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
 }
 
 .key.pressed {
@@ -48,15 +55,40 @@ body.dark {
   color: var(--light);
 }
 
+.backspace {
+  width: 80px;
+}
+
+.tab, .caps-lock, .shift, .enter {
+  width: 60px;
+}
+
+.ctrl, .win, .alt {
+  width: 40px;
+}
+
 .space {
   width: 200px;
 }
 
+#timeIndicator {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin: 5px;
+  background-color: red;
+  transition: background-color 0.3s;
+}
+
+#timeIndicator.active {
+  background-color: green;
+}
+
 .definition-background {
-  position: fixed;
-  top: 50%;
+  position: absolute;
+  top: 20%; /* Moved up */
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   font-size: 28px;
   color: var(--text);
   opacity: 0.15;
@@ -65,17 +97,21 @@ body.dark {
   max-width: 800px;
   word-wrap: break-word;
   pointer-events: none;
-  z-index: -1; /* Behind all interactive elements */
+  z-index: 1; /* Above keyboard (z-index 2) but below input */
 }
 
 #userInput {
   position: relative;
-  z-index: 1;
+  z-index: 3; /* Above everything */
+  width: 80%;
+  margin: 10px auto;
+  display: block;
 }
 
 #gameContainer {
   position: relative;
   z-index: 0;
+  text-align: center;
 }
 
 #keyboard {
@@ -83,12 +119,32 @@ body.dark {
   bottom: 10px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 2; /* Above definition background */
+  z-index: 2;
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
   gap: 5px;
   padding: 10px;
   background-color: var(--secondary);
   border-radius: 5px;
+}
+
+.row {
+  display: flex;
+  gap: 5px;
+}
+
+#startScreen {
+  text-align: center;
+  padding: 20px;
+}
+
+.hidden {
+  display: none;
+}
+
+footer {
+  text-align: center;
+  margin-top: 20px;
+  color: var(--text);
 }
