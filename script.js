@@ -369,14 +369,6 @@ document.addEventListener('DOMContentLoaded', () => {
     userInput.placeholder = finalPrompt;
     wpmStartTime = null;
 
-    let definitionBackground = document.querySelector('.definition-background');
-    if (!definitionBackground) {
-      definitionBackground = document.createElement('div');
-      definitionBackground.className = 'definition-background';
-      gameContainer.insertBefore(definitionBackground, gameContainer.querySelector('#keyboard'));
-    }
-    definitionBackground.textContent = finalDefinition;
-
     updateTimeIndicator();
   }
 
@@ -392,6 +384,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // Draw bottom warning line
+    ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+    ctx.fillRect(0, canvas.height - 20, canvas.width, 20);
+
+    // Draw definition background text on the canvas
+    if (words.length > 0) {
+      const definition = words[0].definition;
+      ctx.font = '24px Arial';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+      ctx.textAlign = 'center';
+      const maxWidth = canvas.width - 40;
+      const wordsArray = definition.split(' ');
+      let line = '';
+      let lines = [];
+      for (let word of wordsArray) {
+        const testLine = line + word + ' ';
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && line !== '') {
+          lines.push(line.trim());
+          line = word + ' ';
+        } else {
+          line = testLine;
+        }
+      }
+      if (line) lines.push(line.trim());
+      const lineHeight = 30;
+      const totalHeight = lines.length * lineHeight;
+      const startY = (canvas.height - totalHeight) / 2;
+      lines.forEach((line, index) => {
+        ctx.fillText(line, canvas.width / 2, startY + index * lineHeight);
+      });
+    }
+
+    // Draw falling words
     ctx.font = '20px Arial';
     const computedStyle = window.getComputedStyle(document.body);
     const textColor = computedStyle.getPropertyValue('--text').trim();

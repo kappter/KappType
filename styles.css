@@ -147,16 +147,11 @@ body.dark {
   background-color: green;
 }
 
-.definition-background {
-  font-size: 24px;
-  color: var(--text);
-  opacity: 0.15;
-  text-align: center;
-  width: 90%;
-  max-width: 700px;
-  word-wrap: break-word;
-  pointer-events: none;
+#gameCanvas {
+  border: 2px solid var(--dark);
+  background-color: rgba(255, 255, 255, 0.1);
   margin: 5px 0;
+  position: relative;
 }
 
 #userInput {
