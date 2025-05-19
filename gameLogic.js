@@ -2,10 +2,10 @@ let currentVocab = [];
 let currentWordIndex = 0;
 let startTime = null;
 let totalTypingTime = 0;
-let isProcessingWord = false; // Flag to prevent infinite loop
+let isProcessingWord = false;
 
-// Populate dropdowns (assumed to be working as per logs)
-function populateDropdowns(vocabLists) {
+// Populate dropdowns
+export function populateDropdowns(vocabLists) {
     const vocabSelect = document.getElementById('vocabSelect');
     const amalgamateSelect = document.getElementById('amalgamateSelect');
     
@@ -27,7 +27,7 @@ function populateDropdowns(vocabLists) {
 }
 
 // Start the game with the selected vocabulary
-function startGame(vocabList) {
+export function startGame(vocabList) {
     currentVocab = vocabList;
     currentWordIndex = 0;
     totalTypingTime = 0;
@@ -53,13 +53,12 @@ function updateGameState() {
     };
     console.log(`Amalgamated word: ${JSON.stringify(amalgamateWord)}`);
 
-    // Display the definition to the user (assumed to be handled by UI)
     displayDefinition(amalgamateWord.finalPrompt);
 }
 
 // Handle user input
-function handleInput(userInput) {
-    if (isProcessingWord) return; // Prevent re-entry during processing
+export function handleInput(userInput) {
+    if (isProcessingWord) return;
     isProcessingWord = true;
 
     const currentWord = currentVocab[currentWordIndex];
@@ -69,15 +68,14 @@ function handleInput(userInput) {
         totalTypingTime += elapsedTime;
         console.log(`Word completed. Elapsed time: ${elapsedTime.toFixed(2)}s, Total typing time: ${totalTypingTime.toFixed(2)}s`);
 
-        currentWordIndex++; // Move to the next word
-        startTime = new Date(); // Reset the timer for the next word
-        updateGameState(); // Update to the next word
+        currentWordIndex++;
+        startTime = new Date();
+        updateGameState();
     } else {
-        // Handle incorrect input (e.g., show feedback)
         console.log("Incorrect input, try again.");
     }
 
-    isProcessingWord = false; // Reset the flag
+    isProcessingWord = false;
 }
 
 // End the game
@@ -88,17 +86,17 @@ function endGame() {
 }
 
 // Toggle theme (light/dark mode)
-function toggleTheme() {
+export function toggleTheme() {
     const body = document.body;
     body.classList.toggle('dark-mode');
     console.log("Theme toggled");
 }
 
-// Placeholder for displaying the definition (assumed to be in UI code)
+// Display the definition
 function displayDefinition(definition) {
     const definitionElement = document.getElementById('definition');
     definitionElement.textContent = definition;
 }
 
-// Event listener for theme toggle button (assumed to be in UI code)
-document.getElementById('toggleThemeButton').addEventListener('click', toggleTheme);
+// Event listener for theme toggle button
+document.getElementById('toggleThemeButton')?.addEventListener('click', toggleTheme);
