@@ -397,7 +397,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const vocab1 = getRandomVocab(vocabData);
-    if (!vocab1) return;
+    if (!vocab1) {
+      console.error('No vocab1 selected from vocabData:', vocabData);
+      return;
+    }
+    console.log('vocab1 selected:', vocab1);
 
     let prompt1, typedInput1;
     if (promptType === 'definition') {
@@ -416,7 +420,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (amalgamateVocab.length > 0) {
       vocab2 = getRandomVocab(amalgamateVocab);
       if (vocab2) {
-        if (promiseType === 'definition') {
+        console.log('vocab2 selected:', vocab2);
+        if (promptType === 'definition') {
           prompt2 = vocab2.Definition;
           typedInput2 = vocab2.Term;
         } else if (promptType === 'term') {
@@ -427,12 +432,16 @@ document.addEventListener('DOMContentLoaded', () => {
           prompt2 = randomType === 'definition' ? vocab2.Definition : vocab2.Term;
           typedInput2 = randomType === 'definition' ? vocab2.Term : vocab2.Definition;
         }
+      } else {
+        console.warn('No vocab2 selected from amalgamateVocab:', amalgamateVocab);
       }
     }
 
     const finalTypedInput = amalgamateVocab.length > 0 && vocab2 ? typedInput1 + ' ' + typedInput2 : typedInput1;
     const finalPrompt = amalgamateVocab.length > 0 && vocab2 ? prompt1 + ' ' + prompt2 : prompt1;
     const finalDefinition = amalgamateVocab.length > 0 && vocab2 ? vocab1.Definition + ' ' + vocab2.Definition : vocab1.Definition;
+
+    console.log('Amalgamated word:', { finalPrompt, finalTypedInput, finalDefinition });
 
     // Ensure word stays within canvas bounds with padding
     const padding = 10;
@@ -482,7 +491,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (words.length > 0) {
       const definition = words[0].definition;
       ctx.font = '24px Arial';
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'; // Reduced to 30% opacity for subtlety
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
       ctx.textAlign = 'center';
       const maxWidth = canvas.width - 40;
       const wordsArray = definition.split(' ');
