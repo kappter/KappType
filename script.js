@@ -435,15 +435,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Ensure word stays within canvas bounds with padding
     const padding = 10;
+    ctx.font = '20px Arial'; // Match the font used in rendering
     const textWidth = ctx.measureText(finalTypedInput).width;
     const maxX = canvas.width - textWidth - padding;
     const minX = padding;
     const xRange = maxX - minX;
     const x = mode === 'game' ? minX + Math.random() * (xRange > 0 ? xRange : 0) : 50;
+    // Ensure x is within bounds
+    const finalX = Math.max(minX, Math.min(x, maxX));
 
     const y = 0;
     const speed = mode === 'game' ? 0.5 + wave * 0.5 * (level / 5) : 0.5 + level * 0.1;
-    const word = { prompt: finalPrompt, typedInput: finalTypedInput, displayText: getUnderscoreText(finalTypedInput), x, y, speed, matched: '', definition: finalDefinition, isExiting: false };
+    const word = { prompt: finalPrompt, typedInput: finalTypedInput, displayText: getUnderscoreText(finalTypedInput), x: finalX, y, speed, matched: '', definition: finalDefinition, isExiting: false };
     words.push(word);
     userInput.placeholder = finalPrompt;
     wpmStartTime = null;
@@ -478,7 +481,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (words.length > 0) {
       const definition = words[0].definition;
       ctx.font = '24px Arial';
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.25)'; // Increased opacity from 0.15 to 0.25
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.35)'; // Increased opacity from 0.25 to 0.35
       ctx.textAlign = 'center';
       const maxWidth = canvas.width - 40;
       const wordsArray = definition.split(' ');
@@ -751,6 +754,7 @@ document.addEventListener('DOMContentLoaded', () => {
     userInput.removeEventListener('input', handleInput);
     document.removeEventListener('keydown', highlightKeys);
     certificateButton.removeEventListener('click', generateCertificate);
+    // Note: restartButton listener is now attached globally, so no need to remove it
   }
 
   function startGame() {
@@ -767,11 +771,13 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.key').forEach(key => key.classList.remove('pressed'));
     });
     certificateButton.addEventListener('click', generateCertificate);
-    restartButton.addEventListener('click', restartGame);
     spawnWord();
     updateGame();
     updateTimer();
   }
+
+  // Attach restart button listener globally to ensure it persists
+  restartButton.addEventListener('click', restartGame);
 
   populateVocabDropdown();
   startButton.addEventListener('click', async () => {
