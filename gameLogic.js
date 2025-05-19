@@ -26,15 +26,6 @@ export function populateDropdowns(vocabLists) {
     console.log(`Dropdown population completed. Vocab options: ${vocabSelect.options.length} Amalgamate options: ${amalgamateSelect.options.length}`);
 }
 
-// Start the game with the selected vocabulary
-export function startGame(vocabList) {
-    currentVocab = vocabList;
-    currentWordIndex = 0;
-    totalTypingTime = 0;
-    startTime = new Date();
-    console.log(`WPM timer started at ${startTime.toISOString()}`);
-}
-
 // Spawn a new word on the canvas
 export function spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator) {
     if (!vocabData || vocabData.length === 0) return;
