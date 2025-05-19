@@ -81,7 +81,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const caseSelect = document.getElementById('caseSelect');
   const vocabSelect = document.getElementById('vocabSelect');
   const amalgamateSelect = document.getElementById('amalgamateSelect');
-  const customVocabInput = document.getElementById('customVocabInput');
+  const customVocabInput1 = document.getElementById('customVocabInput1');
+  const customVocabInput2 = document.getElementById('customVocabInput2');
   const vocabSetTitle = document.getElementById('vocabSetTitle');
   const certificateButton = document.getElementById('certificateButton');
   const loadingIndicator = document.getElementById('loadingIndicator');
@@ -92,11 +93,6 @@ document.addEventListener('DOMContentLoaded', () => {
     console.error('Required elements not found:', { canvas, ctx, userInput, timeIndicator, startButton });
     alert('Critical elements are missing from the page. Please check the HTML structure and try again.');
     return;
-  }
-
-  // Warn if customVocabInput is missing
-  if (!customVocabInput) {
-    console.warn('customVocabInput element not found. Custom vocabulary upload will be disabled.');
   }
 
   canvas.width = 800;
@@ -536,7 +532,9 @@ document.addEventListener('DOMContentLoaded', () => {
         words = [];
         if (mode === 'game') {
           gameActive = false;
-          alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
+          if (confirm(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%\nClick OK to restart or Cancel to stay.`)) {
+            restartGame();
+          }
         } else {
           spawnWord();
         }
@@ -717,6 +715,39 @@ document.addEventListener('DOMContentLoaded', () => {
     alert('Certificate .tex file downloaded. Upload it to your Overleaf project at https://www.overleaf.com/project/6827805d3e926f37c9afb11e to compile it into a PDF. If compilation fails, check for errors in Overleaf (e.g., missing packages or syntax issues) or ensure your GitHub repository (https://github.com/kappter/KappType) is synced with your Overleaf project under the "certificate.tex" file.');
   }
 
+  function restartGame() {
+    gameActive = false;
+    words = [];
+    vocabData = [];
+    amalgamateVocab = [];
+    vocabSetName = '';
+    amalgamateSetName = '';
+    score = 0;
+    wave = 1;
+    timeLeft = 30;
+    mode = 'game';
+    promptType = 'definition';
+    caseSensitive = false;
+    level = 1;
+    totalTime = 0;
+    wpmStartTime = null;
+    missedWords = [];
+    totalChars = 0;
+    correctChars = 0;
+    lastFrameTime = performance.now();
+    userInput.value = '';
+    userInput.placeholder = 'Prompt will appear here...';
+    scoreDisplay.textContent = `Score: ${score}`;
+    waveDisplay.textContent = `Wave: ${wave}`;
+    timerDisplay.textContent = `Time: ${timeLeft}s`;
+    wpmDisplay.textContent = `WPM: 0`;
+    gameContainer.classList.add('hidden');
+    startScreen.classList.remove('hidden');
+    userInput.removeEventListener('input', handleInput);
+    document.removeEventListener('keydown', highlightKeys);
+    certificateButton.removeEventListener('click', generateCertificate);
+  }
+
   function startGame() {
     if (vocabData.length === 0) {
       vocabData = [...defaultVocabData];
@@ -745,29 +776,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const csvUrl = vocabSelect.value || '';
     const amalgamateUrl = amalgamateSelect.value || '';
 
-    // Handle custom vocabulary upload
-    if (customVocabInput) {
-      if (customVocabInput.files && customVocabInput.files.length > 0) {
-        await loadCustomVocab(customVocabInput.files[0]);
+    // Handle custom vocabulary upload for two files
+    if (customVocabInput1 && customVocabInput2) {
+      if (customVocabInput1.files && customVocabInput1.files.length > 0) {
+        await loadCustomVocab(customVocabInput1.files[0]);
       }
-      // Handle amalgamation if a second file is uploaded
-      if (customVocabInput.files && customVocabInput.files.length > 1) {
-        await loadCustomVocab(customVocabInput.files[1], true);
+      if (customVocabInput2.files && customVocabInput2.files.length > 0) {
+        await loadCustomVocab(customVocabInput2.files[0], true);
       }
     } else {
-      console.warn('Skipping custom vocabulary upload since customVocabInput is not available.');
+      console.warn('Custom vocabulary inputs not available.');
     }
 
-    // Load from URL if no custom file is uploaded
-    if (csvUrl && (!customVocabInput || !customVocabInput.files || customVocabInput.files.length === 0)) {
+    // Load from URL if no custom files are uploaded
+    if (csvUrl && (!customVocabInput1 || !customVocabInput1.files || customVocabInput1.files.length === 0)) {
       await loadVocab(csvUrl);
-    } else if (!customVocabInput || !customVocabInput.files || customVocabInput.files.length === 0) {
+    } else if (!customVocabInput1 || !customVocabInput1.files || customVocabInput1.files.length === 0) {
       vocabData = [...defaultVocabData];
       vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
     }
 
-    // Handle amalgamation URL if no second file is uploaded
-    if (amalgamateUrl && (!customVocabInput || !customVocabInput.files || customVocabInput.files.length <= 1)) {
+    // Load amalgamation URL if no second custom file is uploaded
+    if (amalgamateUrl && (!customVocabInput2 || !customVocabInput2.files || customVocabInput2.files.length === 0)) {
       await loadVocab(amalgamateUrl, true);
     }
 

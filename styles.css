@@ -199,12 +199,22 @@ body::before {
   box-shadow: 0 0 15px rgba(212, 0, 255, 0.7);
 }
 
-/* Keyboard (if present) */
+/* Keyboard */
 .keyboard {
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   border-radius: 10px;
   padding: 1rem;
+  margin-top: 1rem;
+  max-width: 800px;
+  width: 100%;
+}
+
+.row {
+  display: flex;
+  justify-content: center;
+  gap: 0.2rem;
+  margin-bottom: 0.2rem;
 }
 
 .key {
@@ -212,12 +222,24 @@ body::before {
   border: 1px solid var(--neon-cyan);
   border-radius: 5px;
   color: #ffffff;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.9rem;
+  text-align: center;
+  flex: 1;
   transition: background 0.2s, box-shadow 0.2s;
 }
 
 .key.pressed {
   background: var(--neon-purple);
   box-shadow: 0 0 10px rgba(212, 0, 255, 0.5);
+}
+
+.key.backspace {
+  flex: 2;
+}
+
+.key.space {
+  flex: 6;
 }
 
 /* Animations */
@@ -297,5 +319,14 @@ body.dark .keyboard {
 
   #userInput {
     font-size: 1rem;
+  }
+
+  .keyboard {
+    padding: 0.5rem;
+  }
+
+  .key {
+    font-size: 0.8rem;
+    padding: 0.2rem 0.4rem;
   }
 }
