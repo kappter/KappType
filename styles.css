@@ -76,6 +76,21 @@ body::before {
   color: #e0e0e0;
 }
 
+.start-card .checkbox-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+.start-card input[type="checkbox"] {
+  margin-right: 0.5rem;
+  accent-color: var(--neon-cyan);
+  width: 1.2rem;
+  height: 1.2rem;
+  cursor: pointer;
+}
+
 .start-card select,
 .start-card input[type="number"],
 .start-card input[type="file"] {

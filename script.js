@@ -83,6 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const amalgamateSelect = document.getElementById('amalgamateSelect');
   const customVocabInput = document.getElementById('customVocabInput');
   const customVocabInput2 = document.getElementById('customVocabInput2');
+  const randomizeTermsCheckbox = document.getElementById('randomizeTerms');
   const vocabSetTitle = document.getElementById('vocabSetTitle');
   const certificateButton = document.getElementById('certificateButton');
   const resetButton = document.getElementById('resetButton');
@@ -90,8 +91,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const timeIndicator = document.getElementById('timeIndicator');
 
   // Check for missing critical elements
-  if (!canvas || !ctx || !userInput || !timeIndicator || !startButton || !resetButton) {
-    console.error('Required elements not found:', { canvas, ctx, userInput, timeIndicator, startButton, resetButton });
+  if (!canvas || !ctx || !userInput || !timeIndicator || !startButton || !resetButton || !randomizeTermsCheckbox) {
+    console.error('Required elements not found:', { canvas, ctx, userInput, timeIndicator, startButton, resetButton, randomizeTermsCheckbox });
     alert('Critical elements are missing from the page. Please check the HTML structure and try again.');
     return;
   }
@@ -119,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let mode = 'game';
   let promptType = 'definition';
   let caseSensitive = false;
+  let randomizeTerms = true; // Default to checked (randomized)
   let level = 1;
   let totalTime = 0;
   let wpmStartTime = null;
@@ -126,6 +128,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let totalChars = 0;
   let correctChars = 0;
   let lastFrameTime = performance.now();
+  let vocabIndex = 0; // For sequential traversal of vocabData
+  let amalgamateIndex = 0; // For sequential traversal of amalgamateVocab
 
   // Apply saved theme on load
   const savedTheme = localStorage.getItem('theme');
@@ -385,9 +389,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function getRandomVocab(sourceArray) {
+  function getRandomVocab(sourceArray, isAmalgamate = false) {
     if (sourceArray.length === 0) return null;
-    const index = Math.floor(Math.random() * sourceArray.length);
+    let index;
+    if (randomizeTerms) {
+      // Random selection
+      index = Math.floor(Math.random() * sourceArray.length);
+    } else {
+      // Sequential selection
+      if (isAmalgamate) {
+        index = amalgamateIndex;
+        amalgamateIndex = (amalgamateIndex + 1) % sourceArray.length; // Loop back to start
+      } else {
+        index = vocabIndex;
+        vocabIndex = (vocabIndex + 1) % sourceArray.length; // Loop back to start
+      }
+    }
     return sourceArray[index];
   }
 
@@ -402,7 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
       vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
     }
 
-    const vocab1 = getRandomVocab(vocabData);
+    const vocab1 = getRandomVocab(vocabData, false);
     if (!vocab1) return;
 
     let prompt1, typedInput1;
@@ -420,7 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let prompt2 = '', typedInput2 = '', vocab2 = null;
     if (amalgamateVocab.length > 0) {
-      vocab2 = getRandomVocab(amalgamateVocab);
+      vocab2 = getRandomVocab(amalgamateVocab, true);
       if (vocab2) {
         if (promptType === 'definition') {
           prompt2 = vocab2.Definition;
@@ -751,6 +768,8 @@ document.addEventListener('DOMContentLoaded', () => {
     missedWords = [];
     totalChars = 0;
     correctChars = 0;
+    vocabIndex = 0; // Reset sequential indices
+    amalgamateIndex = 0;
     scoreDisplay.textContent = `Score: ${score}`;
     waveDisplay.textContent = `Wave: ${wave}`;
     timerDisplay.textContent = `Time: ${timeLeft}s`;
@@ -786,6 +805,7 @@ document.addEventListener('DOMContentLoaded', () => {
     mode = modeSelect.value;
     promptType = promptSelect.value;
     caseSensitive = caseSelect.value === 'sensitive';
+    randomizeTerms = randomizeTermsCheckbox.checked; // Set randomization based on checkbox
     const csvUrl = vocabSelect.value || '';
     const amalgamateUrl = amalgamateSelect.value || '';
 
