@@ -81,7 +81,7 @@ export function spawnWord(vocabData, amalgamateVocab, promptType, mode, level, w
   updateTimeIndicator();
 }
 
-export function updateGame(gameActive, ctx, canvas, userInput, words, mode, wave, wpmStartTime, missedWords, totalChars, scoreDisplay, calculateWPM, calculateAccuracy, restartGame, spawnWord, certificateButton, gameContainer, startScreen) {
+export function updateGame(gameActive, ctx, canvas, userInput, words, mode, wave, wpmStartTime, missedWords, totalChars, scoreDisplay, calculateWPM, calculateAccuracy, restartGame, spawnWordCallback, certificateButton, gameContainer, startScreen, vocabData, amalgamateVocab, promptType, level) {
   if (!gameActive) return;
 
   let lastFrameTime = performance.now();
@@ -175,12 +175,12 @@ export function updateGame(gameActive, ctx, canvas, userInput, words, mode, wave
             certificateButton.focus();
           }
         } else {
-          spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator);
+          spawnWordCallback(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator);
         }
       }
     });
 
-    if (words.length === 0) spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator);
+    if (words.length === 0) spawnWordCallback(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator);
     if (mode === 'game' && wpmStartTime !== null && timeLeft <= 0) {
       wave++;
       waveDisplay.textContent = `Wave: ${wave}`;
@@ -192,7 +192,7 @@ export function updateGame(gameActive, ctx, canvas, userInput, words, mode, wave
   gameLoop();
 }
 
-export function handleInput(e, words, caseSensitive, score, correctChars, totalChars, scoreDisplay, userInput, ctx, wpmStartTime, totalTypingTime, spawnWord, vocabData, amalgamateVocab, promptType, mode, level, wave, updateTimeIndicator) {
+export function handleInput(e, words, caseSensitive, score, correctChars, totalChars, scoreDisplay, userInput, ctx, wpmStartTime, totalTypingTime, spawnWordCallback, vocabData, amalgamateVocab, promptType, mode, level, wave, updateTimeIndicator) {
   const typed = e.target.value;
   let newWpmStartTime = wpmStartTime;
   let newTotalTypingTime = totalTypingTime;
@@ -223,7 +223,7 @@ export function handleInput(e, words, caseSensitive, score, correctChars, totalC
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       newWpmStartTime = null;
       word.isExiting = true;
-      spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, ctx.canvas, userInput, words, updateTimeIndicator);
+      spawnWordCallback(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator);
       return false;
     }
     return true;
