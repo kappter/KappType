@@ -89,13 +89,130 @@ export function updateGame(gameState) {
     updateTimeIndicator
   } = gameState;
 
-  if (!gameActive) return;
+  console.log('updateGame called', { gameActive, wordsLength: words.length, mode, wave });
+
+  if (!gameActive) {
+    console.log('Game not active, exiting updateGame');
+    return;
+  }
 
   let lastFrameTime = performance.now();
   function gameLoop() {
-    // ... existing gameLoop code ...
-    if (words.length === 0) spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator);
-    // ... rest of gameLoop ...
+    if (!gameActive) {
+      console.log('Game loop stopped: game not active');
+      return;
+    }
+
+    const now = performance.now();
+    if (now - lastFrameTime < 16.67) {
+      requestAnimationFrame(gameLoop);
+      return;
+    }
+    lastFrameTime = now;
+
+    console.log('Game loop tick', { wordsLength: words.length, gameActive });
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw a test rectangle to confirm canvas is rendering
+    ctx.fillStyle = 'blue';
+    ctx.fillRect(10, 10, 50, 50); // Should see a blue square in top-left
+
+    const rectHeight = 20;
+    const rectY = canvas.height - rectHeight;
+    ctx.beginPath();
+    ctx.roundRect(0, rectY, canvas.width, rectHeight, 10);
+    ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+    ctx.fill();
+    ctx.strokeStyle = '#333333';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    if (words.length > 0) {
+      const definition = words[0].definition;
+      console.log('Rendering definition:', definition);
+      ctx.font = '24px Arial';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.textAlign = 'center';
+      const maxWidth = canvas.width - 40;
+      const wordsArray = definition.split(' ');
+      let line = '';
+      let lines = [];
+      for (let word of wordsArray) {
+        const testLine = line + word + ' ';
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && line !== '') {
+          lines.push(line.trim());
+          line = word + ' ';
+        } else {
+          line = testLine;
+        }
+      }
+      if (line) lines.push(line.trim());
+      const lineHeight = 30;
+      const totalHeight = lines.length * lineHeight;
+      const startY = (canvas.height - totalHeight) / 2;
+      lines.forEach((line, index) => {
+        ctx.fillText(line, canvas.width / 2, startY + index * lineHeight);
+      });
+    } else {
+      console.log('No words to render');
+    }
+
+    ctx.font = '20px Arial';
+    ctx.textAlign = 'left';
+    const computedStyle = window.getComputedStyle(document.body);
+    const textColor = computedStyle.color || '#333';
+
+    words = words.filter(word => word.y < canvas.height && !word.isExiting);
+    words.forEach(word => {
+      console.log('Rendering word:', { text: word.displayText, x: word.x, y: word.y, matched: word.matched });
+      const textWidth = ctx.measureText(word.typedInput).width;
+      ctx.clearRect(word.x - 5, word.y - 25, textWidth + 10, 30);
+
+      word.y += word.speed;
+      const typed = userInput.value;
+      const target = gameState.caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
+      const input = gameState.caseSensitive ? typed : typed.toLowerCase();
+      word.matched = target.startsWith(input) ? typed : '';
+
+      ctx.fillStyle = 'red';
+      ctx.fillText(word.matched, word.x, word.y);
+
+      const matchedWidth = ctx.measureText(word.matched).width;
+      ctx.fillStyle = textColor;
+      ctx.fillText(word.displayText.slice(word.matched.length), word.x + matchedWidth, word.y);
+
+      if (word.y >= canvas.height) {
+        console.log('Word reached bottom:', word.typedInput);
+        missedWords.push(word.typedInput);
+        totalChars += word.typedInput.length;
+        word.isExiting = true;
+        words = [];
+        if (mode === 'game') {
+          gameActive = false;
+          console.log('Game over due to word reaching bottom');
+          if (confirm(`Game Over! Score: ${word.score}, WPM: ${calculateWPM(word.totalTypingTime, word.totalChars)}, Accuracy: ${calculateAccuracy(word.totalChars, word.correctChars)}%\nClick OK to restart or Cancel to stay.`)) {
+            restartGame();
+          }
+        } else {
+          spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator);
+        }
+      }
+    });
+
+    if (words.length === 0) {
+      console.log('Spawning new word due to empty words array');
+      spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator);
+    }
+    if (mode === 'game' && wpmStartTime !== null && gameState.timeLeft <= 0) {
+      wave++;
+      console.log('Wave incremented:', wave);
+      scoreDisplay.textContent = `Wave: ${wave}`;
+      gameState.timeLeft = 30;
+      words.forEach(word => word.speed += 0.5);
+    }
+    requestAnimationFrame(gameLoop);
   }
   gameLoop();
 }
