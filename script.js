@@ -114,6 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let level = 1;
   let totalTime = 0;
   let wpmStartTime = null;
+  let totalTypingTime = 0; // Accumulate active typing time
   let missedWords = [];
   let totalChars = 0;
   let correctChars = 0;
@@ -449,7 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const word = { prompt: finalPrompt, typedInput: finalTypedInput, displayText: getUnderscoreText(finalTypedInput), x: finalX, y, speed, matched: '', definition: finalDefinition, isExiting: false };
     words.push(word);
     userInput.placeholder = finalPrompt;
-    wpmStartTime = null;
+    wpmStartTime = null; // Reset for the new word
 
     updateTimeIndicator();
   }
@@ -477,11 +478,11 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Draw definition background text on the canvas with increased opacity and lighter color
+    // Draw definition background text on the canvas
     if (words.length > 0) {
       const definition = words[0].definition;
       ctx.font = '24px Arial';
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'; // Changed to white with 50% opacity
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'; // White with 50% opacity
       ctx.textAlign = 'center';
       const maxWidth = canvas.width - 40;
       const wordsArray = definition.split(' ');
@@ -560,9 +561,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function calculateWPM() {
-    if (wpmStartTime === null) return 0;
-    const elapsedTime = (performance.now() - wpmStartTime) / 1000 / 60;
-    return elapsedTime > 0 ? Math.round((totalChars / 5) / elapsedTime) : 0;
+    if (totalTypingTime === 0) return 0;
+    const minutes = totalTypingTime / 60;
+    const wordsTyped = totalChars / 5; // Standard WPM calculation: 5 characters = 1 word
+    return minutes > 0 ? Math.round(wordsTyped / minutes) : 0;
   }
 
   function calculateAccuracy() {
@@ -586,6 +588,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const typed = e.target.value;
     if (wpmStartTime === null && typed.length > 0) {
       wpmStartTime = performance.now();
+      console.log('WPM timer started at', new Date().toISOString());
     }
     words = words.filter(word => {
       const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
@@ -594,6 +597,12 @@ document.addEventListener('DOMContentLoaded', () => {
         word.displayText = word.typedInput;
       }
       if (target === input) {
+        // Accumulate typing time for this word
+        if (wpmStartTime !== null) {
+          const elapsed = (performance.now() - wpmStartTime) / 1000; // Convert to seconds
+          totalTypingTime += elapsed;
+          console.log(`Word completed. Elapsed time: ${elapsed.toFixed(2)}s, Total typing time: ${totalTypingTime.toFixed(2)}s`);
+        }
         score += word.typedInput.length;
         correctChars += word.typedInput.length;
         totalChars += word.typedInput.length;
@@ -601,7 +610,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.target.value = '';
         e.target.placeholder = 'Prompt will appear here...';
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        wpmStartTime = null;
+        wpmStartTime = null; // Pause WPM timer
         word.isExiting = true; // Mark for exit animation
         spawnWord();
         return false;
@@ -739,7 +748,9 @@ document.addEventListener('DOMContentLoaded', () => {
     caseSensitive = false;
     level = 1;
     totalTime = 0;
-    wpmStartTime = null;
+    // Preserve WPM-related variables to show final WPM
+    // wpmStartTime = null; // Do not reset
+    // totalTypingTime is not reset so final WPM can be shown
     missedWords = [];
     totalChars = 0;
     correctChars = 0;
@@ -749,9 +760,20 @@ document.addEventListener('DOMContentLoaded', () => {
     scoreDisplay.textContent = `Score: ${score}`;
     waveDisplay.textContent = `Wave: ${wave}`;
     timerDisplay.textContent = `Time: ${timeLeft}s`;
-    wpmDisplay.textContent = `WPM: 0`;
+    wpmDisplay.textContent = `WPM: ${calculateWPM()}`; // Preserve final WPM
+
+    // Ensure game container is hidden and start screen is shown
     gameContainer.classList.add('hidden');
     startScreen.classList.remove('hidden');
+
+    // Log visibility state for debugging
+    console.log('After restart - gameContainer hidden:', gameContainer.classList.contains('hidden'));
+    console.log('After restart - startScreen visible:', !startScreen.classList.contains('hidden'));
+
+    // Force DOM reflow to ensure visibility changes take effect
+    gameContainer.offsetHeight;
+    startScreen.offsetHeight;
+
     userInput.removeEventListener('input', handleInput);
     document.removeEventListener('keydown', highlightKeys);
     document.removeEventListener('keyup', keyUpHandler);
@@ -767,6 +789,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     vocabSetTitle.textContent = vocabSetName + (amalgamateSetName ? ' + ' + amalgamateSetName : '');
     gameActive = true;
+    // Reset WPM-related variables for a new game session
+    wpmStartTime = null;
+    totalTypingTime = 0;
+    totalChars = 0;
+    correctChars = 0;
     userInput.focus();
     userInput.addEventListener('input', handleInput);
     document.addEventListener('keydown', highlightKeys);
