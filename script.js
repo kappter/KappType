@@ -83,14 +83,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const timeIndicator = document.getElementById('timeIndicator');
   const themeSelect = document.getElementById('themeSelect');
 
-  // Check for missing critical elements
   if (!canvas || !ctx || !userInput || !timeIndicator || !startButton || !resetButton || !randomizeTermsCheckbox || !themeSelect) {
     console.error('Required elements not found:', { canvas, ctx, userInput, timeIndicator, startButton, resetButton, randomizeTermsCheckbox, themeSelect });
     alert('Critical elements are missing from the page. Please check the HTML structure and try again.');
     return;
   }
 
-  // Warn if customVocabInput or customVocabInput2 is missing
   if (!customVocabInput) {
     console.warn('customVocabInput element not found. Custom vocabulary upload will be disabled.');
   }
@@ -126,12 +124,10 @@ document.addEventListener('DOMContentLoaded', () => {
   let amalgamateIndex = 0;
   let currentWPM = 0;
 
-  // Apply saved theme on load
   const savedTheme = localStorage.getItem('theme') || 'natural-light';
   document.body.className = savedTheme;
   themeSelect.value = savedTheme;
 
-  // Theme change handler
   themeSelect.addEventListener('change', () => {
     const selectedTheme = themeSelect.value;
     document.body.className = selectedTheme;
@@ -462,7 +458,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const x = mode === 'game' ? (minX + Math.random() * xRange) : 50;
 
     const y = 0;
-    const speed = mode === 'game' ? 0.5 + wave * 0.5 * (level / 5) : 0.5 + level * 0.1;
+    const speed = mode === 'game' ? (wave / 10) * 12.79 : 0.5 + level * 0.1; // Adjusted for 140 WPM at wave 10
     const word = { prompt: finalPrompt, typedInput: finalTypedInput, displayText: getUnderscoreText(finalTypedInput), x, y, speed, matched: '', definition: finalDefinition, isExiting: false };
     words.push(word);
     userInput.placeholder = finalPrompt;
@@ -565,7 +561,7 @@ document.addEventListener('DOMContentLoaded', () => {
       wave++;
       waveDisplay.textContent = `Wave: ${wave}`;
       timeLeft = 30;
-      words.forEach(word => word.speed += 0.5);
+      words.forEach(word => word.speed = (wave / 10) * 12.79); // Update speed for new wave
     }
     requestAnimationFrame(updateGame);
   }
