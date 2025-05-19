@@ -1,7 +1,11 @@
-export function getRandomVocab(sourceArray) {
+export function getRandomVocab(sourceArray, excludeTerm = null) {
   if (sourceArray.length === 0) return null;
-  const index = Math.floor(Math.random() * sourceArray.length);
-  return sourceArray[index];
+  let filteredArray = sourceArray;
+  if (excludeTerm && sourceArray.length > 1) {
+    filteredArray = sourceArray.filter(item => item.Term !== excludeTerm);
+  }
+  const index = Math.floor(Math.random() * filteredArray.length);
+  return filteredArray[index];
 }
 
 export function getUnderscoreText(text) {
@@ -9,13 +13,13 @@ export function getUnderscoreText(text) {
   return text[0] + '_'.repeat(text.length - 1);
 }
 
-export function spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator) {
+export function spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator, lastTerm = null) {
   if (vocabData.length === 0) {
     console.error('vocabData is empty in spawnWord');
     return;
   }
 
-  const vocab1 = getRandomVocab(vocabData);
+  const vocab1 = getRandomVocab(vocabData, lastTerm);
   if (!vocab1) {
     console.error('No vocab1 selected from vocabData:', vocabData);
     return;
@@ -37,7 +41,7 @@ export function spawnWord(vocabData, amalgamateVocab, promptType, mode, level, w
 
   let prompt2 = '', typedInput2 = '', vocab2 = null;
   if (amalgamateVocab.length > 0) {
-    vocab2 = getRandomVocab(amalgamateVocab);
+    vocab2 = getRandomVocab(amalgamateVocab, lastTerm);
     if (vocab2) {
       console.log('vocab2 selected:', vocab2);
       if (promptType === 'definition') {
@@ -78,6 +82,7 @@ export function spawnWord(vocabData, amalgamateVocab, promptType, mode, level, w
   userInput.placeholder = finalPrompt;
   updateTimeIndicator();
   console.log('Word pushed:', word, 'Words array:', words);
+  return vocab1.Term; // Return the term for exclusion in next spawn
 }
 
 export function updateGame(gameState) {
@@ -96,6 +101,7 @@ export function updateGame(gameState) {
   }
 
   let lastFrameTime = performance.now();
+  let lastTerm = null;
   function gameLoop() {
     if (!gameState.gameActive) {
       console.log('Game loop stopped: game not active');
@@ -194,14 +200,14 @@ export function updateGame(gameState) {
             restartGame();
           }
         } else {
-          spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator);
+          lastTerm = spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator, lastTerm);
         }
       }
     });
 
     if (words.length === 0) {
       console.log('Spawning new word due to empty words array');
-      spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator);
+      lastTerm = spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator, lastTerm);
     }
 
     requestAnimationFrame(gameLoop);
@@ -210,12 +216,13 @@ export function updateGame(gameState) {
 }
 
 export function handleInput(e, words, caseSensitive, score, correctChars, totalChars, scoreDisplay, userInput, ctx, wpmStartTime, totalTypingTime, spawnWord, vocabData, amalgamateVocab, promptType, mode, level, wave, updateTimeIndicator) {
-  const typed = e.target.value.trim(); // Trim to avoid whitespace issues
+  const typed = e.target.value.trim();
   let newWpmStartTime = wpmStartTime;
   let newTotalTypingTime = totalTypingTime;
   let newScore = score;
   let newCorrectChars = correctChars;
   let newTotalChars = totalChars;
+  let lastTerm = words.length > 0 ? words[0].typedInput : null;
 
   console.log('handleInput called', { typed, caseSensitive, wordsLength: words.length });
 
@@ -224,6 +231,7 @@ export function handleInput(e, words, caseSensitive, score, correctChars, totalC
     console.log('WPM timer started at', new Date().toISOString());
   }
 
+  let wordMatched = false;
   words = words.filter(word => {
     const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
     const input = caseSensitive ? typed : typed.toLowerCase();
@@ -236,6 +244,7 @@ export function handleInput(e, words, caseSensitive, score, correctChars, totalC
 
     if (target === input) {
       console.log('Word matched:', word.typedInput);
+      wordMatched = true;
       if (newWpmStartTime !== null) {
         const elapsed = (performance.now() - newWpmStartTime) / 1000;
         newTotalTypingTime += elapsed;
@@ -250,13 +259,18 @@ export function handleInput(e, words, caseSensitive, score, correctChars, totalC
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       newWpmStartTime = null;
       word.isExiting = true;
-      console.log('Spawning new word after match');
-      spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, ctx.canvas, userInput, words, updateTimeIndicator);
       return false; // Remove the matched word
     }
     return true; // Keep unmatched words
   });
 
+  if (wordMatched) {
+    console.log('Clearing words array and spawning new word');
+    words.length = 0; // Ensure old word is gone
+    lastTerm = spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, ctx.canvas, userInput, words, updateTimeIndicator, lastTerm);
+  }
+
+  console.log('After handleInput, words:', words);
   updateTimeIndicator();
-  return { wpmStartTime: newWpmStartTime, totalTypingTime: newTotalTypingTime, score: newScore, correctChars: newCorrectChars, totalChars: newTotalChars, words };
+  return { wpmStartTime: newWpmStartTime, totalTypingTime: newTotalTypingTime, score: newScore, correctChars: newCorrectChars, totalChars: newTotalChars, words, lastTerm };
 }
