@@ -87,8 +87,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const loadingIndicator = document.getElementById('loadingIndicator');
   const timeIndicator = document.getElementById('timeIndicator');
 
-  if (!canvas || !ctx || !userInput || !timeIndicator || !startButton || !restartButton || !certificateButton || !vocabSelect || !amalgamateSelect) {
-    console.error('Required elements not found:', { canvas, ctx, userInput, timeIndicator, startButton, restartButton, certificateButton, vocabSelect, amalgamateSelect });
+  if (!canvas || !ctx || !userInput || !timeIndicator || !startButton || !restartButton || !certificateButton) {
+    console.error('Required elements not found:', { canvas, ctx, userInput, timeIndicator, startButton, restartButton, certificateButton });
     alert('Critical elements are missing from the page. Please check the HTML structure and try again.');
     return;
   }
@@ -125,7 +125,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function populateVocabDropdown() {
-    console.log('Populating vocab dropdowns...');
     const baseUrl = 'https://raw.githubusercontent.com/kappter/vocab-sets/main/';
     const files = [
       'Exploring_Computer_Science_Vocabulary',
@@ -150,12 +149,6 @@ document.addEventListener('DOMContentLoaded', () => {
       'psych_terms_4',
       'utah_video_production_terms_Final'
     ];
-    console.log('Vocab select element:', vocabSelect);
-    console.log('Amalgamate select element:', amalgamateSelect);
-    if (!vocabSelect || !amalgamateSelect) {
-      console.error('Vocab or amalgamate select elements not found');
-      return;
-    }
     vocabSelect.innerHTML = '<option value="">[Embedded Vocabulary - 53 Computer Science Terms]</option>';
     amalgamateSelect.innerHTML = '<option value="">[None]</option>';
     files.forEach(file => {
@@ -163,15 +156,12 @@ document.addEventListener('DOMContentLoaded', () => {
       option1.value = baseUrl + file + '.csv';
       option1.textContent = file;
       vocabSelect.appendChild(option1);
-      console.log(`Added option to vocabSelect: ${file}`);
 
       const option2 = document.createElement('option');
       option2.value = baseUrl + file + '.csv';
       option2.textContent = file;
       amalgamateSelect.appendChild(option2);
-      console.log(`Added option to amalgamateSelect: ${file}`);
     });
-    console.log('Dropdown population completed. Vocab options:', vocabSelect.options.length, 'Amalgamate options:', amalgamateSelect.options.length);
   }
 
   function validateCsvUrl(url) {
@@ -526,14 +516,14 @@ document.addEventListener('DOMContentLoaded', () => {
     certificateButton.addEventListener('click', generateCertificate);
     certificateButton.disabled = true; // Disable until game ends
     spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, () => updateTimeIndicator(timeIndicator, wpmStartTime));
-    updateGame(gameActive, ctx, canvas, userInput, words, mode, wave, wpmStartTime, missedWords, totalChars, totalTypingTime, score, scoreDisplay, calculateWPM, calculateAccuracy, restartGame, () => spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, () => updateTimeIndicator(timeIndicator, wpmStartTime)), certificateButton, gameContainer, startScreen, vocabData, amalgamateVocab, promptType, level, () => updateTimeIndicator(timeIndicator, wpmStartTime));
+    updateGame(gameActive, ctx, canvas, userInput, words, mode, wave, wpmStartTime, missedWords, totalChars, scoreDisplay, calculateWPM, calculateAccuracy, restartGame, () => spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, () => updateTimeIndicator(timeIndicator, wpmStartTime)), certificateButton, gameContainer, startScreen);
     const updatedStats = updateTimer(gameActive, timeLeft, timerDisplay, wpmDisplay, wave, waveDisplay, mode, words, calculateWPM, totalTypingTime, totalChars);
     timeLeft = updatedStats.timeLeft;
     wave = updatedStats.wave;
   }
 
   function handleInputWrapper(e) {
-    const result = handleInput(e, words, caseSensitive, score, correctChars, totalChars, scoreDisplay, userInput, ctx, canvas, wpmStartTime, totalTypingTime, () => spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, () => updateTimeIndicator(timeIndicator, wpmStartTime)), vocabData, amalgamateVocab, promptType, mode, level, wave, () => updateTimeIndicator(timeIndicator, wpmStartTime));
+    const result = handleInput(e, words, caseSensitive, score, correctChars, totalChars, scoreDisplay, userInput, ctx, wpmStartTime, totalTypingTime, () => spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, () => updateTimeIndicator(timeIndicator, wpmStartTime)), vocabData, amalgamateVocab, promptType, mode, level, wave, () => updateTimeIndicator(timeIndicator, wpmStartTime));
     wpmStartTime = result.wpmStartTime;
     totalTypingTime = result.totalTypingTime;
     score = result.score;
