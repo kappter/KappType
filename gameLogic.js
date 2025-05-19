@@ -271,7 +271,7 @@ export function handleInput(e, words, caseSensitive, score, correctChars, totalC
       e.target.value = '';
       console.log('Input cleared');
       e.target.placeholder = 'Type here...';
-      ctx.clearRect(0, 0, ctx.canvas.width, canvas.height);
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       newWpmStartTime = null;
       return false;
     }

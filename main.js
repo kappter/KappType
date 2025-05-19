@@ -1,6 +1,6 @@
 import { updateGame, spawnWord, handleInput } from './gameLogic.js';
 import { calculateWPM, calculateAccuracy } from './stats.js';
-import { applyTheme } from './theme.js';
+import { applyTheme, highlightKeys, keyUpHandler } from './theme.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('DOM fully loaded and parsed');
@@ -88,6 +88,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     usedTerms: [],
     updateTimeIndicator: () => {
       timeIndicator.textContent = `Time: ${gameState.timeLeft}s`;
+      if (gameState.wpmStartTime !== null) {
+        timeIndicator.classList.add('active');
+      } else {
+        timeIndicator.classList.remove('active');
+      }
     }
   };
 
@@ -170,6 +175,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     gameState.usedTerms = updatedState.usedTerms;
   });
 
+  userInput.addEventListener('keydown', highlightKeys);
+  userInput.addEventListener('keyup', keyUpHandler);
+
   startButton.addEventListener('click', startGame);
   restartButton.addEventListener('click', restartGame);
 
@@ -199,8 +207,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   themeSelect.addEventListener('change', () => {
-    applyTheme(themeSelect.value);
+    try {
+      applyTheme(themeSelect.value);
+    } catch (error) {
+      console.warn('Failed to apply theme:', error);
+    }
   });
 
-  applyTheme(themeSelect.value);
+  try {
+    applyTheme(themeSelect.value || localStorage.getItem('theme') || 'light');
+  } catch (error) {
+    console.warn('Failed to apply initial theme:', error);
+  }
 });
