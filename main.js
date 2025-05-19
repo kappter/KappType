@@ -490,6 +490,18 @@ document.addEventListener('DOMContentLoaded', () => {
     gameContainer.classList.add('hidden');
     startScreen.classList.remove('hidden');
 
+    gameContainer.style.display = 'none';
+    startScreen.style.display = 'block';
+
+    console.log('After restart - gameContainer hidden:', gameContainer.classList.contains('hidden'));
+    console.log('After restart - startScreen visible:', !startScreen.classList.contains('hidden'));
+
+    console.log('Computed display for gameContainer:', window.getComputedStyle(gameContainer).display);
+    console.log('Computed display for startScreen:', window.getComputedStyle(startScreen).display);
+
+    gameContainer.offsetHeight;
+    startScreen.offsetHeight;
+
     userInput.removeEventListener('input', handleInputWrapper);
     document.removeEventListener('keydown', highlightKeys);
     document.removeEventListener('keyup', keyUpHandler);
@@ -514,9 +526,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('keyup', keyUpHandler);
     certificateButton.removeEventListener('click', generateCertificate);
     certificateButton.addEventListener('click', generateCertificate);
-    certificateButton.disabled = true; // Disable until game ends
     spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, () => updateTimeIndicator(timeIndicator, wpmStartTime));
-    updateGame(gameActive, ctx, canvas, userInput, words, mode, wave, wpmStartTime, missedWords, totalChars, scoreDisplay, calculateWPM, calculateAccuracy, restartGame, () => spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, () => updateTimeIndicator(timeIndicator, wpmStartTime)), certificateButton, gameContainer, startScreen);
+    updateGame(gameActive, ctx, canvas, userInput, words, mode, wave, wpmStartTime, missedWords, totalChars, scoreDisplay, calculateWPM, calculateAccuracy, restartGame, () => spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, () => updateTimeIndicator(timeIndicator, wpmStartTime)));
     const updatedStats = updateTimer(gameActive, timeLeft, timerDisplay, wpmDisplay, wave, waveDisplay, mode, words, calculateWPM, totalTypingTime, totalChars);
     timeLeft = updatedStats.timeLeft;
     wave = updatedStats.wave;

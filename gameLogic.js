@@ -81,7 +81,7 @@ export function spawnWord(vocabData, amalgamateVocab, promptType, mode, level, w
   updateTimeIndicator();
 }
 
-export function updateGame(gameActive, ctx, canvas, userInput, words, mode, wave, wpmStartTime, missedWords, totalChars, scoreDisplay, calculateWPM, calculateAccuracy, restartGame, spawnWord, certificateButton, gameContainer, startScreen) {
+export function updateGame(gameActive, ctx, canvas, userInput, words, mode, wave, wpmStartTime, missedWords, totalChars, scoreDisplay, calculateWPM, calculateAccuracy, restartGame, spawnWord) {
   if (!gameActive) return;
 
   let lastFrameTime = performance.now();
@@ -165,14 +165,8 @@ export function updateGame(gameActive, ctx, canvas, userInput, words, mode, wave
         words = [];
         if (mode === 'game') {
           gameActive = false;
-          const score = word.score || 0; // Fallback if score isn't passed correctly
-          if (confirm(`Game Over! Score: ${score}, WPM: ${calculateWPM(totalTypingTime, totalChars)}, Accuracy: ${calculateAccuracy(totalChars, correctChars)}%\nClick OK to restart or Cancel to generate a certificate.`)) {
+          if (confirm(`Game Over! Score: ${word.score}, WPM: ${calculateWPM(word.totalTypingTime, word.totalChars)}, Accuracy: ${calculateAccuracy(word.totalChars, word.correctChars)}%\nClick OK to restart or Cancel to stay.`)) {
             restartGame();
-          } else {
-            // Keep game container visible, enable certificate button
-            gameContainer.classList.remove('hidden');
-            certificateButton.disabled = false;
-            certificateButton.focus();
           }
         } else {
           spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator);
