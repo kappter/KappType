@@ -155,7 +155,10 @@ document.addEventListener('DOMContentLoaded', () => {
       'psych_terms_2',
       'psych_terms_3',
       'psych_terms_4',
-      'utah_video_production_terms_Final'
+      'utah_video_production_terms_Final',
+      'idioms',
+      'unusual_adjectives',
+      'unusual_verbs'
     ];
     const vocabSelectElement = document.getElementById('vocabSelect');
     const amalgamateSelectElement = document.getElementById('amalgamateSelect');
@@ -441,8 +444,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const textWidth = ctx.measureText(finalTypedInput).width;
     const maxX = canvas.width - textWidth - padding;
     const minX = padding;
-    const xRange = maxX - minX;
-    const x = mode === 'game' ? minX + Math.random() * (xRange > 0 ? xRange : 0) : 50;
+    const xRange = Math.max(0, maxX - minX); // Ensure xRange is not negative
+    const x = mode === 'game' ? (minX + Math.random() * xRange) : 50;
 
     const y = 0;
     const speed = mode === 'game' ? 0.5 + wave * 0.5 * (level / 5) : 0.5 + level * 0.1;
@@ -466,22 +469,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw bottom warning line
-    const rectHeight = 20;
-    const rectY = canvas.height - rectHeight;
-    ctx.beginPath();
-    ctx.roundRect(0, rectY, canvas.width, rectHeight, 10);
-    ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
-    ctx.fill();
-    ctx.strokeStyle = '#333333';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Draw definition background text on the canvas
+    // Draw definition background text on the canvas (behind words)
     if (words.length > 0) {
       const definition = words[0].definition;
       ctx.font = '24px Arial';
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'; // Increased opacity for visibility
       ctx.textAlign = 'center';
       const maxWidth = canvas.width - 40;
       const wordsArray = definition.split(' ');
@@ -501,10 +493,21 @@ document.addEventListener('DOMContentLoaded', () => {
       const lineHeight = 30;
       const totalHeight = lines.length * lineHeight;
       const startY = (canvas.height - totalHeight) / 2;
-      lines.forEach((line, index) => {
-        ctx.fillText(line, canvas.width / 2, startY + index * lineHeight);
-      });
+      for (let i = 0; i < lines.length; i++) {
+        ctx.fillText(lines[i], canvas.width / 2, startY + i * lineHeight);
+      }
     }
+
+    // Draw bottom warning line
+    const rectHeight = 20;
+    const rectY = canvas.height - rectHeight;
+    ctx.beginPath();
+    ctx.roundRect(0, rectY, canvas.width, rectHeight, 10);
+    ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+    ctx.fill();
+    ctx.strokeStyle = '#333333';
+    ctx.lineWidth = 2;
+    ctx.stroke();
 
     // Draw falling words
     ctx.font = '20px Arial';
