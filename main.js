@@ -460,54 +460,53 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function restartGame() {
-    console.log('restartGame() called - Resetting game state');
-    gameActive = false;
-    words = [];
-    vocabData = [];
-    amalgamateVocab = [];
-    vocabSetName = '';
-    amalgamateSetName = '';
-    score = 0;
-    wave = 1;
-    timeLeft = 30;
-    mode = 'game';
-    promptType = 'definition';
-    caseSensitive = false;
-    level = 1;
-    totalTime = 0;
-    totalTypingTime = 0;
-    totalChars = 0;
-    correctChars = 0;
-    missedWords = [];
-    userInput.value = '';
-    userInput.placeholder = 'Prompt will appear here...';
-    scoreDisplay.textContent = `Score: ${score}`;
-    waveDisplay.textContent = `Wave: ${wave}`;
-    timerDisplay.textContent = `Time: ${timeLeft}s`;
-    wpmDisplay.textContent = `WPM: ${calculateWPM(totalTypingTime, totalChars)}`;
-
-    gameContainer.classList.add('hidden');
-    startScreen.classList.remove('hidden');
-
-    gameContainer.style.display = 'none';
-    startScreen.style.display = 'block';
-
-    console.log('After restart - gameContainer hidden:', gameContainer.classList.contains('hidden'));
-    console.log('After restart - startScreen visible:', !startScreen.classList.contains('hidden'));
-
-    console.log('Computed display for gameContainer:', window.getComputedStyle(gameContainer).display);
-    console.log('Computed display for startScreen:', window.getComputedStyle(startScreen).display);
-
-    gameContainer.offsetHeight;
-    startScreen.offsetHeight;
-
-    userInput.removeEventListener('input', handleInputWrapper);
-    document.removeEventListener('keydown', highlightKeys);
-    document.removeEventListener('keyup', keyUpHandler);
-    certificateButton.removeEventListener('click', generateCertificate);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  function startGame() {
+  if (vocabData.length === 0) {
+    vocabData = [...defaultVocabData];
+    vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
   }
+  vocabSetTitle.textContent = vocabSetName + (amalgamateSetName ? ' + ' + amalgamateSetName : '');
+  gameActive = true;
+  wpmStartTime = null;
+  totalTypingTime = 0;
+  totalChars = 0;
+  correctChars = 0;
+  userInput.focus();
+  userInput.addEventListener('input', handleInputWrapper);
+  document.addEventListener('keydown', highlightKeys);
+  document.addEventListener('keyup', keyUpHandler);
+  certificateButton.removeEventListener('click', generateCertificate);
+  certificateButton.addEventListener('click', generateCertificate);
+  console.log('Starting game with state:', { gameActive, vocabDataLength: vocabData.length, mode, wave, level, promptType });
+  spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, () => updateTimeIndicator(timeIndicator, wpmStartTime));
+  updateGame({
+    gameActive,
+    ctx,
+    canvas,
+    userInput,
+    words,
+    mode,
+    wave,
+    wpmStartTime,
+    missedWords,
+    totalChars,
+    scoreDisplay,
+    calculateWPM,
+    calculateAccuracy,
+    restartGame,
+    spawnWord,
+    vocabData,
+    amalgamateVocab,
+    promptType,
+    level,
+    timeLeft,
+    caseSensitive,
+    updateTimeIndicator: () => updateTimeIndicator(timeIndicator, wpmStartTime)
+  });
+  const updatedStats = updateTimer(gameActive, timeLeft, timerDisplay, wpmDisplay, wave, waveDisplay, mode, words, calculateWPM, totalTypingTime, totalChars);
+  timeLeft = updatedStats.timeLeft;
+  wave = updatedStats.wave;
+}
 
   function startGame() {
     if (vocabData.length === 0) {
@@ -554,15 +553,15 @@ updateGame({
     wave = updatedStats.wave;
   }
 
-  function handleInputWrapper(e) {
-    const result = handleInput(e, words, caseSensitive, score, correctChars, totalChars, scoreDisplay, userInput, ctx, wpmStartTime, totalTypingTime, () => spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, () => updateTimeIndicator(timeIndicator, wpmStartTime)), vocabData, amalgamateVocab, promptType, mode, level, wave, () => updateTimeIndicator(timeIndicator, wpmStartTime));
-    wpmStartTime = result.wpmStartTime;
-    totalTypingTime = result.totalTypingTime;
-    score = result.score;
-    correctChars = result.correctChars;
-    totalChars = result.totalChars;
-    words = result.words;
-  }
+ function handleInputWrapper(e) {
+  const result = handleInput(e, words, caseSensitive, score, correctChars, totalChars, scoreDisplay, userInput, ctx, wpmStartTime, totalTypingTime, spawnWord, vocabData, amalgamateVocab, promptType, mode, level, wave, () => updateTimeIndicator(timeIndicator, wpmStartTime));
+  wpmStartTime = result.wpmStartTime;
+  totalTypingTime = result.totalTypingTime;
+  score = result.score;
+  correctChars = result.correctChars;
+  totalChars = result.totalChars;
+  words = result.words;
+}
 
   populateVocabDropdown();
   startButton.addEventListener('click', async () => {
