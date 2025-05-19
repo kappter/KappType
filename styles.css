@@ -184,7 +184,7 @@ body::before {
   box-shadow: 0 0 10px rgba(0, 247, 255, 0.5);
 }
 
-#certificateButton {
+#certificateButton, #resetButton {
   background: linear-gradient(90deg, var(--neon-purple), var(--neon-cyan));
   border: none;
   padding: 0.5rem 1.5rem;
@@ -193,9 +193,10 @@ body::before {
   font-family: 'Orbitron', sans-serif;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.3s;
+  margin: 0.5rem 0;
 }
 
-#certificateButton:hover {
+#certificateButton:hover, #resetButton:hover {
   transform: scale(1.05);
   box-shadow: 0 0 15px rgba(212, 0, 255, 0.7);
 }

@@ -85,12 +85,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const customVocabInput2 = document.getElementById('customVocabInput2');
   const vocabSetTitle = document.getElementById('vocabSetTitle');
   const certificateButton = document.getElementById('certificateButton');
+  const resetButton = document.getElementById('resetButton');
   const loadingIndicator = document.getElementById('loadingIndicator');
   const timeIndicator = document.getElementById('timeIndicator');
 
   // Check for missing critical elements
-  if (!canvas || !ctx || !userInput || !timeIndicator || !startButton) {
-    console.error('Required elements not found:', { canvas, ctx, userInput, timeIndicator, startButton });
+  if (!canvas || !ctx || !userInput || !timeIndicator || !startButton || !resetButton) {
+    console.error('Required elements not found:', { canvas, ctx, userInput, timeIndicator, startButton, resetButton });
     alert('Critical elements are missing from the page. Please check the HTML structure and try again.');
     return;
   }
@@ -452,7 +453,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const word = { prompt: finalPrompt, typedInput: finalTypedInput, displayText: getUnderscoreText(finalTypedInput), x, y, speed, matched: '', definition: finalDefinition, isExiting: false };
     words.push(word);
     userInput.placeholder = finalPrompt;
-    wpmStartTime = null;
+    if (wpmStartTime === null && userInput.value.length > 0) {
+      wpmStartTime = performance.now();
+    }
 
     updateTimeIndicator();
   }
@@ -561,9 +564,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function calculateWPM() {
-    if (wpmStartTime === null) return 0;
-    const elapsedTime = (performance.now() - wpmStartTime) / 1000 / 60;
-    return elapsedTime > 0 ? Math.round((totalChars / 5) / elapsedTime) : 0;
+    if (wpmStartTime === null || correctChars === 0) return 0;
+    const elapsedTime = (performance.now() - wpmStartTime) / 1000 / 60; // Convert to minutes
+    return elapsedTime > 0 ? Math.round((correctChars / 5) / elapsedTime) : 0; // WPM = (chars / 5) / minute
   }
 
   function calculateAccuracy() {
@@ -602,7 +605,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.target.value = '';
         e.target.placeholder = 'Prompt will appear here...';
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        wpmStartTime = null;
+        wpmStartTime = performance.now(); // Reset timer on correct input
         word.isExiting = true; // Mark for exit animation
         spawnWord();
         return false;
@@ -735,6 +738,31 @@ document.addEventListener('DOMContentLoaded', () => {
     alert('Certificate .tex file downloaded. Upload it to your Overleaf project at https://www.overleaf.com/project/6827805d3e926f37c9afb11e to compile it into a PDF. If compilation fails, check for errors in Overleaf (e.g., missing packages or syntax issues) or ensure your GitHub repository (https://github.com/kappter/KappType) is synced with your Overleaf project under the "certificate.tex" file.');
   }
 
+  function resetGame() {
+    gameActive = false;
+    words = [];
+    vocabData = [];
+    amalgamateVocab = [];
+    score = 0;
+    wave = 1;
+    timeLeft = 30;
+    totalTime = 0;
+    wpmStartTime = null;
+    missedWords = [];
+    totalChars = 0;
+    correctChars = 0;
+    scoreDisplay.textContent = `Score: ${score}`;
+    waveDisplay.textContent = `Wave: ${wave}`;
+    timerDisplay.textContent = `Time: ${timeLeft}s`;
+    wpmDisplay.textContent = `WPM: ${calculateWPM()}`;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    userInput.value = '';
+    userInput.placeholder = 'Prompt will appear here...';
+    gameContainer.classList.add('hidden');
+    startScreen.classList.remove('hidden');
+    startButton.disabled = false;
+  }
+
   function startGame() {
     if (vocabData.length === 0) {
       vocabData = [...defaultVocabData];
@@ -786,4 +814,6 @@ document.addEventListener('DOMContentLoaded', () => {
     gameContainer.classList.remove('hidden');
     startGame();
   });
+
+  resetButton.addEventListener('click', resetGame);
 });
