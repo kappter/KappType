@@ -85,12 +85,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const customVocabInput2 = document.getElementById('customVocabInput2');
   const vocabSetTitle = document.getElementById('vocabSetTitle');
   const certificateButton = document.getElementById('certificateButton');
+  const restartButton = document.getElementById('restartButton');
   const loadingIndicator = document.getElementById('loadingIndicator');
   const timeIndicator = document.getElementById('timeIndicator');
 
   // Check for missing critical elements
-  if (!canvas || !ctx || !userInput || !timeIndicator || !startButton) {
-    console.error('Required elements not found:', { canvas, ctx, userInput, timeIndicator, startButton });
+  if (!canvas || !ctx || !userInput || !timeIndicator || !startButton || !restartButton) {
+    console.error('Required elements not found:', { canvas, ctx, userInput, timeIndicator, startButton, restartButton });
     alert('Critical elements are missing from the page. Please check the HTML structure and try again.');
     return;
   }
@@ -117,6 +118,10 @@ document.addEventListener('DOMContentLoaded', () => {
   let totalChars = 0;
   let correctChars = 0;
   let lastFrameTime = performance.now();
+
+  // Ensure start screen is shown on page load or refresh
+  gameContainer.classList.add('hidden');
+  startScreen.classList.remove('hidden');
 
   // Apply saved theme on load
   const savedTheme = localStorage.getItem('theme');
@@ -469,11 +474,11 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Draw definition background text on the canvas
+    // Draw definition background text on the canvas with increased opacity
     if (words.length > 0) {
       const definition = words[0].definition;
       ctx.font = '24px Arial';
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.25)'; // Increased opacity from 0.15 to 0.25
       ctx.textAlign = 'center';
       const maxWidth = canvas.width - 40;
       const wordsArray = definition.split(' ');
@@ -762,6 +767,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.key').forEach(key => key.classList.remove('pressed'));
     });
     certificateButton.addEventListener('click', generateCertificate);
+    restartButton.addEventListener('click', restartGame);
     spawnWord();
     updateGame();
     updateTimer();

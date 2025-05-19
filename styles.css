@@ -183,7 +183,13 @@ body::before {
   box-shadow: 0 0 10px rgba(0, 247, 255, 0.5);
 }
 
-#certificateButton {
+.button-group {
+  display: flex;
+  gap: 1rem;
+}
+
+#certificateButton,
+#restartButton {
   background: linear-gradient(90deg, var(--neon-purple), var(--neon-cyan));
   border: none;
   padding: 0.5rem 1.5rem;
@@ -194,7 +200,8 @@ body::before {
   transition: transform 0.2s, box-shadow 0.3s;
 }
 
-#certificateButton:hover {
+#certificateButton:hover,
+#restartButton:hover {
   transform: scale(1.05);
   box-shadow: 0 0 15px rgba(212, 0, 255, 0.7);
 }
@@ -328,5 +335,10 @@ body.dark .keyboard {
   .key {
     font-size: 0.8rem;
     padding: 0.2rem 0.4rem;
+  }
+
+  .button-group {
+    flex-direction: column;
+    gap: 0.5rem;
   }
 }
