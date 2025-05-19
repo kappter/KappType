@@ -210,9 +210,14 @@ export function updateGame(gameState) {
 }
 
 export function handleInput(e, words, caseSensitive, score, correctChars, totalChars, scoreDisplay, userInput, ctx, wpmStartTime, totalTypingTime, spawnWord, vocabData, amalgamateVocab, promptType, mode, level, wave, updateTimeIndicator) {
-  const typed = e.target.value;
+  const typed = e.target.value.trim(); // Trim to avoid whitespace issues
   let newWpmStartTime = wpmStartTime;
   let newTotalTypingTime = totalTypingTime;
+  let newScore = score;
+  let newCorrectChars = correctChars;
+  let newTotalChars = totalChars;
+
+  console.log('handleInput called', { typed, caseSensitive, wordsLength: words.length });
 
   if (newWpmStartTime === null && typed.length > 0) {
     newWpmStartTime = performance.now();
@@ -222,30 +227,36 @@ export function handleInput(e, words, caseSensitive, score, correctChars, totalC
   words = words.filter(word => {
     const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
     const input = caseSensitive ? typed : typed.toLowerCase();
+    console.log('Comparing:', { target, input, matches: target === input });
+
     if (typed.length === 1 && target.startsWith(input)) {
       word.displayText = word.typedInput;
+      console.log('First character matched, showing full text:', word.typedInput);
     }
+
     if (target === input) {
+      console.log('Word matched:', word.typedInput);
       if (newWpmStartTime !== null) {
         const elapsed = (performance.now() - newWpmStartTime) / 1000;
         newTotalTypingTime += elapsed;
         console.log(`Word completed. Elapsed time: ${elapsed.toFixed(2)}s, Total typing time: ${newTotalTypingTime.toFixed(2)}s`);
       }
-      score += word.typedInput.length;
-      correctChars += word.typedInput.length;
-      totalChars += word.typedInput.length;
-      scoreDisplay.textContent = `Score: ${score}`;
+      newScore += word.typedInput.length;
+      newCorrectChars += word.typedInput.length;
+      newTotalChars += word.typedInput.length;
+      scoreDisplay.textContent = `Score: ${newScore}`;
       e.target.value = '';
       e.target.placeholder = 'Prompt will appear here...';
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       newWpmStartTime = null;
       word.isExiting = true;
+      console.log('Spawning new word after match');
       spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, ctx.canvas, userInput, words, updateTimeIndicator);
-      return false;
+      return false; // Remove the matched word
     }
-    return true;
+    return true; // Keep unmatched words
   });
 
   updateTimeIndicator();
-  return { wpmStartTime: newWpmStartTime, totalTypingTime: newTotalTypingTime, score, correctChars, totalChars, words };
+  return { wpmStartTime: newWpmStartTime, totalTypingTime: newTotalTypingTime, score: newScore, correctChars: newCorrectChars, totalChars: newTotalChars, words };
 }
