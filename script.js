@@ -90,8 +90,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const timeIndicator = document.getElementById('timeIndicator');
 
   // Check for missing critical elements
-  if (!canvas || !ctx || !userInput || !timeIndicator || !startButton || !restartButton) {
-    console.error('Required elements not found:', { canvas, ctx, userInput, timeIndicator, startButton, restartButton });
+  if (!canvas || !ctx || !userInput || !timeIndicator || !startButton || !restartButton || !certificateButton) {
+    console.error('Required elements not found:', { canvas, ctx, userInput, timeIndicator, startButton, restartButton, certificateButton });
     alert('Critical elements are missing from the page. Please check the HTML structure and try again.');
     return;
   }
@@ -416,7 +416,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (amalgamateVocab.length > 0) {
       vocab2 = getRandomVocab(amalgamateVocab);
       if (vocab2) {
-        if (promptType === 'definition') {
+        if (promiseType === 'definition') {
           prompt2 = vocab2.Definition;
           typedInput2 = vocab2.Term;
         } else if (promptType === 'term') {
@@ -478,11 +478,11 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Draw definition background text on the canvas
+    // Draw definition background text on the canvas with reduced opacity
     if (words.length > 0) {
       const definition = words[0].definition;
       ctx.font = '24px Arial';
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'; // White with 50% opacity
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'; // Reduced to 30% opacity for subtlety
       ctx.textAlign = 'center';
       const maxWidth = canvas.width - 40;
       const wordsArray = definition.split(' ');
@@ -672,8 +672,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function generateCertificate() {
-    const name = prompt('Enter your name for the certificate:');
-    if (!name) return;
+    console.log('Certificate button clicked at', new Date().toISOString());
+    let name;
+    try {
+      name = prompt('Enter your name for the certificate:');
+    } catch (error) {
+      console.error('Prompt failed:', error);
+      alert('Unable to open the name prompt. This may be due to browser security settings. Please try a different browser or disable extensions that might block prompts.');
+      return;
+    }
+    if (!name) {
+      console.log('Certificate generation cancelled: No name provided');
+      return;
+    }
     const safeName = escapeLatex(name.replace(/[^a-zA-Z0-9\s-]/g, ''));
     const wpm = calculateWPM();
     const accuracy = calculateAccuracy();
@@ -721,15 +732,20 @@ document.addEventListener('DOMContentLoaded', () => {
 \\end{document}
     `;
 
-    const blob = new Blob([certificateContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'certificate.tex';
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      const blob = new Blob([certificateContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'certificate.tex';
+      a.click();
+      URL.revokeObjectURL(url);
 
-    alert('Certificate .tex file downloaded. Upload it to your Overleaf project at https://www.overleaf.com/project/6827805d3e926f37c9afb11e to compile it into a PDF. If compilation fails, check for errors in Overleaf (e.g., missing packages or syntax issues) or ensure your GitHub repository (https://github.com/kappter/KappType) is synced with your Overleaf project under the "certificate.tex" file.');
+      alert('Certificate .tex file downloaded. Upload it to your Overleaf project at https://www.overleaf.com/project/6827805d3e926f37c9afb11e to compile it into a PDF. If compilation fails, check for errors in Overleaf (e.g., missing packages or syntax issues) or ensure your GitHub repository (https://github.com/kappter/KappType) is synced with your Overleaf project under the "certificate.tex" file.');
+    } catch (error) {
+      console.error('Certificate generation failed:', error);
+      alert('Failed to generate the certificate. Please check the console for errors and try again.');
+    }
   }
 
   function restartGame() {
@@ -749,8 +765,6 @@ document.addEventListener('DOMContentLoaded', () => {
     level = 1;
     totalTime = 0;
     // Preserve WPM-related variables to show final WPM
-    // wpmStartTime = null; // Do not reset
-    // totalTypingTime is not reset so final WPM can be shown
     missedWords = [];
     totalChars = 0;
     correctChars = 0;
@@ -766,9 +780,17 @@ document.addEventListener('DOMContentLoaded', () => {
     gameContainer.classList.add('hidden');
     startScreen.classList.remove('hidden');
 
+    // Fallback: Directly set display styles
+    gameContainer.style.display = 'none';
+    startScreen.style.display = 'block';
+
     // Log visibility state for debugging
     console.log('After restart - gameContainer hidden:', gameContainer.classList.contains('hidden'));
     console.log('After restart - startScreen visible:', !startScreen.classList.contains('hidden'));
+
+    // Log computed styles to debug CSS issues
+    console.log('Computed display for gameContainer:', window.getComputedStyle(gameContainer).display);
+    console.log('Computed display for startScreen:', window.getComputedStyle(startScreen).display);
 
     // Force DOM reflow to ensure visibility changes take effect
     gameContainer.offsetHeight;
@@ -798,6 +820,8 @@ document.addEventListener('DOMContentLoaded', () => {
     userInput.addEventListener('input', handleInput);
     document.addEventListener('keydown', highlightKeys);
     document.addEventListener('keyup', keyUpHandler);
+    // Remove any existing listeners to prevent duplicates
+    certificateButton.removeEventListener('click', generateCertificate);
     certificateButton.addEventListener('click', generateCertificate);
     spawnWord();
     updateGame();
