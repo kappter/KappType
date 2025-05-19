@@ -527,7 +527,7 @@ document.addEventListener('DOMContentLoaded', () => {
     certificateButton.removeEventListener('click', generateCertificate);
     certificateButton.addEventListener('click', generateCertificate);
     spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, () => updateTimeIndicator(timeIndicator, wpmStartTime));
-updateGame(
+updateGame({
   gameActive,
   ctx,
   canvas,
@@ -542,13 +542,14 @@ updateGame(
   calculateWPM,
   calculateAccuracy,
   restartGame,
-  spawnWord, // Pass the function directly
+  spawnWord,
   vocabData,
   amalgamateVocab,
   promptType,
   level,
-  () => updateTimeIndicator(timeIndicator, wpmStartTime)
-);    const updatedStats = updateTimer(gameActive, timeLeft, timerDisplay, wpmDisplay, wave, waveDisplay, mode, words, calculateWPM, totalTypingTime, totalChars);
+  updateTimeIndicator: () => updateTimeIndicator(timeIndicator, wpmStartTime)
+});
+    const updatedStats = updateTimer(gameActive, timeLeft, timerDisplay, wpmDisplay, wave, waveDisplay, mode, words, calculateWPM, totalTypingTime, totalChars);
     timeLeft = updatedStats.timeLeft;
     wave = updatedStats.wave;
   }
