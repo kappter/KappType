@@ -477,11 +477,11 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Draw definition background text on the canvas with increased opacity
+    // Draw definition background text on the canvas with increased opacity and lighter color
     if (words.length > 0) {
       const definition = words[0].definition;
       ctx.font = '24px Arial';
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.35)'; // Increased opacity from 0.25 to 0.35
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'; // Changed to white with 50% opacity
       ctx.textAlign = 'center';
       const maxWidth = canvas.width - 40;
       const wordsArray = definition.split(' ');
@@ -724,6 +724,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function restartGame() {
+    console.log('restartGame() called - Resetting game state');
     gameActive = false;
     words = [];
     vocabData = [];
@@ -753,8 +754,10 @@ document.addEventListener('DOMContentLoaded', () => {
     startScreen.classList.remove('hidden');
     userInput.removeEventListener('input', handleInput);
     document.removeEventListener('keydown', highlightKeys);
+    document.removeEventListener('keyup', keyUpHandler);
     certificateButton.removeEventListener('click', generateCertificate);
-    // Note: restartButton listener is now attached globally, so no need to remove it
+    // Ensure canvas is cleared
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
 
   function startGame() {
@@ -767,17 +770,23 @@ document.addEventListener('DOMContentLoaded', () => {
     userInput.focus();
     userInput.addEventListener('input', handleInput);
     document.addEventListener('keydown', highlightKeys);
-    document.addEventListener('keyup', () => {
-      document.querySelectorAll('.key').forEach(key => key.classList.remove('pressed'));
-    });
+    document.addEventListener('keyup', keyUpHandler);
     certificateButton.addEventListener('click', generateCertificate);
     spawnWord();
     updateGame();
     updateTimer();
   }
 
-  // Attach restart button listener globally to ensure it persists
-  restartButton.addEventListener('click', restartGame);
+  // Define keyUpHandler to avoid reference errors
+  const keyUpHandler = () => {
+    document.querySelectorAll('.key').forEach(key => key.classList.remove('pressed'));
+  };
+
+  // Attach restart button listener with debug logging
+  restartButton.addEventListener('click', () => {
+    console.log('Restart button clicked at', new Date().toISOString());
+    restartGame();
+  });
 
   populateVocabDropdown();
   startButton.addEventListener('click', async () => {
