@@ -1,32 +1,8 @@
-let currentVocab = [];
-let currentWordIndex = 0;
-let startTime = null;
+let currentWord = null;
 let totalTypingTime = 0;
 let isProcessingWord = false;
 
-// Populate dropdowns (not needed here since it's handled in main.js, but included for context)
-export function populateDropdowns(vocabLists) {
-    const vocabSelect = document.getElementById('vocabSelect');
-    const amalgamateSelect = document.getElementById('amalgamateSelect');
-    
-    vocabLists.forEach(list => {
-        const option1 = document.createElement('option');
-        option1.value = list.name;
-        option1.textContent = list.name;
-        vocabSelect.appendChild(option1);
-        
-        const option2 = document.createElement('option');
-        option2.value = list.name;
-        option2.textContent = list.name;
-        amalgamateSelect.appendChild(option2);
-        
-        console.log(`Added option to vocabSelect: ${list.name}`);
-        console.log(`Added option to amalgamateSelect: ${list.name}`);
-    });
-    console.log(`Dropdown population completed. Vocab options: ${vocabSelect.options.length} Amalgamate options: ${amalgamateSelect.options.length}`);
-}
-
-// Spawn a new word on the canvas
+// Spawn a new word (sets the placeholder, no canvas rendering)
 export function spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator) {
     if (!vocabData || vocabData.length === 0) return;
 
@@ -40,98 +16,78 @@ export function spawnWord(vocabData, amalgamateVocab, promptType, mode, level, w
     const wordText = promptType === 'definition' ? vocabItem.Definition : vocabItem.Term;
     const expectedInput = promptType === 'definition' ? vocabItem.Term : vocabItem.Definition;
 
-    const word = {
+    currentWord = {
         text: wordText,
-        expected: expectedInput,
-        x: Math.random() * (canvas.width - 100),
-        y: 0,
-        speed: 1 + (level * 0.5) + (wave * 0.2),
-        width: ctx.measureText(wordText).width
+        expected: expectedInput
     };
 
-    words.push(word);
-    userInput.placeholder = promptType === 'definition' ? 'Type the term...' : 'Type the definition...';
+    // Set the placeholder to the definition (or term)
+    userInput.placeholder = wordText;
 
-    console.log(`Spawned word: ${word.text} (Expected: ${word.expected})`);
+    // Clear the words array (since we're not using the canvas)
+    words.length = 0;
+    words.push(currentWord);
+
+    console.log(`Spawned word: ${wordText} (Expected: ${expectedInput})`);
     updateTimeIndicator();
 }
 
-// Update the game state (move words, check collisions, etc.)
-export function updateGame(gameActive, ctx, canvas, userInput, words, mode, wave, wpmStartTime, missedWords, totalChars, scoreDisplay, calculateWPM, calculateAccuracy, restartGame, spawnWordCallback, certificateButton, gameContainer, startScreen, vocabData, amalgamateVocab, promptType, level, updateTimeIndicator) {
+// Update the game state (no canvas rendering, just ensures the game continues)
+export function updateGame(gameActive, ctx, canvas, userInput, words, mode, wave, wpmStartTime, missedWords, totalChars, totalTypingTime, score, scoreDisplay, calculateWPM, calculateAccuracy, restartGame, spawnWordCallback, certificateButton, gameContainer, startScreen, vocabData, amalgamateVocab, promptType, level, updateTimeIndicator) {
     if (!gameActive) return;
 
+    // Clear the canvas (since we're not rendering anything)
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    words.forEach((word, index) => {
-        // Draw the word
-        ctx.font = '16px Arial';
-        ctx.fillStyle = 'black';
-        ctx.fillText(word.text, word.x, word.y);
-
-        // Move the word down
-        word.y += word.speed;
-
-        // Check if the word has reached the bottom
-        if (word.y > canvas.height) {
-            missedWords.push(word.expected);
-            words.splice(index, 1);
-            console.log(`Missed word: ${word.expected}`);
-            spawnWordCallback();
-        }
-    });
-
-    // Update score display
-    scoreDisplay.textContent = `Score: ${parseInt(scoreDisplay.textContent.split(': ')[1]) || 0}`;
-
-    // If no words left, spawn a new one
+    // If no words are active, spawn a new one
     if (words.length === 0) {
         spawnWordCallback();
     }
 
+    // Update score display
+    scoreDisplay.textContent = `Score: ${score}`;
+
     // Continue the game loop
     requestAnimationFrame(() =>
-        updateGame(gameActive, ctx, canvas, userInput, words, mode, wave, wpmStartTime, missedWords, totalChars, scoreDisplay, calculateWPM, calculateAccuracy, restartGame, spawnWordCallback, certificateButton, gameContainer, startScreen, vocabData, amalgamateVocab, promptType, level, updateTimeIndicator)
+        updateGame(gameActive, ctx, canvas, userInput, words, mode, wave, wpmStartTime, missedWords, totalChars, totalTypingTime, score, scoreDisplay, calculateWPM, calculateAccuracy, restartGame, spawnWordCallback, certificateButton, gameContainer, startScreen, vocabData, amalgamateVocab, promptType, level, updateTimeIndicator)
     );
 }
 
 // Handle user input
 export function handleInput(e, words, caseSensitive, score, correctChars, totalChars, scoreDisplay, userInput, ctx, canvas, wpmStartTime, totalTypingTime, spawnWordCallback, vocabData, amalgamateVocab, promptType, mode, level, wave, updateTimeIndicator) {
-    if (isProcessingWord) return { words, score, correctChars, totalChars, wpmStartTime, totalTypingTime };
+    if (isProcessingWord || words.length === 0) return { words, score, correctChars, totalChars, wpmStartTime, totalTypingTime };
     isProcessingWord = true;
 
     const userInputValue = userInput.value.trim();
     let matchFound = false;
 
-    words.forEach((word, index) => {
-        const expected = caseSensitive ? word.expected : word.expected.toLowerCase();
-        const input = caseSensitive ? userInputValue : userInputValue.toLowerCase();
+    const word = words[0]; // Only one word active at a time
+    const expected = caseSensitive ? word.expected : word.expected.toLowerCase();
+    const input = caseSensitive ? userInputValue : userInputValue.toLowerCase();
 
-        if (input === expected) {
-            matchFound = true;
-            words.splice(index, 1);
-            score += 10;
-            scoreDisplay.textContent = `Score: ${score}`;
+    if (input === expected) {
+        matchFound = true;
+        words.splice(0, 1); // Remove the current word
+        score += 10;
+        scoreDisplay.textContent = `Score: ${score}`;
 
-            // Update WPM timing
-            if (!wpmStartTime) wpmStartTime = new Date();
-            const endTime = new Date();
-            totalTypingTime += (endTime - wpmStartTime) / 1000;
-            wpmStartTime = null;
+        // Update WPM timing
+        if (!wpmStartTime) wpmStartTime = new Date();
+        const endTime = new Date();
+        totalTypingTime += (endTime - wpmStartTime) / 1000;
+        wpmStartTime = null;
 
-            // Update accuracy stats
-            totalChars += word.expected.length;
-            correctChars += word.expected.length;
+        // Update accuracy stats
+        totalChars += word.expected.length;
+        correctChars += word.expected.length;
 
-            userInput.value = '';
-            console.log(`Word completed: ${word.expected}. Score: ${score}, Total typing time: ${totalTypingTime.toFixed(2)}s`);
+        userInput.value = '';
+        console.log(`Word completed: ${word.expected}. Score: ${score}, Total typing time: ${totalTypingTime.toFixed(2)}s`);
 
-            spawnWordCallback();
-        }
-    });
-
-    if (!matchFound) {
+        spawnWordCallback();
+    } else {
         totalChars += userInputValue.length;
-        // Assume all chars are incorrect if no match (simplified accuracy calculation)
+        // Simplified accuracy: assume all chars are incorrect if no match
         // In a real app, you might compare character-by-character
     }
 
