@@ -42,88 +42,73 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KappType</title>
+  <title>KappType - Typing Game</title>
   <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 </head>
 <body>
-  <div class="container">
-    <header>
+  <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
+  <div id="startScreen">
+    <div class="start-card">
       <h1>KappType</h1>
-      <label for="themeSelect">Theme:</label>
-      <select id="themeSelect">
-        <option value="light">Light</option>
-        <option value="dark">Dark</option>
+      <label for="levelInput">Level (1-10):</label>
+      <input type="number" id="levelInput" min="1" max="10" value="1">
+      <label for="modeSelect">Mode:</label>
+      <select id="modeSelect">
+        <option value="game">Game</option>
+        <option value="practice">Practice</option>
       </select>
-    </header>
-
-    <main>
-      <section class="controls">
-        <label for="levelSelect">Level (1-10):</label>
-        <input type="number" id="levelSelect" min="1" max="10" value="1">
-
-        <label for="modeSelect">Mode:</label>
-        <select id="modeSelect">
-          <option value="game">Game</option>
-          <option value="practice">Practice</option>
-        </select>
-
-        <label for="promptTypeSelect">Prompt Type:</label>
-        <select id="promptTypeSelect">
-          <option value="definition">Definition</option>
-          <option value="term">Term</option>
-          <option value="random">Random</option>
-        </select>
-
-        <label for="caseSelect">Case Sensitivity:</label>
-        <select id="caseSelect">
-          <option value="insensitive">Insensitive</option>
-          <option value="sensitive">Sensitive</option>
-        </select>
-
-        <label for="waveSelect">Wave:</label>
-        <input type="number" id="waveSelect" min="1" value="1">
-
-        <button id="startButton">Start Game</button>
-      </section>
-
-      <canvas id="gameCanvas"></canvas>
-
-      <section class="stats">
-        <span id="score">Score: 0</span>
-        <span id="wave">Wave: 1</span>
-        <span id="timeIndicator">Time: 30s</span>
-        <span id="wpm">WPM: 0</span>
-      </section>
-
-      <section class="input-area">
-        <input type="text" id="userInput" placeholder="Type here..." autocomplete="off" autocorrect="off" spellcheck="false">
-        <button id="certificateButton">Generate Certificate</button>
-        <button id="restartButton">Restart</button>
-      </section>
-
-      <section class="virtual-keyboard">
-        <div class="key-row">
-          <span class="key">`</span><span class="key">1</span><span class="key">2</span><span class="key">3</span><span class="key">4</span><span class="key">5</span><span class="key">6</span><span class="key">7</span><span class="key">8</span><span class="key">9</span><span class="key">0</span><span class="key">-</span><span class="key">=</span><span class="key large backspace">Backspace</span>
-        </div>
-        <div class="key-row">
-          <span class="key large tab">Tab</span><span class="key">q</span><span class="key">w</span><span class="key">e</span><span class="key">r</span><span class="key">t</span><span class="key">y</span><span class="key">u</span><span class="key">i</span><span class="key">o</span><span class="key">p</span><span class="key">[</span><span class="key">]</span><span class="key">\</span>
-        </div>
-        <div class="key-row">
-          <span class="key large caps-lock">Caps Lock</span><span class="key">a</span><span class="key">s</span><span class="key">d</span><span class="key">f</span><span class="key">g</span><span class="key">h</span><span class="key">j</span><span class="key">k</span><span class="key">l</span><span class="key">;</span><span class="key">'</span><span class="key large enter">Enter</span>
-        </div>
-        <div class="key-row">
-          <span class="key large shift">Shift</span><span class="key">z</span><span class="key">x</span><span class="key">c</span><span class="key">v</span><span class="key">b</span><span class="key">n</span><span class="key">m</span><span class="key">,</span><span class="key">.</span><span class="key">/</span><span class="key large shift">Shift</span>
-        </div>
-        <div class="key-row">
-          <span class="key ctrl">Ctrl</span><span class="key win">Win</span><span class="key alt">Alt</span><span class="key large space">Space</span><span class="key alt">Alt</span><span class="key win">Win</span><span class="key ctrl">Ctrl</span>
-        </div>
-      </section>
-    </main>
+      <label for="promptSelect">Prompt Type:</label>
+      <select id="promptSelect">
+        <option value="definition">Definition</option>
+        <option value="term">Term</option>
+        <option value="random">Random</option>
+      </select>
+      <label for="caseSelect">Case Sensitivity:</label>
+      <select id="caseSelect">
+        <option value="insensitive">Insensitive</option>
+        <option value="sensitive">Sensitive</option>
+      </select>
+      <label for="vocabSelect">Vocabulary Set:</label>
+      <select id="vocabSelect"></select>
+      <label for="amalgamateSelect">Amalgamate Set:</label>
+      <select id="amalgamateSelect"></select>
+      <label for="customVocabInput">Custom Vocabulary (CSV):</label>
+      <input type="file" id="customVocabInput" accept=".csv">
+      <button id="startButton">Start Game</button>
+      <div id="loadingIndicator" class="hidden">Loading...</div>
+    </div>
   </div>
-
-  <div id="loadingOverlay">Loading...</div>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-  <script type="module" src="main.js"></script>
+  <div id="gameContainer" class="hidden">
+    <h2 id="vocabSetTitle"></h2>
+    <canvas id="gameCanvas"></canvas>
+    <div class="stats">
+      <span id="score">Score: 0</span>
+      <span id="wave">Wave: 1</span>
+      <span id="timer">Time: 30s</span>
+      <span id="wpm">WPM: 0</span>
+    </div>
+    <input type="text" id="userInput" placeholder="Prompt will appear here..." spellcheck="false">
+    <button id="certificateButton">Generate Certificate</button>
+    <div id="timeIndicator"></div>
+    <div class="keyboard">
+      <div class="row">
+        <span class="key">~</span><span class="key">1</span><span class="key">2</span><span class="key">3</span><span class="key">4</span><span class="key">5</span><span class="key">6</span><span class="key">7</span><span class="key">8</span><span class="key">9</span><span class="key">0</span><span class="key">-</span><span class="key">=</span><span class="key backspace">Backspace</span>
+      </div>
+      <div class="row">
+        <span class="key tab">Tab</span><span class="key">q</span><span class="key">w</span><span class="key">e</span><span class="key">r</span><span class="key">t</span><span class="key">y</span><span class="key">u</span><span class="key">i</span><span class="key">o</span><span class="key">p</span><span class="key">[</span><span class="key">]</span><span class="key">\</span>
+      </div>
+      <div class="row">
+        <span class="key caps-lock">Caps Lock</span><span class="key">a</span><span class="key">s</span><span class="key">d</span><span class="key">f</span><span class="key">g</span><span class="key">h</span><span class="key">j</span><span class="key">k</span><span class="key">l</span><span class="key">;</span><span class="key">'</span><span class="key enter">Enter</span>
+      </div>
+      <div class="row">
+        <span class="key shift">Shift</span><span class="key">z</span><span class="key">x</span><span class="key">c</span><span class="key">v</span><span class="key">b</span><span class="key">n</span><span class="key">m</span><span class="key">,</span><span class="key">.</span><span class="key">/</span><span class="key shift">Shift</span>
+      </div>
+      <div class="row">
+        <span class="key ctrl">Ctrl</span><span class="key win">Win</span><span class="key alt">Alt</span><span class="key space">Space</span><span class="key alt">Alt</span><span class="key win">Win</span><span class="key ctrl">Ctrl</span>
+      </div>
+    </div>
+  </div>
+  <script src="script.js"></script>
 </body>
 </html>
