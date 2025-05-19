@@ -1,5 +1,3 @@
-// gameLogic.js - Manages game mechanics, including word spawning, game updates, and input handling.
-
 export function getRandomVocab(sourceArray) {
   if (sourceArray.length === 0) return null;
   const index = Math.floor(Math.random() * sourceArray.length);
@@ -79,6 +77,7 @@ export function spawnWord(vocabData, amalgamateVocab, promptType, mode, level, w
   words.push(word);
   userInput.placeholder = finalPrompt;
   updateTimeIndicator();
+  console.log('Word pushed:', word, 'Words array:', words);
 }
 
 export function updateGame(gameState) {
@@ -86,10 +85,10 @@ export function updateGame(gameState) {
     gameActive, ctx, canvas, userInput, words, mode, wave, wpmStartTime,
     missedWords, totalChars, scoreDisplay, calculateWPM, calculateAccuracy,
     restartGame, spawnWord, vocabData, amalgamateVocab, promptType, level,
-    updateTimeIndicator
+    timeLeft, caseSensitive, score, totalTypingTime, correctChars, updateTimeIndicator
   } = gameState;
 
-  console.log('updateGame called', { gameActive, wordsLength: words.length, mode, wave });
+  console.log('updateGame called', { gameActive, wordsLength: words.length, restartGameDefined: typeof restartGame });
 
   if (!gameActive) {
     console.log('Game not active, exiting updateGame');
@@ -98,7 +97,7 @@ export function updateGame(gameState) {
 
   let lastFrameTime = performance.now();
   function gameLoop() {
-    if (!gameActive) {
+    if (!gameState.gameActive) {
       console.log('Game loop stopped: game not active');
       return;
     }
@@ -110,13 +109,13 @@ export function updateGame(gameState) {
     }
     lastFrameTime = now;
 
-    console.log('Game loop tick', { wordsLength: words.length, gameActive });
+    console.log('Game loop tick', { wordsLength: words.length, gameActive: gameState.gameActive });
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw a test rectangle to confirm canvas is rendering
+    // Test rendering
     ctx.fillStyle = 'blue';
-    ctx.fillRect(10, 10, 50, 50); // Should see a blue square in top-left
+    ctx.fillRect(10, 10, 50, 50);
 
     const rectHeight = 20;
     const rectY = canvas.height - rectHeight;
@@ -164,7 +163,6 @@ export function updateGame(gameState) {
     const computedStyle = window.getComputedStyle(document.body);
     const textColor = computedStyle.color || '#333';
 
-    words = words.filter(word => word.y < canvas.height && !word.isExiting);
     words.forEach(word => {
       console.log('Rendering word:', { text: word.displayText, x: word.x, y: word.y, matched: word.matched });
       const textWidth = ctx.measureText(word.typedInput).width;
@@ -186,13 +184,13 @@ export function updateGame(gameState) {
       if (word.y >= canvas.height) {
         console.log('Word reached bottom:', word.typedInput);
         missedWords.push(word.typedInput);
-        totalChars += word.typedInput.length;
+        gameState.totalChars += word.typedInput.length;
         word.isExiting = true;
-        words = [];
+        words.length = 0;
         if (mode === 'game') {
-          gameActive = false;
+          gameState.gameActive = false;
           console.log('Game over due to word reaching bottom');
-          if (confirm(`Game Over! Score: ${word.score}, WPM: ${calculateWPM(word.totalTypingTime, word.totalChars)}, Accuracy: ${calculateAccuracy(word.totalChars, word.correctChars)}%\nClick OK to restart or Cancel to stay.`)) {
+          if (confirm(`Game Over! Score: ${gameState.score}, WPM: ${calculateWPM(gameState.totalTypingTime, gameState.totalChars)}, Accuracy: ${calculateAccuracy(gameState.totalChars, gameState.correctChars)}%\nClick OK to redo or Cancel to stay.`)) {
             restartGame();
           }
         } else {
@@ -205,19 +203,14 @@ export function updateGame(gameState) {
       console.log('Spawning new word due to empty words array');
       spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator);
     }
-    if (mode === 'game' && wpmStartTime !== null && gameState.timeLeft <= 0) {
-      wave++;
-      console.log('Wave incremented:', wave);
-      scoreDisplay.textContent = `Wave: ${wave}`;
-      gameState.timeLeft = 30;
-      words.forEach(word => word.speed += 0.5);
-    }
+
     requestAnimationFrame(gameLoop);
   }
   gameLoop();
 }
 
-export function handleInput(e, words, caseSensitive, score, correctChars, totalChars, scoreDisplay, userInput, ctx, wpmStartTime, totalTypingTime, spawnWord, vocabData, amalgamateVocab, promptType, mode, level, wave, updateTimeIndicator) {  const typed = e.target.value;
+export function handleInput(e, words, caseSensitive, score, correctChars, totalChars, scoreDisplay, userInput, ctx, wpmStartTime, totalTypingTime, spawnWord, vocabData, amalgamateVocab, promptType, mode, level, wave, updateTimeIndicator) {
+  const typed = e.target.value;
   let newWpmStartTime = wpmStartTime;
   let newTotalTypingTime = totalTypingTime;
 
@@ -247,7 +240,7 @@ export function handleInput(e, words, caseSensitive, score, correctChars, totalC
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       newWpmStartTime = null;
       word.isExiting = true;
-     spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, ctx.canvas, userInput, words, updateTimeIndicator);
+      spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, ctx.canvas, userInput, words, updateTimeIndicator);
       return false;
     }
     return true;

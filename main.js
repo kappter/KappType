@@ -1,5 +1,3 @@
-// main.js - Entry point for the game, coordinates DOM setup, event listeners, and game initialization.
-
 import { calculateWPM, calculateAccuracy, updateTimer } from './stats.js';
 import { spawnWord, updateGame, handleInput } from './gameLogic.js';
 import { toggleTheme, highlightKeys, keyUpHandler, updateTimeIndicator } from './theme.js';
@@ -189,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (window.location.protocol === 'file:') {
-        alert('Cannot load external CSV files when running via file://. Using embedded vocabulary (53 computer science terms). For external CSVs, run a local server (e.g., python -m http.server) and access http://localhost:8000.');
+        alert('Cannot load external CSV files when running via file://. Using embedded vocabulary.');
         if (!isAmalgamate) {
           vocabData = [...defaultVocabData];
           vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
@@ -217,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (typeof Papa === 'undefined') {
-        alert('Papa Parse library not loaded. Using embedded vocabulary. Ensure papaparse.min.js is in the repository root.');
+        alert('Papa Parse library not loaded. Using embedded vocabulary.');
         if (!isAmalgamate) {
           vocabData = [...defaultVocabData];
           vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
@@ -239,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
       fetch(csvUrl, { signal: controller.signal })
         .then(response => {
           if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status} (${response.statusText})`);
+            throw new Error(`HTTP error! Status: ${response.status}`);
           }
           return response.text();
         })
@@ -251,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
               targetArray.length = 0;
               const filteredData = results.data.filter(row => row.Term && row.Definition);
               if (filteredData.length === 0) {
-                alert(`No valid terms found in the CSV at ${csvUrl}. Ensure it has "Term" and "Definition" columns. Using embedded vocabulary for ${isAmalgamate ? 'amalgamation' : 'primary'}.`);
+                alert(`No valid terms found in the CSV. Using embedded vocabulary.`);
                 if (!isAmalgamate) {
                   vocabData = [...defaultVocabData];
                   vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
@@ -273,7 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
             error: function(error) {
               clearTimeout(timeoutId);
               console.error(`Papa Parse error for ${csvUrl}:`, error);
-              alert(`Failed to parse CSV at ${csvUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary for ${isAmalgamate ? 'amalgamation' : 'primary'}.`);
+              alert(`Failed to parse CSV. Using embedded vocabulary.`);
               if (!isAmalgamate) {
                 vocabData = [...defaultVocabData];
                 vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
@@ -289,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(error => {
           clearTimeout(timeoutId);
           console.error(`Fetch error for ${csvUrl}:`, error);
-          alert(`Failed to load CSV at ${csvUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary for ${isAmalgamate ? 'amalgamation' : 'primary'}.`);
+          alert(`Failed to load CSV. Using embedded vocabulary.`);
           if (!isAmalgamate) {
             vocabData = [...defaultVocabData];
             vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
@@ -311,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
       targetArray.length = 0;
 
       if (typeof Papa === 'undefined') {
-        alert('Papa Parse library not loaded. Using embedded vocabulary. Ensure papaparse.min.js is in the repository root.');
+        alert('Papa Parse library not loaded. Using embedded vocabulary.');
         if (!isAmalgamate) {
           vocabData = [...defaultVocabData];
           vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
@@ -333,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
           targetArray.length = 0;
           const filteredData = results.data.filter(row => row.Term && row.Definition);
           if (filteredData.length === 0) {
-            alert(`No valid terms found in the uploaded CSV. Ensure it has "Term" and "Definition" columns. Using embedded vocabulary for ${isAmalgamate ? 'amalgamation' : 'primary'}.`);
+            alert(`No valid terms found in the uploaded CSV. Using embedded vocabulary.`);
             if (!isAmalgamate) {
               vocabData = [...defaultVocabData];
               vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
@@ -354,7 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         error: function(error) {
           console.error('Papa Parse error for uploaded file:', error);
-          alert(`Failed to parse the uploaded CSV. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary for ${isAmalgamate ? 'amalgamation' : 'primary'}.`);
+          alert(`Failed to parse the uploaded CSV. Using embedded vocabulary.`);
           if (!isAmalgamate) {
             vocabData = [...defaultVocabData];
             vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
@@ -390,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
       name = prompt('Enter your name for the certificate:');
     } catch (error) {
       console.error('Prompt failed:', error);
-      alert('Unable to open the name prompt. This may be due to browser security settings. Please try a different browser or disable extensions that might block prompts.');
+      alert('Unable to open the name prompt. Please try a different browser.');
       return;
     }
     if (!name) {
@@ -449,66 +447,55 @@ document.addEventListener('DOMContentLoaded', () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'certificate.tex';
+      a.download = ' certificate.tex';
       a.click();
       URL.revokeObjectURL(url);
-
-      alert('Certificate .tex file downloaded. Upload it to your Overleaf project at https://www.overleaf.com/project/6827805d3e926f37c9afb11e to compile it into a PDF. If compilation fails, check for errors in Overleaf (e.g., missing packages or syntax issues) or ensure your GitHub repository (https://github.com/kappter/KappType) is synced with your Overleaf project under the "certificate.tex" file.');
+      alert('Certificate .tex file downloaded. Compile it in Overleaf to generate a PDF.');
     } catch (error) {
       console.error('Certificate generation failed:', error);
-      alert('Failed to generate the certificate. Please check the console for errors and try again.');
+      alert('Failed to generate the certificate. Please check the console.');
     }
   }
 
-  function startGame() {
-  if (vocabData.length === 0) {
-    vocabData = [...defaultVocabData];
-    vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
+  function restartGame() {
+    console.log('restartGame() called - Resetting game state');
+    gameActive = false;
+    words = [];
+    vocabData = [];
+    amalgamateVocab = [];
+    vocabSetName = '';
+    amalgamateSetName = '';
+    score = 0;
+    wave = 1;
+    timeLeft = 30;
+    mode = 'game';
+    promptType = 'definition';
+    caseSensitive = false;
+    level = 1;
+    totalTime = 0;
+    totalTypingTime = 0;
+    totalChars = 0;
+    correctChars = 0;
+    missedWords = [];
+    userInput.value = '';
+    userInput.placeholder = 'Prompt will appear here...';
+    scoreDisplay.textContent = `Score: ${score}`;
+    waveDisplay.textContent = `Wave: ${wave}`;
+    timerDisplay.textContent = `Time: ${timeLeft}s`;
+    wpmDisplay.textContent = `WPM: ${calculateWPM(totalTypingTime, totalChars)}`;
+
+    gameContainer.classList.add('hidden');
+    startScreen.classList.remove('hidden');
+
+    userInput.removeEventListener('input', handleInputWrapper);
+    document.removeEventListener('keydown', highlightKeys);
+    document.removeEventListener('keyup', keyUpHandler);
+    certificateButton.removeEventListener('click', generateCertificate);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
-  vocabSetTitle.textContent = vocabSetName + (amalgamateSetName ? ' + ' + amalgamateSetName : '');
-  gameActive = true;
-  wpmStartTime = null;
-  totalTypingTime = 0;
-  totalChars = 0;
-  correctChars = 0;
-  userInput.focus();
-  userInput.addEventListener('input', handleInputWrapper);
-  document.addEventListener('keydown', highlightKeys);
-  document.addEventListener('keyup', keyUpHandler);
-  certificateButton.removeEventListener('click', generateCertificate);
-  certificateButton.addEventListener('click', generateCertificate);
-  console.log('Starting game with state:', { gameActive, vocabDataLength: vocabData.length, mode, wave, level, promptType });
-  spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, () => updateTimeIndicator(timeIndicator, wpmStartTime));
-  updateGame({
-    gameActive,
-    ctx,
-    canvas,
-    userInput,
-    words,
-    mode,
-    wave,
-    wpmStartTime,
-    missedWords,
-    totalChars,
-    scoreDisplay,
-    calculateWPM,
-    calculateAccuracy,
-    restartGame,
-    spawnWord,
-    vocabData,
-    amalgamateVocab,
-    promptType,
-    level,
-    timeLeft,
-    caseSensitive,
-    updateTimeIndicator: () => updateTimeIndicator(timeIndicator, wpmStartTime)
-  });
-  const updatedStats = updateTimer(gameActive, timeLeft, timerDisplay, wpmDisplay, wave, waveDisplay, mode, words, calculateWPM, totalTypingTime, totalChars);
-  timeLeft = updatedStats.timeLeft;
-  wave = updatedStats.wave;
-}
 
   function startGame() {
+    console.log('startGame called, restartGame defined:', typeof restartGame);
     if (vocabData.length === 0) {
       vocabData = [...defaultVocabData];
       vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
@@ -525,43 +512,49 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('keyup', keyUpHandler);
     certificateButton.removeEventListener('click', generateCertificate);
     certificateButton.addEventListener('click', generateCertificate);
+    console.log('Starting game with state:', { gameActive, vocabDataLength: vocabData.length, mode, wave, level, promptType });
     spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, () => updateTimeIndicator(timeIndicator, wpmStartTime));
-updateGame({
-  gameActive,
-  ctx,
-  canvas,
-  userInput,
-  words,
-  mode,
-  wave,
-  wpmStartTime,
-  missedWords,
-  totalChars,
-  scoreDisplay,
-  calculateWPM,
-  calculateAccuracy,
-  restartGame,
-  spawnWord,
-  vocabData,
-  amalgamateVocab,
-  promptType,
-  level,
-  updateTimeIndicator: () => updateTimeIndicator(timeIndicator, wpmStartTime)
-});
+    updateGame({
+      gameActive,
+      ctx,
+      canvas,
+      userInput,
+      words,
+      mode,
+      wave,
+      wpmStartTime,
+      missedWords,
+      totalChars,
+      scoreDisplay,
+      calculateWPM,
+      calculateAccuracy,
+      restartGame,
+      spawnWord,
+      vocabData,
+      amalgamateVocab,
+      promptType,
+      level,
+      timeLeft,
+      caseSensitive,
+      score,
+      totalTypingTime,
+      correctChars,
+      updateTimeIndicator: () => updateTimeIndicator(timeIndicator, wpmStartTime)
+    });
     const updatedStats = updateTimer(gameActive, timeLeft, timerDisplay, wpmDisplay, wave, waveDisplay, mode, words, calculateWPM, totalTypingTime, totalChars);
     timeLeft = updatedStats.timeLeft;
     wave = updatedStats.wave;
   }
 
- function handleInputWrapper(e) {
-  const result = handleInput(e, words, caseSensitive, score, correctChars, totalChars, scoreDisplay, userInput, ctx, wpmStartTime, totalTypingTime, spawnWord, vocabData, amalgamateVocab, promptType, mode, level, wave, () => updateTimeIndicator(timeIndicator, wpmStartTime));
-  wpmStartTime = result.wpmStartTime;
-  totalTypingTime = result.totalTypingTime;
-  score = result.score;
-  correctChars = result.correctChars;
-  totalChars = result.totalChars;
-  words = result.words;
-}
+  function handleInputWrapper(e) {
+    const result = handleInput(e, words, caseSensitive, score, correctChars, totalChars, scoreDisplay, userInput, ctx, wpmStartTime, totalTypingTime, spawnWord, vocabData, amalgamateVocab, promptType, mode, level, wave, () => updateTimeIndicator(timeIndicator, wpmStartTime));
+    wpmStartTime = result.wpmStartTime;
+    totalTypingTime = result.totalTypingTime;
+    score = result.score;
+    correctChars = result.correctChars;
+    totalChars = result.totalChars;
+    words = result.words;
+  }
 
   populateVocabDropdown();
   startButton.addEventListener('click', async () => {
@@ -572,15 +565,11 @@ updateGame({
     const csvUrl = vocabSelect.value || '';
     const amalgamateUrl = amalgamateSelect.value || '';
 
-    if (customVocabInput1 && customVocabInput2) {
-      if (customVocabInput1.files && customVocabInput1.files.length > 0) {
-        await loadCustomVocab(customVocabInput1.files[0]);
-      }
-      if (customVocabInput2.files && customVocabInput2.files.length > 0) {
-        await loadCustomVocab(customVocabInput2.files[0], true);
-      }
-    } else {
-      console.warn('Custom vocabulary inputs not available.');
+    if (customVocabInput1 && customVocabInput1.files && customVocabInput1.files.length > 0) {
+      await loadCustomVocab(customVocabInput1.files[0]);
+    }
+    if (customVocabInput2 && customVocabInput2.files && customVocabInput2.files.length > 0) {
+      await loadCustomVocab(customVocabInput2.files[0], true);
     }
 
     if (csvUrl && (!customVocabInput1 || !customVocabInput1.files || customVocabInput1.files.length === 0)) {
