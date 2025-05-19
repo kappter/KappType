@@ -1,11 +1,18 @@
-export function getRandomVocab(sourceArray, excludeTerm = null) {
+export function getRandomVocab(sourceArray, usedTerms) {
   if (sourceArray.length === 0) return null;
-  let filteredArray = sourceArray;
-  if (excludeTerm && sourceArray.length > 1) {
-    filteredArray = sourceArray.filter(item => item.Term !== excludeTerm);
+  let availableTerms = sourceArray;
+  if (usedTerms.length < sourceArray.length) {
+    availableTerms = sourceArray.filter(item => !usedTerms.includes(item.Term));
   }
-  const index = Math.floor(Math.random() * filteredArray.length);
-  return filteredArray[index];
+  if (availableTerms.length === 0) {
+    console.log('All terms used, resetting usedTerms');
+    usedTerms.length = 0; // Reset when all terms are exhausted
+    availableTerms = sourceArray;
+  }
+  const index = Math.floor(Math.random() * availableTerms.length);
+  const selected = availableTerms[index];
+  console.log('Selected term:', selected, 'Available terms:', availableTerms.length);
+  return selected;
 }
 
 export function getUnderscoreText(text) {
@@ -13,18 +20,19 @@ export function getUnderscoreText(text) {
   return text[0] + '_'.repeat(text.length - 1);
 }
 
-export function spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator, lastTerm = null) {
+export function spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator, usedTerms) {
   if (vocabData.length === 0) {
     console.error('vocabData is empty in spawnWord');
     return;
   }
 
-  const vocab1 = getRandomVocab(vocabData, lastTerm);
+  const vocab1 = getRandomVocab(vocabData, usedTerms);
   if (!vocab1) {
     console.error('No vocab1 selected from vocabData:', vocabData);
     return;
   }
-  console.log('vocab1 selected:', vocab1);
+  usedTerms.push(vocab1.Term);
+  console.log('vocab1 selected:', vocab1, 'usedTerms:', usedTerms);
 
   let prompt1, typedInput1;
   if (promptType === 'definition') {
@@ -41,9 +49,10 @@ export function spawnWord(vocabData, amalgamateVocab, promptType, mode, level, w
 
   let prompt2 = '', typedInput2 = '', vocab2 = null;
   if (amalgamateVocab.length > 0) {
-    vocab2 = getRandomVocab(amalgamateVocab, lastTerm);
+    vocab2 = getRandomVocab(amalgamateVocab, usedTerms);
     if (vocab2) {
-      console.log('vocab2 selected:', vocab2);
+      usedTerms.push(vocab2.Term);
+      console.log('vocab2 selected:', vocab2, 'usedTerms:', usedTerms);
       if (promptType === 'definition') {
         prompt2 = vocab2.Definition;
         typedInput2 = vocab2.Term;
@@ -82,7 +91,6 @@ export function spawnWord(vocabData, amalgamateVocab, promptType, mode, level, w
   userInput.placeholder = finalPrompt;
   updateTimeIndicator();
   console.log('Word pushed:', word, 'Words array:', words);
-  return vocab1.Term; // Return the term for exclusion in next spawn
 }
 
 export function updateGame(gameState) {
@@ -93,6 +101,8 @@ export function updateGame(gameState) {
     timeLeft, caseSensitive, score, totalTypingTime, correctChars, updateTimeIndicator
   } = gameState;
 
+  const usedTerms = []; // Initialize usedTerms for tracking
+
   console.log('updateGame called', { gameActive, wordsLength: words.length, restartGameDefined: typeof restartGame });
 
   if (!gameActive) {
@@ -101,7 +111,6 @@ export function updateGame(gameState) {
   }
 
   let lastFrameTime = performance.now();
-  let lastTerm = null;
   function gameLoop() {
     if (!gameState.gameActive) {
       console.log('Game loop stopped: game not active');
@@ -191,23 +200,23 @@ export function updateGame(gameState) {
         console.log('Word reached bottom:', word.typedInput);
         missedWords.push(word.typedInput);
         gameState.totalChars += word.typedInput.length;
-        word.isExiting = true;
         words.length = 0;
         if (mode === 'game') {
           gameState.gameActive = false;
           console.log('Game over due to word reaching bottom');
           if (confirm(`Game Over! Score: ${gameState.score}, WPM: ${calculateWPM(gameState.totalTypingTime, gameState.totalChars)}, Accuracy: ${calculateAccuracy(gameState.totalChars, gameState.correctChars)}%\nClick OK to redo or Cancel to stay.`)) {
+            usedTerms.length = 0; // Reset usedTerms on restart
             restartGame();
           }
         } else {
-          lastTerm = spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator, lastTerm);
+          spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator, usedTerms);
         }
       }
     });
 
     if (words.length === 0) {
       console.log('Spawning new word due to empty words array');
-      lastTerm = spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator, lastTerm);
+      spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator, usedTerms);
     }
 
     requestAnimationFrame(gameLoop);
@@ -222,9 +231,9 @@ export function handleInput(e, words, caseSensitive, score, correctChars, totalC
   let newScore = score;
   let newCorrectChars = correctChars;
   let newTotalChars = totalChars;
-  let lastTerm = words.length > 0 ? words[0].typedInput : null;
+  const usedTerms = words.length > 0 && words[0].usedTerms ? words[0].usedTerms : [];
 
-  console.log('handleInput called', { typed, caseSensitive, wordsLength: words.length });
+  console.log('handleInput called', { typed, caseSensitive, wordsLength: words.length, usedTerms });
 
   if (newWpmStartTime === null && typed.length > 0) {
     newWpmStartTime = performance.now();
@@ -258,7 +267,6 @@ export function handleInput(e, words, caseSensitive, score, correctChars, totalC
       e.target.placeholder = 'Prompt will appear here...';
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       newWpmStartTime = null;
-      word.isExiting = true;
       return false; // Remove the matched word
     }
     return true; // Keep unmatched words
@@ -267,10 +275,10 @@ export function handleInput(e, words, caseSensitive, score, correctChars, totalC
   if (wordMatched) {
     console.log('Clearing words array and spawning new word');
     words.length = 0; // Ensure old word is gone
-    lastTerm = spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, ctx.canvas, userInput, words, updateTimeIndicator, lastTerm);
+    spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, ctx.canvas, userInput, words, updateTimeIndicator, usedTerms);
   }
 
-  console.log('After handleInput, words:', words);
+  console.log('After handleInput, words:', words, 'usedTerms:', usedTerms);
   updateTimeIndicator();
-  return { wpmStartTime: newWpmStartTime, totalTypingTime: newTotalTypingTime, score: newScore, correctChars: newCorrectChars, totalChars: newTotalChars, words, lastTerm };
+  return { wpmStartTime: newWpmStartTime, totalTypingTime: newTotalTypingTime, score: newScore, correctChars: newCorrectChars, totalChars: newTotalChars, words, usedTerms };
 }
