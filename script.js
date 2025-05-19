@@ -120,16 +120,18 @@ document.addEventListener('DOMContentLoaded', () => {
   let mode = 'game';
   let promptType = 'definition';
   let caseSensitive = false;
-  let randomizeTerms = true; // Default to checked (randomized)
+  let randomizeTerms = true;
   let level = 1;
   let totalTime = 0;
   let wpmStartTime = null;
+  let wpmEndTime = null; // Track when word is completed
   let missedWords = [];
   let totalChars = 0;
   let correctChars = 0;
   let lastFrameTime = performance.now();
-  let vocabIndex = 0; // For sequential traversal of vocabData
-  let amalgamateIndex = 0; // For sequential traversal of amalgamateVocab
+  let vocabIndex = 0;
+  let amalgamateIndex = 0;
+  let currentWPM = 0; // Store the last calculated WPM for display
 
   // Apply saved theme on load
   const savedTheme = localStorage.getItem('theme');
@@ -470,10 +472,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const word = { prompt: finalPrompt, typedInput: finalTypedInput, displayText: getUnderscoreText(finalTypedInput), x, y, speed, matched: '', definition: finalDefinition, isExiting: false };
     words.push(word);
     userInput.placeholder = finalPrompt;
-    if (wpmStartTime === null && userInput.value.length > 0) {
-      wpmStartTime = performance.now();
-    }
-
+    // Reset WPM timing for the new word
+    wpmStartTime = null;
+    wpmEndTime = null;
+    currentWPM = 0; // Reset displayed WPM until first keypress
+    updateWPMDisplay();
     updateTimeIndicator();
   }
 
@@ -493,7 +496,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (words.length > 0) {
       const definition = words[0].definition;
       ctx.font = '24px Arial';
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'; // Increased opacity for visibility
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
       ctx.textAlign = 'center';
       const maxWidth = canvas.width - 40;
       const wordsArray = definition.split(' ');
@@ -571,7 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (words.length === 0) spawnWord();
-    if (mode === 'game' && wpmStartTime !== null && timeLeft <= 0) {
+    if (mode === 'game' && timeLeft <= 0) {
       wave++;
       waveDisplay.textContent = `Wave: ${wave}`;
       timeLeft = 30;
@@ -581,9 +584,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function calculateWPM() {
-    if (wpmStartTime === null || correctChars === 0) return 0;
-    const elapsedTime = (performance.now() - wpmStartTime) / 1000 / 60; // Convert to minutes
-    return elapsedTime > 0 ? Math.round((correctChars / 5) / elapsedTime) : 0; // WPM = (chars / 5) / minute
+    if (wpmStartTime === null || wpmEndTime === null || correctChars === 0) return 0;
+    const elapsedTime = (wpmEndTime - wpmStartTime) / 1000 / 60; // Convert to minutes
+    if (elapsedTime <= 0) return 0;
+    const wpm = Math.round((correctChars / 5) / elapsedTime); // WPM = (chars / 5) / minute
+    return Math.min(wpm, 200); // Cap at 200 WPM
+  }
+
+  function updateWPMDisplay() {
+    wpmDisplay.textContent = `WPM: ${currentWPM}`;
   }
 
   function calculateAccuracy() {
@@ -594,7 +603,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!gameActive) return;
     timeLeft--;
     timerDisplay.textContent = `Time: ${timeLeft}s`;
-    wpmDisplay.textContent = `WPM: ${calculateWPM()}`;
+    // Update WPM display on timer tick, but only if timing has started
+    if (wpmStartTime !== null && wpmEndTime === null) {
+      wpmEndTime = performance.now(); // Temporarily set end time for ongoing calculation
+      currentWPM = calculateWPM();
+      wpmEndTime = null; // Reset end time since word isn't complete
+      updateWPMDisplay();
+    }
     if (timeLeft <= 0) {
       wave++;
       waveDisplay.textContent = `Wave: ${wave}`;
@@ -605,9 +620,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function handleInput(e) {
     const typed = e.target.value;
+    // Start WPM timing on first keypress of a new word
     if (wpmStartTime === null && typed.length > 0) {
       wpmStartTime = performance.now();
+      correctChars = 0; // Reset correct chars for this word
     }
+
     words = words.filter(word => {
       const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
       const input = caseSensitive ? typed : typed.toLowerCase();
@@ -615,15 +633,19 @@ document.addEventListener('DOMContentLoaded', () => {
         word.displayText = word.typedInput;
       }
       if (target === input) {
-        score += word.typedInput.length;
+        // Word completed, stop WPM timing
+        wpmEndTime = performance.now();
         correctChars += word.typedInput.length;
         totalChars += word.typedInput.length;
+        currentWPM = calculateWPM(); // Calculate and store WPM for this word
+        updateWPMDisplay();
+        
+        score += word.typedInput.length;
         scoreDisplay.textContent = `Score: ${score}`;
         e.target.value = '';
         e.target.placeholder = 'Prompt will appear here...';
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        wpmStartTime = performance.now(); // Reset timer on correct input
-        word.isExiting = true; // Mark for exit animation
+        word.isExiting = true;
         spawnWord();
         return false;
       }
@@ -637,7 +659,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const keys = document.querySelectorAll('.key');
     keys.forEach(key => key.classList.remove('pressed'));
 
-    const keyValue = e.key === ' ' ? ' ' : e.key; // Handle space key
+    const keyValue = e.key === ' ' ? ' ' : e.key;
     const keyElement = Array.from(keys).find(k => k.getAttribute('data-key') === keyValue);
 
     if (keyElement) {
@@ -665,8 +687,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (e.key === 'Control') {
       document.querySelectorAll('.ctrl').forEach(ctrl => ctrl.classList.remove('pressed'));
     } else if (e.key === 'Alt') {
-      document.querySelectorAll('.alt').forEach(alt => alt.classList.remove('pressed'));
-    } else if (e.key === 'Meta') {
+      document.querySelectorAll('.alt').forVarticalAlignement('left');
       document.querySelectorAll('.win').forEach(win => win.classList.remove('pressed'));
     }
   }
@@ -698,7 +719,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const name = prompt('Enter your name for the certificate:');
     if (!name) return;
     const safeName = escapeLatex(name.replace(/[^a-zA-Z0-9\s-]/g, ''));
-    const wpm = calculateWPM();
+    const wpm = currentWPM; // Use the last calculated WPM
     const accuracy = calculateAccuracy();
     const promptTypeText = escapeLatex(promptSelect.options[promptSelect.selectedIndex].text);
     const missedTerms = missedWords.length > 0 ? escapeLatex(missedWords.join(', ')) : 'None';
@@ -765,15 +786,17 @@ document.addEventListener('DOMContentLoaded', () => {
     timeLeft = 30;
     totalTime = 0;
     wpmStartTime = null;
+    wpmEndTime = null;
+    currentWPM = 0;
     missedWords = [];
     totalChars = 0;
     correctChars = 0;
-    vocabIndex = 0; // Reset sequential indices
+    vocabIndex = 0;
     amalgamateIndex = 0;
     scoreDisplay.textContent = `Score: ${score}`;
     waveDisplay.textContent = `Wave: ${wave}`;
     timerDisplay.textContent = `Time: ${timeLeft}s`;
-    wpmDisplay.textContent = `WPM: ${calculateWPM()}`;
+    wpmDisplay.textContent = `WPM: ${currentWPM}`;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     userInput.value = '';
     userInput.placeholder = 'Prompt will appear here...';
@@ -805,7 +828,7 @@ document.addEventListener('DOMContentLoaded', () => {
     mode = modeSelect.value;
     promptType = promptSelect.value;
     caseSensitive = caseSelect.value === 'sensitive';
-    randomizeTerms = randomizeTermsCheckbox.checked; // Set randomization based on checkbox
+    randomizeTerms = randomizeTermsCheckbox.checked;
     const csvUrl = vocabSelect.value || '';
     const amalgamateUrl = amalgamateSelect.value || '';
 
