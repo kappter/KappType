@@ -172,7 +172,6 @@ export function updateGame(gameState) {
       });
     } else {
       console.log('No words to render');
-      // Render placeholder text
       ctx.font = '24px Arial';
       ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
       ctx.textAlign = 'center';
@@ -237,7 +236,7 @@ export function handleInput(e, words, caseSensitive, score, correctChars, totalC
   let newScore = score;
   let newCorrectChars = correctChars;
   let newTotalChars = totalChars;
-  const usedTerms = words.length > 0 && words[0].usedTerms ? words[0].usedTerms : [];
+  let usedTerms = gameState.usedTerms || [];
 
   console.log('handleInput called', { typed, caseSensitive, wordsLength: words.length, usedTerms });
 
@@ -271,8 +270,8 @@ export function handleInput(e, words, caseSensitive, score, correctChars, totalC
       scoreDisplay.textContent = `Score: ${newScore}`;
       e.target.value = '';
       console.log('Input cleared');
-      e.target.placeholder = 'Prompt will appear here...';
-      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      e.target.placeholder = 'Type here...';
+      ctx.clearRect(0, 0, ctx.canvas.width, canvas.height);
       newWpmStartTime = null;
       return false;
     }

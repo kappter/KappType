@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const userInput = document.getElementById('userInput');
   const scoreDisplay = document.getElementById('score');
   const startButton = document.getElementById('startButton');
+  const restartButton = document.getElementById('restartButton');
   const modeSelect = document.getElementById('modeSelect');
   const promptTypeSelect = document.getElementById('promptTypeSelect');
   const levelSelect = document.getElementById('levelSelect');
@@ -17,6 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const caseSelect = document.getElementById('caseSelect');
   const themeSelect = document.getElementById('themeSelect');
   const timeIndicator = document.getElementById('timeIndicator');
+  const loadingOverlay = document.getElementById('loadingOverlay');
 
   let vocabData = [];
   let amalgamateVocab = [];
@@ -34,7 +36,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   } catch (error) {
     console.error('Error loading vocab.csv:', error);
-    alert('Failed to load vocabulary data. Please check the console and ensure vocab.csv is available.');
+    alert('Failed to load vocabulary data. Please ensure vocab.csv is available.');
+    loadingOverlay.style.display = 'none';
     return;
   }
 
@@ -52,6 +55,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (error) {
     console.warn('Error loading amalgamateVocab.csv:', error);
   }
+
+  loadingOverlay.style.display = 'none';
 
   canvas.width = 1200;
   canvas.height = 600;
@@ -75,11 +80,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     amalgamateVocab,
     promptType: promptTypeSelect.value,
     level: parseInt(levelSelect.value),
-    timeLeft: 60,
+    timeLeft: 30,
     caseSensitive: caseSelect.value === 'sensitive',
     score: 0,
     totalTypingTime: 0,
     correctChars: 0,
+    usedTerms: [],
     updateTimeIndicator: () => {
       timeIndicator.textContent = `Time: ${gameState.timeLeft}s`;
     }
@@ -95,18 +101,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     gameState.totalChars = 0;
     gameState.wpmStartTime = null;
     gameState.missedWords = [];
-    gameState.timeLeft = 60;
+    gameState.timeLeft = 30;
     gameState.mode = modeSelect.value;
     gameState.wave = parseInt(waveSelect.value);
     gameState.promptType = promptTypeSelect.value;
     gameState.level = parseInt(levelSelect.value);
     gameState.caseSensitive = caseSelect.value === 'sensitive';
+    gameState.usedTerms = [];
     scoreDisplay.textContent = 'Score: 0';
     userInput.value = '';
-    userInput.placeholder = 'Prompt will appear here...';
+    userInput.placeholder = 'Type here...';
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     gameState.updateTimeIndicator();
-    gameState.usedTerms = []; // Reset usedTerms
     startGame();
   }
 
@@ -125,11 +131,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     gameState.promptType = promptTypeSelect.value;
     gameState.level = parseInt(levelSelect.value);
     gameState.caseSensitive = caseSelect.value === 'sensitive';
-    gameState.usedTerms = gameState.usedTerms || []; // Initialize usedTerms
+    gameState.words = [];
+    gameState.usedTerms = gameState.usedTerms || [];
     console.log('Starting game with state:', gameState);
-    if (gameState.words.length === 0) {
-      spawnWord(vocabData, amalgamateVocab, gameState.promptType, gameState.mode, gameState.level, gameState.wave, ctx, canvas, userInput, gameState.words, gameState.updateTimeIndicator, gameState.usedTerms);
-    }
+    spawnWord(vocabData, amalgamateVocab, gameState.promptType, gameState.mode, gameState.level, gameState.wave, ctx, canvas, userInput, gameState.words, gameState.updateTimeIndicator, gameState.usedTerms);
     updateGame(gameState);
   }
 
@@ -166,6 +171,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   startButton.addEventListener('click', startGame);
+  restartButton.addEventListener('click', restartGame);
 
   modeSelect.addEventListener('change', () => {
     gameState.mode = modeSelect.value;
@@ -196,6 +202,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyTheme(themeSelect.value);
   });
 
-  // Apply initial theme
   applyTheme(themeSelect.value);
 });
