@@ -54,14 +54,6 @@ const defaultVocabData = [
   { Term: "Portfolio", Definition: "A collection of projects showcasing computer science skills and experience" }
 ];
 
-// Theme toggle function (global so it can be called from HTML)
-function toggleTheme() {
-  const body = document.body;
-  body.classList.toggle('dark');
-  const isDark = body.classList.contains('dark');
-  localStorage.setItem('theme', isDark ? 'dark' : 'light');
-}
-
 document.addEventListener('DOMContentLoaded', () => {
   console.log('DOM fully loaded and parsed');
   
@@ -89,10 +81,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const resetButton = document.getElementById('resetButton');
   const loadingIndicator = document.getElementById('loadingIndicator');
   const timeIndicator = document.getElementById('timeIndicator');
+  const themeSelect = document.getElementById('themeSelect');
 
   // Check for missing critical elements
-  if (!canvas || !ctx || !userInput || !timeIndicator || !startButton || !resetButton || !randomizeTermsCheckbox) {
-    console.error('Required elements not found:', { canvas, ctx, userInput, timeIndicator, startButton, resetButton, randomizeTermsCheckbox });
+  if (!canvas || !ctx || !userInput || !timeIndicator || !startButton || !resetButton || !randomizeTermsCheckbox || !themeSelect) {
+    console.error('Required elements not found:', { canvas, ctx, userInput, timeIndicator, startButton, resetButton, randomizeTermsCheckbox, themeSelect });
     alert('Critical elements are missing from the page. Please check the HTML structure and try again.');
     return;
   }
@@ -106,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   canvas.width = 800;
-  canvas.height = 350; // Updated to match CSS
+  canvas.height = 350;
 
   let words = [];
   let vocabData = [];
@@ -134,10 +127,16 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentWPM = 0;
 
   // Apply saved theme on load
-  const savedTheme = localStorage.getItem('theme');
-  if (savedTheme === 'dark') {
-    document.body.classList.add('dark');
-  }
+  const savedTheme = localStorage.getItem('theme') || 'natural-light';
+  document.body.className = savedTheme;
+  themeSelect.value = savedTheme;
+
+  // Theme change handler
+  themeSelect.addEventListener('change', () => {
+    const selectedTheme = themeSelect.value;
+    document.body.className = selectedTheme;
+    localStorage.setItem('theme', selectedTheme);
+  });
 
   function populateVocabDropdown() {
     const baseUrl = 'https://raw.githubusercontent.com/kappter/vocab-sets/main/';
@@ -193,7 +192,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const targetArray = isAmalgamate ? amalgamateVocab : vocabData;
       const setName = isAmalgamate ? amalgamateSelect.options[amalgamateSelect.selectedIndex].textContent : vocabSelect.options[vocabSelect.selectedIndex].textContent;
 
-      // Clear the target array before loading new data
       targetArray.length = 0;
 
       if (!csvUrl) {
@@ -329,7 +327,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const targetArray = isAmalgamate ? amalgamateVocab : vocabData;
       const setName = file.name.replace(/\.csv$/, '');
 
-      // Clear the target array before loading new data
       targetArray.length = 0;
 
       if (typeof Papa === 'undefined') {
@@ -490,10 +487,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (words.length > 0) {
       const definition = words[0].definition;
-      ctx.font = '20px Arial'; /* Reduced from 24px */
+      ctx.font = '20px Arial';
       ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
       ctx.textAlign = 'center';
-      const maxWidth = canvas.width - 30; /* Reduced from 40 */
+      const maxWidth = canvas.width - 30;
       const wordsArray = definition.split(' ');
       let line = '';
       let lines = [];
@@ -508,7 +505,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
       if (line) lines.push(line.trim());
-      const lineHeight = 25; /* Reduced from 30 */
+      const lineHeight = 25;
       const totalHeight = lines.length * lineHeight;
       const startY = (canvas.height - totalHeight) / 2;
       for (let i = 0; i < lines.length; i++) {
@@ -519,14 +516,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const rectHeight = 20;
     const rectY = canvas.height - rectHeight;
     ctx.beginPath();
-    ctx.roundRect(0, rectY, canvas.width, rectHeight, 8); /* Reduced from 10 */
+    ctx.roundRect(0, rectY, canvas.width, rectHeight, 8);
     ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
     ctx.fill();
     ctx.strokeStyle = '#333333';
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    ctx.font = '18px Arial'; /* Reduced from 20px */
+    ctx.font = '18px Arial';
     ctx.textAlign = 'left';
     const computedStyle = window.getComputedStyle(document.body);
     const textColor = computedStyle.getPropertyValue('--text')?.trim() || '#ffffff';
@@ -534,7 +531,7 @@ document.addEventListener('DOMContentLoaded', () => {
     words = words.filter(word => word.y < canvas.height && !word.isExiting);
     words.forEach(word => {
       const textWidth = ctx.measureText(word.typedInput).width;
-      ctx.clearRect(word.x - 5, word.y - 20, textWidth + 10, 25); /* Adjusted for smaller font */
+      ctx.clearRect(word.x - 5, word.y - 20, textWidth + 10, 25);
 
       word.y += word.speed;
       const typed = userInput.value;
