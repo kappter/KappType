@@ -7,10 +7,10 @@
   --neon-purple: #7b68ee;
   --glass-bg: rgba(255, 255, 255, 0.3);
   --glass-blur: blur(10px);
-  --text-shadow: 0 0 5px rgba(0, 196, 180, 0.5);
+  --text-shadow: 0 0 5px rgba(0, 196, 180, 0.5), 0 0 10px #1a1a1a; /* Enhanced shadow */
   --box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  --text: #333333;
-  --background-pattern: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" fill="none" stroke="rgba(0,0,0,0.1)" stroke-width="1"><path d="M10 10 Q 50 90 90 10" /><path d="M10 90 Q 50 10 90 90" /></svg>');
+  --text: #1a1a1a; /* Darker text for better contrast */
+  --background-pattern: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" fill="none" stroke="rgba(0,0,0,0.05)" stroke-width="1"><path d="M10 10 Q 50 90 90 10" /><path d="M10 90 Q 50 10 90 90" /></svg>');
 }
 
 /* Natural Dark Theme */
@@ -30,9 +30,9 @@ body.architecture {
   --neon-cyan: #4682b4;
   --neon-purple: #8a2be2;
   --glass-bg: rgba(255, 255, 255, 0.2);
-  --text-shadow: 0 0 5px rgba(70, 130, 180, 0.5);
-  --text: #333333;
-  --background-pattern: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 50 50" fill="none" stroke="rgba(0,0,0,0.1)" stroke-width="1"><rect x="5" y="5" width="40" height="40" /><line x1="5" y1="5" x2="45" y2="45" /><line x1="5" y1="45" x2="45" y2="5" /></svg>');
+  --text-shadow: 0 0 5px rgba(70, 130, 180, 0.5), 0 0 10px #1a1a1a; /* Enhanced shadow */
+  --text: #1a1a1a; /* Darker text for better contrast */
+  --background-pattern: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 50 50" fill="none" stroke="rgba(0,0,0,0.05)" stroke-width="1"><rect x="5" y="5" width="40" height="40" /><line x1="5" y1="5" x2="45" y2="45" /><line x1="5" y1="45" x2="45" y2="5" /></svg>');
 }
 
 /* Space Theme */
@@ -72,7 +72,6 @@ body {
   position: relative;
 }
 
-/* Background Overlay (Pattern) */
 body::before {
   content: '';
   position: absolute;
@@ -85,7 +84,6 @@ body::before {
   z-index: -1;
 }
 
-/* Medieval Font Override */
 body.medieval,
 body.medieval .start-card h1,
 body.medieval button,
@@ -93,7 +91,6 @@ body.medieval .stats span {
   font-family: 'Cinzel', serif;
 }
 
-/* Start Screen */
 #startScreen {
   display: flex;
   justify-content: center;
@@ -191,7 +188,6 @@ body.medieval .stats span {
   font-size: 0.9rem;
 }
 
-/* Gameplay Screen */
 #gameContainer {
   display: flex;
   flex-direction: column;

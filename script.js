@@ -458,7 +458,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const x = mode === 'game' ? (minX + Math.random() * xRange) : 50;
 
     const y = 0;
-    const speed = mode === 'game' ? (wave / 10) * 12.79 : 0.5 + level * 0.1; // Adjusted for 140 WPM at wave 10
+    const speed = mode === 'game' ? (wave / 10) * 6.395 : 0.5 + level * 0.1; // Halved base speed, still reaches 140 WPM at wave 10
     const word = { prompt: finalPrompt, typedInput: finalTypedInput, displayText: getUnderscoreText(finalTypedInput), x, y, speed, matched: '', definition: finalDefinition, isExiting: false };
     words.push(word);
     userInput.placeholder = finalPrompt;
@@ -561,7 +561,7 @@ document.addEventListener('DOMContentLoaded', () => {
       wave++;
       waveDisplay.textContent = `Wave: ${wave}`;
       timeLeft = 30;
-      words.forEach(word => word.speed = (wave / 10) * 12.79); // Update speed for new wave
+      words.forEach(word => word.speed = (wave / 10) * 6.395); // Halved base speed
     }
     requestAnimationFrame(updateGame);
   }
