@@ -1,12 +1,15 @@
 export function getRandomVocab(sourceArray, usedTerms) {
-  if (sourceArray.length === 0) return null;
+  if (!sourceArray || !Array.isArray(sourceArray) || sourceArray.length === 0) {
+    console.error('sourceArray is invalid or empty:', sourceArray);
+    return null;
+  }
   let availableTerms = sourceArray;
   if (usedTerms.length < sourceArray.length) {
     availableTerms = sourceArray.filter(item => !usedTerms.includes(item.Term));
   }
   if (availableTerms.length === 0) {
     console.log('All terms used, resetting usedTerms');
-    usedTerms.length = 0; // Reset when all terms are exhausted
+    usedTerms.length = 0;
     availableTerms = sourceArray;
   }
   const index = Math.floor(Math.random() * availableTerms.length);
@@ -21,8 +24,8 @@ export function getUnderscoreText(text) {
 }
 
 export function spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator, usedTerms) {
-  if (vocabData.length === 0) {
-    console.error('vocabData is empty in spawnWord');
+  if (!vocabData || !Array.isArray(vocabData) || vocabData.length === 0) {
+    console.error('vocabData is invalid or empty:', vocabData);
     return;
   }
 
@@ -48,7 +51,7 @@ export function spawnWord(vocabData, amalgamateVocab, promptType, mode, level, w
   }
 
   let prompt2 = '', typedInput2 = '', vocab2 = null;
-  if (amalgamateVocab.length > 0) {
+  if (amalgamateVocab && amalgamateVocab.length > 0) {
     vocab2 = getRandomVocab(amalgamateVocab, usedTerms);
     if (vocab2) {
       usedTerms.push(vocab2.Term);
@@ -69,9 +72,9 @@ export function spawnWord(vocabData, amalgamateVocab, promptType, mode, level, w
     }
   }
 
-  const finalTypedInput = amalgamateVocab.length > 0 && vocab2 ? typedInput1 + ' ' + typedInput2 : typedInput1;
-  const finalPrompt = amalgamateVocab.length > 0 && vocab2 ? prompt1 + ' ' + prompt2 : prompt1;
-  const finalDefinition = amalgamateVocab.length > 0 && vocab2 ? vocab1.Definition + ' ' + vocab2.Definition : vocab1.Definition;
+  const finalTypedInput = amalgamateVocab && vocab2 ? typedInput1 + ' ' + typedInput2 : typedInput1;
+  const finalPrompt = amalgamateVocab && vocab2 ? prompt1 + ' ' + prompt2 : prompt1;
+  const finalDefinition = amalgamateVocab && vocab2 ? vocab1.Definition + ' ' + vocab2.Definition : vocab1.Definition;
 
   console.log('Amalgamated word:', { finalPrompt, finalTypedInput, finalDefinition });
 
@@ -100,8 +103,6 @@ export function updateGame(gameState) {
     restartGame, spawnWord, vocabData, amalgamateVocab, promptType, level,
     timeLeft, caseSensitive, score, totalTypingTime, correctChars, updateTimeIndicator
   } = gameState;
-
-  const usedTerms = []; // Initialize usedTerms for tracking
 
   console.log('updateGame called', { gameActive, wordsLength: words.length, restartGameDefined: typeof restartGame });
 
@@ -171,6 +172,11 @@ export function updateGame(gameState) {
       });
     } else {
       console.log('No words to render');
+      // Render placeholder text
+      ctx.font = '24px Arial';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.textAlign = 'center';
+      ctx.fillText('Waiting for word...', canvas.width / 2, canvas.height / 2);
     }
 
     ctx.font = '20px Arial';
@@ -205,18 +211,18 @@ export function updateGame(gameState) {
           gameState.gameActive = false;
           console.log('Game over due to word reaching bottom');
           if (confirm(`Game Over! Score: ${gameState.score}, WPM: ${calculateWPM(gameState.totalTypingTime, gameState.totalChars)}, Accuracy: ${calculateAccuracy(gameState.totalChars, gameState.correctChars)}%\nClick OK to redo or Cancel to stay.`)) {
-            usedTerms.length = 0; // Reset usedTerms on restart
+            gameState.usedTerms.length = 0;
             restartGame();
           }
         } else {
-          spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator, usedTerms);
+          spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator, gameState.usedTerms);
         }
       }
     });
 
-    if (words.length === 0) {
+    if (words.length === 0 && vocabData && vocabData.length > 0) {
       console.log('Spawning new word due to empty words array');
-      spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator, usedTerms);
+      spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator, gameState.usedTerms);
     }
 
     requestAnimationFrame(gameLoop);
@@ -264,17 +270,18 @@ export function handleInput(e, words, caseSensitive, score, correctChars, totalC
       newTotalChars += word.typedInput.length;
       scoreDisplay.textContent = `Score: ${newScore}`;
       e.target.value = '';
+      console.log('Input cleared');
       e.target.placeholder = 'Prompt will appear here...';
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       newWpmStartTime = null;
-      return false; // Remove the matched word
+      return false;
     }
-    return true; // Keep unmatched words
+    return true;
   });
 
-  if (wordMatched) {
+  if (wordMatched && vocabData && vocabData.length > 0) {
     console.log('Clearing words array and spawning new word');
-    words.length = 0; // Ensure old word is gone
+    words.length = 0;
     spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, ctx.canvas, userInput, words, updateTimeIndicator, usedTerms);
   }
 
