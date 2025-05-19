@@ -526,14 +526,14 @@ document.addEventListener('DOMContentLoaded', () => {
     certificateButton.addEventListener('click', generateCertificate);
     certificateButton.disabled = true; // Disable until game ends
     spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, () => updateTimeIndicator(timeIndicator, wpmStartTime));
-    updateGame(gameActive, ctx, canvas, userInput, words, mode, wave, wpmStartTime, missedWords, totalChars, scoreDisplay, calculateWPM, calculateAccuracy, restartGame, () => spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, () => updateTimeIndicator(timeIndicator, wpmStartTime)), certificateButton, gameContainer, startScreen, vocabData, amalgamateVocab, promptType, level);
+    updateGame(gameActive, ctx, canvas, userInput, words, mode, wave, wpmStartTime, missedWords, totalChars, scoreDisplay, calculateWPM, calculateAccuracy, restartGame, () => spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, () => updateTimeIndicator(timeIndicator, wpmStartTime)), certificateButton, gameContainer, startScreen, vocabData, amalgamateVocab, promptType, level, () => updateTimeIndicator(timeIndicator, wpmStartTime));
     const updatedStats = updateTimer(gameActive, timeLeft, timerDisplay, wpmDisplay, wave, waveDisplay, mode, words, calculateWPM, totalTypingTime, totalChars);
     timeLeft = updatedStats.timeLeft;
     wave = updatedStats.wave;
   }
 
   function handleInputWrapper(e) {
-    const result = handleInput(e, words, caseSensitive, score, correctChars, totalChars, scoreDisplay, userInput, ctx, wpmStartTime, totalTypingTime, () => spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, () => updateTimeIndicator(timeIndicator, wpmStartTime)), vocabData, amalgamateVocab, promptType, mode, level, wave, () => updateTimeIndicator(timeIndicator, wpmStartTime));
+    const result = handleInput(e, words, caseSensitive, score, correctChars, totalChars, scoreDisplay, userInput, ctx, canvas, wpmStartTime, totalTypingTime, () => spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, () => updateTimeIndicator(timeIndicator, wpmStartTime)), vocabData, amalgamateVocab, promptType, mode, level, wave, () => updateTimeIndicator(timeIndicator, wpmStartTime));
     wpmStartTime = result.wpmStartTime;
     totalTypingTime = result.totalTypingTime;
     score = result.score;
