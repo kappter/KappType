@@ -98,17 +98,20 @@
   <div id="gameContainer" class="hidden">
     <h2 id="vocabSetTitle"></h2>
     <canvas id="gameCanvas"></canvas>
-    <div class="stats">
-      <span id="score">Score: 0</span>
-      <span id="wave">Wave: 1</span>
-      <span id="timer">Time: 30s</span>
-      <span id="wpm">WPM: 0</span>
-      <span id="timeIndicator"></span>
+    <div class="stats-container">
+      <div class="stats">
+        <span id="score">Score: 0</span>
+        <span id="wave">Wave: 1</span>
+        <span id="timer">Time: 30s</span>
+        <span id="wpm">WPM: 0</span>
+        <span id="timeIndicator"></span>
+      </div>
     </div>
     <input type="text" id="userInput" placeholder="Prompt will appear here...">
-    <button id="certificateButton">Generate Certificate</button>
-    <button id="resetButton">Reset Game</button>
-
+    <div class="button-group">
+      <button id="certificateButton">Generate Certificate</button>
+      <button id="resetButton">Reset Game</button>
+    </div>
     <div class="keyboard">
       <div class="row">
         <span class="key" data-key="~">~</span><span class="key" data-key="1">1</span><span class="key" data-key="2">2</span><span class="key" data-key="3">3</span><span class="key" data-key="4">4</span><span class="key" data-key="5">5</span><span class="key" data-key="6">6</span><span class="key" data-key="7">7</span><span class="key" data-key="8">8</span><span class="key" data-key="9">9</span><span class="key" data-key="0">0</span><span class="key" data-key="-">-</span><span class="key" data-key="=">=</span><span class="key backspace" data-key="Backspace">Backspace</span>
