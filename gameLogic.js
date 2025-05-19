@@ -81,8 +81,7 @@ export function spawnWord(vocabData, amalgamateVocab, promptType, mode, level, w
   updateTimeIndicator();
 }
 
-export function updateGame(gameActive, ctx, canvas, userInput, words, mode, wave, wpmStartTime, missedWords, totalChars, scoreDisplay, calculateWPM, calculateAccuracy, restartGame, spawnWord) {
-  if (!gameActive) return;
+export function updateGame(gameActive, ctx, canvas, userInput, words, mode, wave, wpmStartTime, missedWords, totalChars, scoreDisplay, calculateWPM, calculateAccuracy, restartGame, spawnWord, vocabData, amalgamateVocab, promptType, level, updateTimeIndicator) {  if (!gameActive) return;
 
   let lastFrameTime = performance.now();
   function gameLoop() {
@@ -174,8 +173,7 @@ export function updateGame(gameActive, ctx, canvas, userInput, words, mode, wave
       }
     });
 
-    if (words.length === 0) spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator);
-    if (mode === 'game' && wpmStartTime !== null && timeLeft <= 0) {
+if (words.length === 0) spawnWord(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator);    if (mode === 'game' && wpmStartTime !== null && timeLeft <= 0) {
       wave++;
       waveDisplay.textContent = `Wave: ${wave}`;
       timeLeft = 30;
