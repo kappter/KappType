@@ -81,7 +81,7 @@ export function spawnWord(vocabData, amalgamateVocab, promptType, mode, level, w
   updateTimeIndicator();
 }
 
-export function updateGame(gameActive, ctx, canvas, userInput, words, mode, wave, wpmStartTime, missedWords, totalChars, scoreDisplay, calculateWPM, calculateAccuracy, restartGame, spawnWordCallback, certificateButton, gameContainer, startScreen, vocabData, amalgamateVocab, promptType, level) {
+export function updateGame(gameActive, ctx, canvas, userInput, words, mode, wave, wpmStartTime, missedWords, totalChars, scoreDisplay, calculateWPM, calculateAccuracy, restartGame, spawnWordCallback, certificateButton, gameContainer, startScreen, vocabData, amalgamateVocab, promptType, level, updateTimeIndicator) {
   if (!gameActive) return;
 
   let lastFrameTime = performance.now();
@@ -192,7 +192,7 @@ export function updateGame(gameActive, ctx, canvas, userInput, words, mode, wave
   gameLoop();
 }
 
-export function handleInput(e, words, caseSensitive, score, correctChars, totalChars, scoreDisplay, userInput, ctx, wpmStartTime, totalTypingTime, spawnWordCallback, vocabData, amalgamateVocab, promptType, mode, level, wave, updateTimeIndicator) {
+export function handleInput(e, words, caseSensitive, score, correctChars, totalChars, scoreDisplay, userInput, ctx, canvas, wpmStartTime, totalTypingTime, spawnWordCallback, vocabData, amalgamateVocab, promptType, mode, level, wave, updateTimeIndicator) {
   const typed = e.target.value;
   let newWpmStartTime = wpmStartTime;
   let newTotalTypingTime = totalTypingTime;
@@ -220,7 +220,7 @@ export function handleInput(e, words, caseSensitive, score, correctChars, totalC
       scoreDisplay.textContent = `Score: ${score}`;
       e.target.value = '';
       e.target.placeholder = 'Prompt will appear here...';
-      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      ctx.clearRect(0, 0, canvas.width, canvas.height); // Use canvas parameter
       newWpmStartTime = null;
       word.isExiting = true;
       spawnWordCallback(vocabData, amalgamateVocab, promptType, mode, level, wave, ctx, canvas, userInput, words, updateTimeIndicator);
