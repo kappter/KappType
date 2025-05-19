@@ -82,6 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const vocabSelect = document.getElementById('vocabSelect');
   const amalgamateSelect = document.getElementById('amalgamateSelect');
   const customVocabInput = document.getElementById('customVocabInput');
+  const customVocabInput2 = document.getElementById('customVocabInput2');
   const vocabSetTitle = document.getElementById('vocabSetTitle');
   const certificateButton = document.getElementById('certificateButton');
   const loadingIndicator = document.getElementById('loadingIndicator');
@@ -94,9 +95,12 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
-  // Warn if customVocabInput is missing
+  // Warn if customVocabInput or customVocabInput2 is missing
   if (!customVocabInput) {
     console.warn('customVocabInput element not found. Custom vocabulary upload will be disabled.');
+  }
+  if (!customVocabInput2) {
+    console.warn('customVocabInput2 element not found. Amalgamation vocabulary upload will be disabled.');
   }
 
   canvas.width = 800;
@@ -609,16 +613,12 @@ document.addEventListener('DOMContentLoaded', () => {
   function highlightKeys(e) {
     const keys = document.querySelectorAll('.key');
     keys.forEach(key => key.classList.remove('pressed'));
-    if (e.key === ' ') {
-      document.querySelector('.space').classList.add('pressed');
-    } else if (e.key === 'Backspace') {
-      document.querySelector('.backspace').classList.add('pressed');
-    } else if (e.key === 'Tab') {
-      document.querySelector('.tab').classList.add('pressed');
-    } else if (e.key === 'CapsLock') {
-      document.querySelector('.caps-lock').classList.add('pressed');
-    } else if (e.key === 'Enter') {
-      document.querySelector('.enter').classList.add('pressed');
+
+    const keyValue = e.key === ' ' ? ' ' : e.key; // Handle space key
+    const keyElement = Array.from(keys).find(k => k.getAttribute('data-key') === keyValue);
+
+    if (keyElement) {
+      keyElement.classList.add('pressed');
     } else if (e.key === 'Shift') {
       document.querySelectorAll('.shift').forEach(shift => shift.classList.add('pressed'));
     } else if (e.key === 'Control') {
@@ -627,9 +627,24 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.alt').forEach(alt => alt.classList.add('pressed'));
     } else if (e.key === 'Meta') {
       document.querySelectorAll('.win').forEach(win => win.classList.add('pressed'));
-    } else {
-      const key = Array.from(keys).find(k => k.textContent.toLowerCase() === e.key.toLowerCase());
-      if (key) key.classList.add('pressed');
+    }
+  }
+
+  function keyUpHandler(e) {
+    const keys = document.querySelectorAll('.key');
+    const keyValue = e.key === ' ' ? ' ' : e.key;
+    const keyElement = Array.from(keys).find(k => k.getAttribute('data-key') === keyValue);
+
+    if (keyElement) {
+      keyElement.classList.remove('pressed');
+    } else if (e.key === 'Shift') {
+      document.querySelectorAll('.shift').forEach(shift => shift.classList.remove('pressed'));
+    } else if (e.key === 'Control') {
+      document.querySelectorAll('.ctrl').forEach(ctrl => ctrl.classList.remove('pressed'));
+    } else if (e.key === 'Alt') {
+      document.querySelectorAll('.alt').forEach(alt => alt.classList.remove('pressed'));
+    } else if (e.key === 'Meta') {
+      document.querySelectorAll('.win').forEach(win => win.classList.remove('pressed'));
     }
   }
 
@@ -727,9 +742,7 @@ document.addEventListener('DOMContentLoaded', () => {
     userInput.focus();
     userInput.addEventListener('input', handleInput);
     document.addEventListener('keydown', highlightKeys);
-    document.addEventListener('keyup', () => {
-      document.querySelectorAll('.key').forEach(key => key.classList.remove('pressed'));
-    });
+    document.addEventListener('keyup', keyUpHandler);
     certificateButton.addEventListener('click', generateCertificate);
     spawnWord();
     updateGame();
@@ -745,29 +758,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const csvUrl = vocabSelect.value || '';
     const amalgamateUrl = amalgamateSelect.value || '';
 
-    // Handle custom vocabulary upload
-    if (customVocabInput) {
-      if (customVocabInput.files && customVocabInput.files.length > 0) {
-        await loadCustomVocab(customVocabInput.files[0]);
-      }
-      // Handle amalgamation if a second file is uploaded
-      if (customVocabInput.files && customVocabInput.files.length > 1) {
-        await loadCustomVocab(customVocabInput.files[1], true);
-      }
-    } else {
-      console.warn('Skipping custom vocabulary upload since customVocabInput is not available.');
+    // Handle custom vocabulary uploads
+    if (customVocabInput && customVocabInput.files && customVocabInput.files.length > 0) {
+      await loadCustomVocab(customVocabInput.files[0], false);
+    }
+    if (customVocabInput2 && customVocabInput2.files && customVocabInput2.files.length > 0) {
+      await loadCustomVocab(customVocabInput2.files[0], true);
     }
 
     // Load from URL if no custom file is uploaded
     if (csvUrl && (!customVocabInput || !customVocabInput.files || customVocabInput.files.length === 0)) {
-      await loadVocab(csvUrl);
+      await loadVocab(csvUrl, false);
     } else if (!customVocabInput || !customVocabInput.files || customVocabInput.files.length === 0) {
       vocabData = [...defaultVocabData];
       vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
     }
 
     // Handle amalgamation URL if no second file is uploaded
-    if (amalgamateUrl && (!customVocabInput || !customVocabInput.files || customVocabInput.files.length <= 1)) {
+    if (amalgamateUrl && (!customVocabInput2 || !customVocabInput2.files || customVocabInput2.files.length === 0)) {
       await loadVocab(amalgamateUrl, true);
     }
 

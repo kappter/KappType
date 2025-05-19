@@ -8,6 +8,7 @@
   --glass-blur: blur(10px);
   --text-shadow: 0 0 5px rgba(0, 247, 255, 0.5);
   --box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  --text: #ffffff; /* Default text color for falling words */
 }
 
 * {
@@ -199,12 +200,21 @@ body::before {
   box-shadow: 0 0 15px rgba(212, 0, 255, 0.7);
 }
 
-/* Keyboard (if present) */
+/* Keyboard Styles */
 .keyboard {
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   border-radius: 10px;
   padding: 1rem;
+  max-width: 800px;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.row {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 5px;
 }
 
 .key {
@@ -212,12 +222,32 @@ body::before {
   border: 1px solid var(--neon-cyan);
   border-radius: 5px;
   color: #ffffff;
+  padding: 5px 10px;
+  margin: 0 2px;
+  font-size: 0.9rem;
+  text-align: center;
+  min-width: 30px;
   transition: background 0.2s, box-shadow 0.2s;
 }
 
 .key.pressed {
   background: var(--neon-purple);
   box-shadow: 0 0 10px rgba(212, 0, 255, 0.5);
+}
+
+.key.space {
+  min-width: 150px;
+}
+
+.key.tab,
+.key.backspace,
+.key.caps-lock,
+.key.enter,
+.key.shift,
+.key.ctrl,
+.key.win,
+.key.alt {
+  min-width: 60px;
 }
 
 /* Animations */
@@ -271,6 +301,7 @@ body::before {
 /* Dark Theme Adjustments */
 body.dark {
   --primary-gradient: linear-gradient(135deg, #0f0f1a 0%, #0a0e1f 100%);
+  --text: #ffffff; /* Ensure falling words are visible in dark theme */
 }
 
 body.dark .start-card,
@@ -297,5 +328,30 @@ body.dark .keyboard {
 
   #userInput {
     font-size: 1rem;
+  }
+
+  .keyboard {
+    padding: 0.5rem;
+  }
+
+  .key {
+    padding: 3px 5px;
+    font-size: 0.8rem;
+    min-width: 20px;
+  }
+
+  .key.space {
+    min-width: 100px;
+  }
+
+  .key.tab,
+  .key.backspace,
+  .key.caps-lock,
+  .key.enter,
+  .key.shift,
+  .key.ctrl,
+  .key.win,
+  .key.alt {
+    min-width: 40px;
   }
 }

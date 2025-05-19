@@ -42,43 +42,54 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KappType - Typing Game</title>
+  <title>KappType</title>
   <link rel="stylesheet" href="styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 </head>
 <body>
   <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
+
   <div id="startScreen">
     <div class="start-card">
       <h1>KappType</h1>
       <label for="levelInput">Level (1-10):</label>
-      <input type="number" id="levelInput" min="1" max="10" value="1">
+      <input type="number" id="levelInput" value="1" min="1" max="10">
+      
       <label for="modeSelect">Mode:</label>
       <select id="modeSelect">
         <option value="game">Game</option>
         <option value="practice">Practice</option>
       </select>
+
       <label for="promptSelect">Prompt Type:</label>
       <select id="promptSelect">
         <option value="definition">Definition</option>
         <option value="term">Term</option>
         <option value="random">Random</option>
       </select>
+
       <label for="caseSelect">Case Sensitivity:</label>
       <select id="caseSelect">
         <option value="insensitive">Insensitive</option>
         <option value="sensitive">Sensitive</option>
       </select>
+
       <label for="vocabSelect">Vocabulary Set:</label>
       <select id="vocabSelect"></select>
+
       <label for="amalgamateSelect">Amalgamate Set:</label>
       <select id="amalgamateSelect"></select>
+
       <label for="customVocabInput">Custom Vocabulary (CSV):</label>
       <input type="file" id="customVocabInput" accept=".csv">
+
+      <label for="customVocabInput2">Amalgamation Vocabulary (CSV):</label>
+      <input type="file" id="customVocabInput2" accept=".csv">
+
       <button id="startButton">Start Game</button>
       <div id="loadingIndicator" class="hidden">Loading...</div>
     </div>
   </div>
+
   <div id="gameContainer" class="hidden">
     <h2 id="vocabSetTitle"></h2>
     <canvas id="gameCanvas"></canvas>
@@ -87,28 +98,31 @@
       <span id="wave">Wave: 1</span>
       <span id="timer">Time: 30s</span>
       <span id="wpm">WPM: 0</span>
+      <span id="timeIndicator"></span>
     </div>
-    <input type="text" id="userInput" placeholder="Prompt will appear here..." spellcheck="false">
+    <input type="text" id="userInput" placeholder="Prompt will appear here...">
     <button id="certificateButton">Generate Certificate</button>
-    <div id="timeIndicator"></div>
+
     <div class="keyboard">
       <div class="row">
-        <span class="key">~</span><span class="key">1</span><span class="key">2</span><span class="key">3</span><span class="key">4</span><span class="key">5</span><span class="key">6</span><span class="key">7</span><span class="key">8</span><span class="key">9</span><span class="key">0</span><span class="key">-</span><span class="key">=</span><span class="key backspace">Backspace</span>
+        <span class="key" data-key="~">~</span><span class="key" data-key="1">1</span><span class="key" data-key="2">2</span><span class="key" data-key="3">3</span><span class="key" data-key="4">4</span><span class="key" data-key="5">5</span><span class="key" data-key="6">6</span><span class="key" data-key="7">7</span><span class="key" data-key="8">8</span><span class="key" data-key="9">9</span><span class="key" data-key="0">0</span><span class="key" data-key="-">-</span><span class="key" data-key="=">=</span><span class="key backspace" data-key="Backspace">Backspace</span>
       </div>
       <div class="row">
-        <span class="key tab">Tab</span><span class="key">q</span><span class="key">w</span><span class="key">e</span><span class="key">r</span><span class="key">t</span><span class="key">y</span><span class="key">u</span><span class="key">i</span><span class="key">o</span><span class="key">p</span><span class="key">[</span><span class="key">]</span><span class="key">\</span>
+        <span class="key tab" data-key="Tab">Tab</span><span class="key" data-key="q">q</span><span class="key" data-key="w">w</span><span class="key" data-key="e">e</span><span class="key" data-key="r">r</span><span class="key" data-key="t">t</span><span class="key" data-key="y">y</span><span class="key" data-key="u">u</span><span class="key" data-key="i">i</span><span class="key" data-key="o">o</span><span class="key" data-key="p">p</span><span class="key" data-key="[">[</span><span class="key" data-key="]">]</span><span class="key" data-key="\\">\</span>
       </div>
       <div class="row">
-        <span class="key caps-lock">Caps Lock</span><span class="key">a</span><span class="key">s</span><span class="key">d</span><span class="key">f</span><span class="key">g</span><span class="key">h</span><span class="key">j</span><span class="key">k</span><span class="key">l</span><span class="key">;</span><span class="key">'</span><span class="key enter">Enter</span>
+        <span class="key caps-lock" data-key="CapsLock">Caps Lock</span><span class="key" data-key="a">a</span><span class="key" data-key="s">s</span><span class="key" data-key="d">d</span><span class="key" data-key="f">f</span><span class="key" data-key="g">g</span><span class="key" data-key="h">h</span><span class="key" data-key="j">j</span><span class="key" data-key="k">k</span><span class="key" data-key="l">l</span><span class="key" data-key=";">;</span><span class="key" data-key="'">'</span><span class="key enter" data-key="Enter">Enter</span>
       </div>
       <div class="row">
-        <span class="key shift">Shift</span><span class="key">z</span><span class="key">x</span><span class="key">c</span><span class="key">v</span><span class="key">b</span><span class="key">n</span><span class="key">m</span><span class="key">,</span><span class="key">.</span><span class="key">/</span><span class="key shift">Shift</span>
+        <span class="key shift" data-key="Shift">Shift</span><span class="key" data-key="z">z</span><span class="key" data-key="x">x</span><span class="key" data-key="c">c</span><span class="key" data-key="v">v</span><span class="key" data-key="b">b</span><span class="key" data-key="n">n</span><span class="key" data-key="m">m</span><span class="key" data-key=",">,</span><span class="key" data-key=".">.</span><span class="key" data-key="/">/</span><span class="key shift" data-key="Shift">Shift</span>
       </div>
       <div class="row">
-        <span class="key ctrl">Ctrl</span><span class="key win">Win</span><span class="key alt">Alt</span><span class="key space">Space</span><span class="key alt">Alt</span><span class="key win">Win</span><span class="key ctrl">Ctrl</span>
+        <span class="key ctrl" data-key="Control">Ctrl</span><span class="key win" data-key="Meta">Win</span><span class="key alt" data-key="Alt">Alt</span><span class="key space" data-key=" ">Space</span><span class="key alt" data-key="Alt">Alt</span><span class="key win" data-key="Meta">Win</span><span class="key ctrl" data-key="Control">Ctrl</span>
       </div>
     </div>
   </div>
+
+  <script src="papaparse.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
