@@ -160,11 +160,8 @@ document.addEventListener('DOMContentLoaded', () => {
       'Game_Development_Fundamentals_2_Terms_Definitions',
       'Game_Development_Fundamentals_1_Terms_Definitions',
       'Music_Theory_Terms_Definitions',
-      'Short_Testing_Sample',
-      'Summer_Job_Preparation_Terms_Definitions',
       'Utah_Computer_Programming_1_Terms_Definitions',
       'Web_Development_Terms_Definitions',
-      'Yearbook_Staff_Editor_Skills_Terms_Definitions',
       'advanced_computer_programming_vocab',
       'psych_terms_1',
       'psych_terms_2',
@@ -173,7 +170,10 @@ document.addEventListener('DOMContentLoaded', () => {
       'utah_video_production_terms_Final',
       'idioms',
       'unusual_adjectives',
-      'unusual_verbs'
+      'unusual_verbs',
+      'common_appetizers_usa',
+      'common_us_entrees',
+      'common_us_side_dishes'
     ];
     const vocabSelectElement = document.getElementById('vocabSelect');
     const amalgamateSelectElement = document.getElementById('amalgamateSelect');
