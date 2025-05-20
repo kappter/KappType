@@ -125,16 +125,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const waveSpeeds = [
     0, // Wave 0 (not used)
-    1.74,  // Wave 1: 19 WPM
-    2.29,  // Wave 2: 25 WPM
-    3.67,  // Wave 3: 40 WPM
-    5.04,  // Wave 4: 55 WPM
-    6.42,  // Wave 5: 70 WPM
-    7.79,  // Wave 6: 85 WPM
-    9.17,  // Wave 7: 100 WPM
-    10.54, // Wave 8: 115 WPM
-    11.91, // Wave 9: 130 WPM
-    12.82  // Wave 10: 140 WPM
+    0.87,   // Wave 1: ~9.49 WPM
+    1.0875, // Wave 2: ~11.86 WPM
+    1.3594, // Wave 3: ~14.83 WPM
+    1.6992, // Wave 4: ~18.54 WPM
+    2.1240, // Wave 5: ~23.17 WPM
+    2.6550, // Wave 6: ~28.97 WPM
+    3.3188, // Wave 7: ~36.21 WPM
+    4.1485, // Wave 8: ~45.26 WPM
+    5.1856, // Wave 9: ~56.58 WPM
+    6.4820  // Wave 10: ~70.72 WPM
   ];
 
   const savedTheme = localStorage.getItem('theme') || 'natural-light';
