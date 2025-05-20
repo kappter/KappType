@@ -603,6 +603,8 @@ document.addEventListener('DOMContentLoaded', () => {
       wave++;
       waveDisplay.textContent = `Wave: ${wave}`;
       timeLeft = 30;
+      userInput.classList.add('pulse');
+      setTimeout(() => userInput.classList.remove('pulse'), 500); // Remove pulse after animation (0.5s)
     }
     setTimeout(updateTimer, 1000);
   }
