@@ -150,13 +150,13 @@ document.addEventListener('DOMContentLoaded', () => {
   function populateVocabDropdown() {
     const baseUrl = 'https://raw.githubusercontent.com/kappter/vocab-sets/main/';
     const files = [
-      'Exploring_Computer_Science_Vocabulary',
       'ARRL_Ham_Radio_Extra_License_Terms_Definitions',
       'ARRL_Ham_Radio_General_License_Terms_Definitions',
       'ARRL_Ham_Radio_Technician_License_Terms_Definitions',
       'Computer_Programming_2_Terms_Definitions',
       'Digital_Media_2_Terms_and_Definitions',
       'ECS_Hardware_OS_DataStorage_Terms_Definitions',
+      'Exploring_Computer_Science_Vocabulary',
       'Game_Development_Fundamentals_2_Terms_Definitions',
       'Game_Development_Fundamentals_1_Terms_Definitions',
       'Music_Theory_Terms_Definitions',
@@ -173,7 +173,10 @@ document.addEventListener('DOMContentLoaded', () => {
       'utah_video_production_terms_Final',
       'idioms',
       'unusual_adjectives',
-      'unusual_verbs'
+      'unusual_verbs',
+      'common_appetizers_usa',
+      'common_us_entrees',
+      'common_us_side_dishes'
     ];
     const vocabSelectElement = document.getElementById('vocabSelect');
     const amalgamateSelectElement = document.getElementById('amalgamateSelect');
@@ -572,6 +575,11 @@ document.addEventListener('DOMContentLoaded', () => {
       waveDisplay.textContent = `Wave: ${wave}`;
       timeLeft = 30;
       words.forEach(word => word.speed = waveSpeeds[wave] || waveSpeeds[waveSpeeds.length - 1]); // Use waveSpeeds array
+      // Update glow color based on wave
+      const lightness = 20 + (wave - 1) * 7; // Increases from 20% to 69% across 10 waves
+      document.documentElement.style.setProperty('--glow-color', `hsl(240, 70%, ${Math.min(lightness, 69)}%)`);
+      userInput.classList.add('pulse');
+      setTimeout(() => userInput.classList.remove('pulse'), 500); // Remove pulse after animation (0.5s)
     }
     requestAnimationFrame(updateGame);
   }
@@ -788,6 +796,8 @@ document.addEventListener('DOMContentLoaded', () => {
     gameContainer.classList.add('hidden');
     startScreen.classList.remove('hidden');
     startButton.disabled = false;
+    // Reset glow color to initial state
+    document.documentElement.style.setProperty('--glow-color', 'hsl(240, 70%, 20%)');
   }
 
   function startGame() {
