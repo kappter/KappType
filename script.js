@@ -114,8 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let randomizeTerms = true;
   let level = 1;
   let totalTime = 0;
-  let wpmStartTime = null;
-  let wpmEndTime = null;
+  let sessionStartTime = null;
   let missedWords = [];
   let totalChars = 0;
   let correctChars = 0;
@@ -123,6 +122,20 @@ document.addEventListener('DOMContentLoaded', () => {
   let vocabIndex = 0;
   let amalgamateIndex = 0;
   let currentWPM = 0;
+
+  const waveSpeeds = [
+    0, // Wave 0 (not used)
+    1.74,  // Wave 1: 19 WPM
+    2.29,  // Wave 2: 25 WPM
+    3.67,  // Wave 3: 40 WPM
+    5.04,  // Wave 4: 55 WPM
+    6.42,  // Wave 5: 70 WPM
+    7.79,  // Wave 6: 85 WPM
+    9.17,  // Wave 7: 100 WPM
+    10.54, // Wave 8: 115 WPM
+    11.91, // Wave 9: 130 WPM
+    12.82  // Wave 10: 140 WPM
+  ];
 
   const savedTheme = localStorage.getItem('theme') || 'natural-light';
   document.body.className = savedTheme;
@@ -458,13 +471,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const x = mode === 'game' ? (minX + Math.random() * xRange) : 50;
 
     const y = 0;
-    const speed = mode === 'game' ? (wave / 10) * 6.395 : 0.5 + level * 0.1; // Halved base speed, still reaches 140 WPM at wave 10
+    const speed = mode === 'game' ? waveSpeeds[wave] : 0.5 + level * 0.1; // Use waveSpeeds array
     const word = { prompt: finalPrompt, typedInput: finalTypedInput, displayText: getUnderscoreText(finalTypedInput), x, y, speed, matched: '', definition: finalDefinition, isExiting: false };
     words.push(word);
     userInput.placeholder = finalPrompt;
-    wpmStartTime = null;
-    wpmEndTime = null;
-    currentWPM = 0;
     updateWPMDisplay();
     updateTimeIndicator();
   }
@@ -561,20 +571,21 @@ document.addEventListener('DOMContentLoaded', () => {
       wave++;
       waveDisplay.textContent = `Wave: ${wave}`;
       timeLeft = 30;
-      words.forEach(word => word.speed = (wave / 10) * 6.395); // Halved base speed
+      words.forEach(word => word.speed = waveSpeeds[wave] || waveSpeeds[waveSpeeds.length - 1]); // Use waveSpeeds array
     }
     requestAnimationFrame(updateGame);
   }
 
   function calculateWPM() {
-    if (wpmStartTime === null || wpmEndTime === null || correctChars === 0) return 0;
-    const elapsedTime = (wpmEndTime - wpmStartTime) / 1000 / 60;
+    if (sessionStartTime === null || correctChars === 0) return 0;
+    const elapsedTime = (performance.now() - sessionStartTime) / 1000 / 60; // Minutes
     if (elapsedTime <= 0) return 0;
     const wpm = Math.round((correctChars / 5) / elapsedTime);
     return Math.min(wpm, 200);
   }
 
   function updateWPMDisplay() {
+    currentWPM = calculateWPM();
     wpmDisplay.textContent = `WPM: ${currentWPM}`;
   }
 
@@ -585,13 +596,9 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateTimer() {
     if (!gameActive) return;
     timeLeft--;
+    totalTime++;
     timerDisplay.textContent = `Time: ${timeLeft}s`;
-    if (wpmStartTime !== null && wpmEndTime === null) {
-      wpmEndTime = performance.now();
-      currentWPM = calculateWPM();
-      wpmEndTime = null;
-      updateWPMDisplay();
-    }
+    updateWPMDisplay();
     if (timeLeft <= 0) {
       wave++;
       waveDisplay.textContent = `Wave: ${wave}`;
@@ -602,8 +609,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function handleInput(e) {
     const typed = e.target.value;
-    if (wpmStartTime === null && typed.length > 0) {
-      wpmStartTime = performance.now();
+    if (sessionStartTime === null && typed.length > 0) {
+      sessionStartTime = performance.now();
       correctChars = 0;
     }
 
@@ -614,12 +621,8 @@ document.addEventListener('DOMContentLoaded', () => {
         word.displayText = word.typedInput;
       }
       if (target === input) {
-        wpmEndTime = performance.now();
         correctChars += word.typedInput.length;
         totalChars += word.typedInput.length;
-        currentWPM = calculateWPM();
-        updateWPMDisplay();
-        
         score += word.typedInput.length;
         scoreDisplay.textContent = `Score: ${score}`;
         e.target.value = '';
@@ -676,7 +679,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateTimeIndicator() {
     if (timeIndicator) {
       timeIndicator.classList.remove('active');
-      if (wpmStartTime !== null) {
+      if (sessionStartTime !== null) {
         timeIndicator.classList.add('active');
       }
     }
@@ -766,8 +769,7 @@ document.addEventListener('DOMContentLoaded', () => {
     wave = 1;
     timeLeft = 30;
     totalTime = 0;
-    wpmStartTime = null;
-    wpmEndTime = null;
+    sessionStartTime = null;
     currentWPM = 0;
     missedWords = [];
     totalChars = 0;
