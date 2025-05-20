@@ -1,6 +1,6 @@
 # KappType - Typing Game with Vocabulary Challenge
 
-KappType is an engaging typing game designed to improve typing speed and accuracy while testing vocabulary knowledge. Built with HTML, CSS, and JavaScript, it offers a variety of features to enhance the learning and gaming experience. Whether you're a beginner or an advanced typist, KappType provides a customizable and immersive environment.
+[KappType](https://kappter.github.io/KappType/) is an engaging typing game designed to improve typing speed and accuracy while testing vocabulary knowledge. Built with HTML, CSS, and JavaScript, it offers a variety of features to enhance the learning and gaming experience. Whether you're a beginner or an advanced typist, KappType provides a customizable and immersive environment.
 
 ## Features
 
