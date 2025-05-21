@@ -43,125 +43,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KappType</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/papaparse/5.3.2/papaparse.min.js"></script>
-  <script src="script.js" defer></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-      transition: all 0.3s;
-    }
-
-    .game-stats {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 15px;
-      margin: 10px 0;
-      font-size: 1.1em;
-    }
-
-    .game-stats span {
-      padding: 5px 10px;
-      border-radius: 5px;
-      background-color: rgba(0, 0, 0, 0.1);
-      color: #333; /* Default color for visibility */
-    }
-
-    /* Ensure timeIndicator doesn’t disrupt layout */
-    .time-indicator {
-      width: 20px;
-      height: 20px;
-      background-color: #ccc;
-      border-radius: 50%;
-      display: inline-block;
-    }
-
-    .time-indicator.active {
-      background-color: #28a745;
-    }
-
-    /* Theme-specific overrides */
-    body.natural-light .game-stats span {
-      background-color: rgba(0, 0, 0, 0.1);
-      color: #333;
-    }
-
-    body.natural-dark .game-stats span {
-      background-color: rgba(255, 255, 255, 0.1);
-      color: #ddd;
-    }
-
-    body.architecture .game-stats span {
-      background-color: rgba(0, 0, 0, 0.2);
-      color: #444;
-    }
-
-    body.space .game-stats span {
-      background-color: rgba(255, 255, 255, 0.1);
-      color: #fff;
-    }
-
-    body.medieval .game-stats span {
-      background-color: rgba(139, 69, 19, 0.2); /* Brownish background */
-      color: #333;
-    }
-
-    /* Other existing styles (if any) */
-    .hidden {
-      display: none;
-    }
-
-    .pulse {
-      animation: pulse 0.5s;
-    }
-
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-      100% { transform: scale(1); }
-    }
-
-    canvas {
-      border: 1px solid #333;
-      display: block;
-      margin: 0 auto;
-    }
-
-    input, select, button {
-      margin: 5px;
-      padding: 5px;
-    }
-
-    .keyboard {
-      margin-top: 20px;
-      text-align: center;
-    }
-
-    .row {
-      margin: 5px 0;
-    }
-
-    .key {
-      display: inline-block;
-      padding: 5px 10px;
-      margin: 2px;
-      background-color: #ddd;
-      border: 1px solid #999;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    .key.pressed {
-      background-color: #bbb;
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
-<body class="natural-light">
+<body>
   <div id="startScreen">
-    <h1>KappType</h1>
-    <div>
+    <div class="start-card">
+      <h1>KappType</h1>
       <label for="themeSelect">Theme:</label>
       <select id="themeSelect">
         <option value="natural-light">Natural Light</option>
@@ -170,89 +57,89 @@
         <option value="space">Space</option>
         <option value="medieval">Medieval</option>
       </select>
-    </div>
-    <div>
+      
       <label for="levelInput">Level (1-10):</label>
-      <input type="number" id="levelInput" min="1" max="10" value="1">
-    </div>
-    <div>
+      <input type="number" id="levelInput" value="1" min="1" max="10">
+      
       <label for="modeSelect">Mode:</label>
       <select id="modeSelect">
         <option value="game">Game</option>
         <option value="practice">Practice</option>
       </select>
-    </div>
-    <div>
+
       <label for="promptSelect">Prompt Type:</label>
       <select id="promptSelect">
         <option value="definition">Definition</option>
         <option value="term">Term</option>
         <option value="random">Random</option>
       </select>
-    </div>
-    <div>
+
       <label for="caseSelect">Case Sensitivity:</label>
       <select id="caseSelect">
         <option value="insensitive">Insensitive</option>
         <option value="sensitive">Sensitive</option>
       </select>
-    </div>
-    <div>
+
       <label for="vocabSelect">Vocabulary Set:</label>
       <select id="vocabSelect"></select>
-    </div>
-    <div>
+
       <label for="amalgamateSelect">Amalgamate Set:</label>
       <select id="amalgamateSelect"></select>
-    </div>
-    <div>
+
       <label for="customVocabInput">Custom Vocabulary (CSV):</label>
       <input type="file" id="customVocabInput" accept=".csv">
-    </div>
-    <div>
+
       <label for="customVocabInput2">Amalgamation Vocabulary (CSV):</label>
       <input type="file" id="customVocabInput2" accept=".csv">
+
+      <label for="randomizeTerms" class="checkbox-label">
+        <input type="checkbox" id="randomizeTerms" checked>
+        Randomize Terms
+      </label>
+
+      <button id="startButton">Start Game</button>
+      <div id="loadingIndicator" class="hidden">Loading...</div>
     </div>
-    <div>
-      <input type="checkbox" id="randomizeTerms" checked>
-      <label for="randomizeTerms">Randomize Terms</label>
-    </div>
-    <button id="startButton">Start Game</button>
-    <div id="loadingIndicator" class="hidden">Loading...</div>
   </div>
+
   <div id="gameContainer" class="hidden">
     <h2 id="vocabSetTitle"></h2>
-    <div class="game-stats">
-      <span id="score">Score: 0</span>
-      <span id="wave">Wave: 1</span>
-      <span id="timer">Time: 30s</span>
-      <span id="accuracy">Accuracy: 100%</span>
-      <span id="wpm">WPM: 0</span>
-      <span id="timeIndicator" class="time-indicator"></span>
-    </div>
     <canvas id="gameCanvas"></canvas>
-    <div>
-      <input type="text" id="userInput" placeholder="Prompt will appear here...">
+    <div class="stats-container">
+      <div class="game-stats">
+  <span id="score">Score: 0</span>
+  <span id="wave">Wave: 1</span>
+  <span id="timer">Time: 30s</span>
+  <span id="accuracy">Accuracy: 100%</span>
+  <span id="wpm">WPM: 0</span>
+  <span id="timeIndicator" class="time-indicator"></span>
+</div>
+    </div>
+    <input type="text" id="userInput" placeholder="Prompt will appear here...">
+    <div class="button-group">
       <button id="certificateButton">Generate Certificate</button>
       <button id="resetButton">Reset Game</button>
     </div>
     <div class="keyboard">
       <div class="row">
-        <span class="key" data-key="~">~</span><span class="key" data-key="1">1</span><span class="key" data-key="2">2</span><span class="key" data-key="3">3</span><span class="key" data-key="4">4</span><span class="key" data-key="5">5</span><span class="key" data-key="6">6</span><span class="key" data-key="7">7</span><span class="key" data-key="8">8</span><span class="key" data-key="9">9</span><span class="key" data-key="0">0</span><span class="key" data-key="-">-</span><span class="key" data-key="=">=</span><span class="key" data-key="Backspace">Backspace</span>
+        <span class="key" data-key="~">~</span><span class="key" data-key="1">1</span><span class="key" data-key="2">2</span><span class="key" data-key="3">3</span><span class="key" data-key="4">4</span><span class="key" data-key="5">5</span><span class="key" data-key="6">6</span><span class="key" data-key="7">7</span><span class="key" data-key="8">8</span><span class="key" data-key="9">9</span><span class="key" data-key="0">0</span><span class="key" data-key="-">-</span><span class="key" data-key="=">=</span><span class="key backspace" data-key="Backspace">Backspace</span>
       </div>
       <div class="row">
-        <span class="key" data-key="Tab">Tab</span><span class="key" data-key="q">q</span><span class="key" data-key="w">w</span><span class="key" data-key="e">e</span><span class="key" data-key="r">r</span><span class="key" data-key="t">t</span><span class="key" data-key="y">y</span><span class="key" data-key="u">u</span><span class="key" data-key="i">i</span><span class="key" data-key="o">o</span><span class="key" data-key="p">p</span><span class="key" data-key="[">[</span><span class="key" data-key="]">]</span><span class="key" data-key="\">\\</span>
+        <span class="key tab" data-key="Tab">Tab</span><span class="key" data-key="q">q</span><span class="key" data-key="w">w</span><span class="key" data-key="e">e</span><span class="key" data-key="r">r</span><span class="key" data-key="t">t</span><span class="key" data-key="y">y</span><span class="key" data-key="u">u</span><span class="key" data-key="i">i</span><span class="key" data-key="o">o</span><span class="key" data-key="p">p</span><span class="key" data-key="[">[</span><span class="key" data-key="]">]</span><span class="key" data-key="\\">\</span>
       </div>
       <div class="row">
-        <span class="key" data-key="CapsLock">Caps Lock</span><span class="key" data-key="a">a</span><span class="key" data-key="s">s</span><span class="key" data-key="d">d</span><span class="key" data-key="f">f</span><span class="key" data-key="g">g</span><span class="key" data-key="h">h</span><span class="key" data-key="j">j</span><span class="key" data-key="k">k</span><span class="key" data-key="l">l</span><span class="key" data-key=";">;</span><span class="key" data-key="'">'</span><span class="key" data-key="Enter">Enter</span>
+        <span class="key caps-lock" data-key="CapsLock">Caps Lock</span><span class="key" data-key="a">a</span><span class="key" data-key="s">s</span><span class="key" data-key="d">d</span><span class="key" data-key="f">f</span><span class="key" data-key="g">g</span><span class="key" data-key="h">h</span><span class="key" data-key="j">j</span><span class="key" data-key="k">k</span><span class="key" data-key="l">l</span><span class="key" data-key=";">;</span><span class="key" data-key="'">'</span><span class="key enter" data-key="Enter">Enter</span>
       </div>
       <div class="row">
         <span class="key shift" data-key="Shift">Shift</span><span class="key" data-key="z">z</span><span class="key" data-key="x">x</span><span class="key" data-key="c">c</span><span class="key" data-key="v">v</span><span class="key" data-key="b">b</span><span class="key" data-key="n">n</span><span class="key" data-key="m">m</span><span class="key" data-key=",">,</span><span class="key" data-key=".">.</span><span class="key" data-key="/">/</span><span class="key shift" data-key="Shift">Shift</span>
       </div>
       <div class="row">
-        <span class="key ctrl" data-key="Control">Ctrl</span><span class="key win" data-key="Meta">Win</span><span class="key alt" data-key="Alt">Alt</span><span class="key" data-key=" ">Space</span><span class="key alt" data-key="Alt">Alt</span><span class="key win" data-key="Meta">Win</span><span class="key ctrl" data-key="Control">Ctrl</span>
+        <span class="key ctrl" data-key="Control">Ctrl</span><span class="key win" data-key="Meta">Win</span><span class="key alt" data-key="Alt">Alt</span><span class="key space" data-key=" ">Space</span><span class="key alt" data-key="Alt">Alt</span><span class="key win" data-key="Meta">Win</span><span class="key ctrl" data-key="Control">Ctrl</span>
       </div>
     </div>
   </div>
+
+  <script src="papaparse.min.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>

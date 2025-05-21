@@ -63,7 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const scoreDisplay = document.getElementById('score');
   const waveDisplay = document.getElementById('wave');
   const timerDisplay = document.getElementById('timer');
-  const accuracyDisplay = document.getElementById('accuracy');
   const wpmDisplay = document.getElementById('wpm');
   const startScreen = document.getElementById('startScreen');
   const gameContainer = document.getElementById('gameContainer');
@@ -88,10 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
     console.error('Required elements not found:', { canvas, ctx, userInput, timeIndicator, startButton, resetButton, randomizeTermsCheckbox, themeSelect });
     alert('Critical elements are missing from the page. Please check the HTML structure and try again.');
     return;
-  }
-
-  if (!accuracyDisplay) {
-    console.warn('Accuracy display element not found. Accuracy will not be shown.');
   }
 
   if (!customVocabInput) {
@@ -158,7 +153,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const baseUrl = 'https://raw.githubusercontent.com/kappter/vocab-sets/main/';
     const files = [
       'Exploring_Computer_Science_Vocabulary',
-      'Computer_Usage_Terms',
       'ARRL_Ham_Radio_Extra_License_Terms_Definitions',
       'ARRL_Ham_Radio_General_License_Terms_Definitions',
       'ARRL_Ham_Radio_Technician_License_Terms_Definitions',
@@ -167,26 +161,21 @@ document.addEventListener('DOMContentLoaded', () => {
       'ECS_Hardware_OS_DataStorage_Terms_Definitions',
       'Game_Development_Fundamentals_2_Terms_Definitions',
       'Game_Development_Fundamentals_1_Terms_Definitions',
-      'Game_Development_Terms_2020s',
       'Music_Theory_Terms_Definitions',
       'Short_Testing_Sample',
       'Summer_Job_Preparation_Terms_Definitions',
       'Utah_Computer_Programming_1_Terms_Definitions',
       'Web_Development_Terms_Definitions',
-      'Yearbook_Design_Terms',
+      'Yearbook_Staff_Editor_Skills_Terms_Definitions',
       'advanced_computer_programming_vocab',
-      'Photography_Terms',
-      'OOP_Programming_Terms',
       'psych_terms_1',
       'psych_terms_2',
       'psych_terms_3',
       'psych_terms_4',
       'utah_video_production_terms_Final',
-      'Social_Media_Photography_Terms',
       'idioms',
       'unusual_adjectives',
       'unusual_verbs',
-      'Rare_English_Words',
       'common_appetizers_usa',
       'common_us_entrees',
       'common_us_side_dishes'
@@ -202,11 +191,9 @@ document.addEventListener('DOMContentLoaded', () => {
       vocabSelectElement.appendChild(option1);
 
       const option2 = document.createElement('option');
-      setTimeout(() => {
-        option2.value = baseUrl + file + '.csv';
-        option2.textContent = file;
-        amalgamateSelectElement.appendChild(option2);
-      }, 0);
+      option2.value = baseUrl + file + '.csv';
+      option2.textContent = file;
+      amalgamateSelectElement.appendChild(option2);
     });
   }
 
@@ -610,7 +597,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const lightness = 50 + (wave - 1) * 3;
       document.documentElement.style.setProperty('--bg-lightness', `${Math.min(lightness, 77)}%`);
     }
-    updateWPMDisplay(); // Add this to update accuracy in real-time
     requestAnimationFrame(updateGame);
   }
 
@@ -622,17 +608,13 @@ document.addEventListener('DOMContentLoaded', () => {
     return Math.min(wpm, 200);
   }
 
-  function calculateAccuracy() {
-    return totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 100;
-  }
-
   function updateWPMDisplay() {
     currentWPM = calculateWPM();
-    const accuracy = calculateAccuracy();
-    if (accuracyDisplay) {
-      accuracyDisplay.textContent = `Accuracy: ${accuracy}%`;
-    }
     wpmDisplay.textContent = `WPM: ${currentWPM}`;
+  }
+
+  function calculateAccuracy() {
+    return totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 100;
   }
 
   function updateTimer() {
@@ -679,7 +661,6 @@ document.addEventListener('DOMContentLoaded', () => {
       return true;
     });
 
-    updateWPMDisplay(); // Update accuracy after each input
     updateTimeIndicator();
   }
 
@@ -713,7 +694,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (e.key === 'Shift') {
       document.querySelectorAll('.shift').forEach(shift => shift.classList.remove('pressed'));
     } else if (e.key === 'Control') {
-      document.querySelectorAll('.ctrl').forEach(ctrl => shift.classList.remove('pressed'));
+      document.querySelectorAll('.ctrl').forEach(ctrl => ctrl.classList.remove('pressed'));
     } else if (e.key === 'Alt') {
       document.querySelectorAll('.alt').forEach(alt => alt.classList.remove('pressed'));
     } else if (e.key === 'Meta') {
