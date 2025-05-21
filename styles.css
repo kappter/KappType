@@ -19,7 +19,7 @@
 body.natural-dark {
   --primary-gradient: linear-gradient(135deg, hsl(210, 30%, var(--bg-lightness)) 0%, hsl(210, 30%, calc(var(--bg-lightness) - 10%)) 100%);
   --neon-cyan: #00c4b4;
-  --neon-purple: #7b68ee;
+  --neon-purple: #f3f3ff;
   --glass-bg: rgba(0, 0, 0, 0.5);
   --text-shadow: 0 0 5px rgba(0, 196, 180, 0.5);
   --text: #ffffff;
