@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let vocabSetName = '';
   let amalgamateSetName = '';
   let score = 0;
-  let wave = 1;
+  let wave = 0; // Start at Wave 0
   let timeLeft = 30;
   let gameActive = false;
   let mode = 'game';
@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentWPM = 0;
 
   const waveSpeeds = [
-    0, // Wave 0 (not used)
+    0.435,  // Wave 0: ~4.75 WPM (half of Wave 1)
     0.87,   // Wave 1: ~9.49 WPM
     1.0875, // Wave 2: ~11.86 WPM
     1.3594, // Wave 3: ~14.83 WPM
@@ -160,8 +160,11 @@ document.addEventListener('DOMContentLoaded', () => {
       'Game_Development_Fundamentals_2_Terms_Definitions',
       'Game_Development_Fundamentals_1_Terms_Definitions',
       'Music_Theory_Terms_Definitions',
+      'Short_Testing_Sample',
+      'Summer_Job_Preparation_Terms_Definitions',
       'Utah_Computer_Programming_1_Terms_Definitions',
       'Web_Development_Terms_Definitions',
+      'Yearbook_Staff_Editor_Skills_Terms_Definitions',
       'advanced_computer_programming_vocab',
       'psych_terms_1',
       'psych_terms_2',
@@ -532,7 +535,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.font = '18px Arial';
     ctx.textAlign = 'left';
     const computedStyle = window.getComputedStyle(document.body);
-    const textColor = computedStyle.getPropertyValue('--text')?.trim() || '#ffffff';
+    const textColor = computedStyle.getPropertyValue('--canvas-text')?.trim() || '#ffffff'; // Use updated CSS variable
 
     words = words.filter(word => word.y < canvas.height && !word.isExiting);
     words.forEach(word => {
@@ -572,6 +575,9 @@ document.addEventListener('DOMContentLoaded', () => {
       waveDisplay.textContent = `Wave: ${wave}`;
       timeLeft = 30;
       words.forEach(word => word.speed = waveSpeeds[wave] || waveSpeeds[waveSpeeds.length - 1]); // Use waveSpeeds array
+      // Update background tint based on wave
+      const lightness = 50 + (wave - 1) * 3; // Increases from 50% to 77% across 10 waves
+      document.documentElement.style.setProperty('--bg-lightness', `${Math.min(lightness, 77)}%`);
     }
     requestAnimationFrame(updateGame);
   }
@@ -768,7 +774,7 @@ document.addEventListener('DOMContentLoaded', () => {
     vocabData = [];
     amalgamateVocab = [];
     score = 0;
-    wave = 1;
+    wave = 0; // Reset to Wave 0
     timeLeft = 30;
     totalTime = 0;
     sessionStartTime = null;
@@ -788,6 +794,8 @@ document.addEventListener('DOMContentLoaded', () => {
     gameContainer.classList.add('hidden');
     startScreen.classList.remove('hidden');
     startButton.disabled = false;
+    // Reset background tint to initial state
+    document.documentElement.style.setProperty('--bg-lightness', '50%');
   }
 
   function startGame() {
