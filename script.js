@@ -153,6 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const baseUrl = 'https://raw.githubusercontent.com/kappter/vocab-sets/main/';
     const files = [
       'Exploring_Computer_Science_Vocabulary',
+      'Computer_Usage_Terms',
       'ARRL_Ham_Radio_Extra_License_Terms_Definitions',
       'ARRL_Ham_Radio_General_License_Terms_Definitions',
       'ARRL_Ham_Radio_Technician_License_Terms_Definitions',
