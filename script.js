@@ -63,6 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const scoreDisplay = document.getElementById('score');
   const waveDisplay = document.getElementById('wave');
   const timerDisplay = document.getElementById('timer');
+  const accuracyDisplay = document.getElementById('accuracy');
   const wpmDisplay = document.getElementById('wpm');
   const startScreen = document.getElementById('startScreen');
   const gameContainer = document.getElementById('gameContainer');
@@ -87,6 +88,10 @@ document.addEventListener('DOMContentLoaded', () => {
     console.error('Required elements not found:', { canvas, ctx, userInput, timeIndicator, startButton, resetButton, randomizeTermsCheckbox, themeSelect });
     alert('Critical elements are missing from the page. Please check the HTML structure and try again.');
     return;
+  }
+
+  if (!accuracyDisplay) {
+    console.warn('Accuracy display element not found. Accuracy will not be shown.');
   }
 
   if (!customVocabInput) {
@@ -197,9 +202,11 @@ document.addEventListener('DOMContentLoaded', () => {
       vocabSelectElement.appendChild(option1);
 
       const option2 = document.createElement('option');
-      option2.value = baseUrl + file + '.csv';
-      option2.textContent = file;
-      amalgamateSelectElement.appendChild(option2);
+      setTimeout(() => {
+        option2.value = baseUrl + file + '.csv';
+        option2.textContent = file;
+        amalgamateSelectElement.appendChild(option2);
+      }, 0);
     });
   }
 
@@ -603,18 +610,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const lightness = 50 + (wave - 1) * 3;
       document.documentElement.style.setProperty('--bg-lightness', `${Math.min(lightness, 77)}%`);
     }
+    updateWPMDisplay(); // Add this to update accuracy in real-time
     requestAnimationFrame(updateGame);
   }
-
-  function updateWPMDisplay() {
-  currentWPM = calculateWPM();
-  const accuracy = calculateAccuracy();
-  const accuracyDisplay = document.getElementById('accuracy');
-  if (accuracyDisplay) {
-    accuracyDisplay.textContent = `Accuracy: ${accuracy}%`;
-  }
-  wpmDisplay.textContent = `WPM: ${currentWPM}`;
-}
 
   function calculateWPM() {
     if (sessionStartTime === null || correctChars === 0) return 0;
@@ -624,13 +622,17 @@ document.addEventListener('DOMContentLoaded', () => {
     return Math.min(wpm, 200);
   }
 
-  function updateWPMDisplay() {
-    currentWPM = calculateWPM();
-    wpmDisplay.textContent = `WPM: ${currentWPM}`;
-  }
-
   function calculateAccuracy() {
     return totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 100;
+  }
+
+  function updateWPMDisplay() {
+    currentWPM = calculateWPM();
+    const accuracy = calculateAccuracy();
+    if (accuracyDisplay) {
+      accuracyDisplay.textContent = `Accuracy: ${accuracy}%`;
+    }
+    wpmDisplay.textContent = `WPM: ${currentWPM}`;
   }
 
   function updateTimer() {
@@ -677,6 +679,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return true;
     });
 
+    updateWPMDisplay(); // Update accuracy after each input
     updateTimeIndicator();
   }
 
@@ -710,7 +713,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (e.key === 'Shift') {
       document.querySelectorAll('.shift').forEach(shift => shift.classList.remove('pressed'));
     } else if (e.key === 'Control') {
-      document.querySelectorAll('.ctrl').forEach(ctrl => ctrl.classList.remove('pressed'));
+      document.querySelectorAll('.ctrl').forEach(ctrl => shift.classList.remove('pressed'));
     } else if (e.key === 'Alt') {
       document.querySelectorAll('.alt').forEach(alt => alt.classList.remove('pressed'));
     } else if (e.key === 'Meta') {
