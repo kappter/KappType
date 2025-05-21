@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
       'Summer_Job_Preparation_Terms_Definitions',
       'Utah_Computer_Programming_1_Terms_Definitions',
       'Web_Development_Terms_Definitions',
-      'Yearbook_Staff_Editor_Skills_Terms_Definitions',
+      'Yearbook_Design_Terms',
       'advanced_computer_programming_vocab',
       'Photography_Terms',
       'OOP_Programming_Terms',
