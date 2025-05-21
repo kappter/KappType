@@ -181,6 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
       'idioms',
       'unusual_adjectives',
       'unusual_verbs',
+      'Rare_English_Words',
       'common_appetizers_usa',
       'common_us_entrees',
       'common_us_side_dishes'
