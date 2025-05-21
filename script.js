@@ -175,6 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
       'psych_terms_3',
       'psych_terms_4',
       'utah_video_production_terms_Final',
+      'Social_Media_Photography_Terms.csv',
       'idioms',
       'unusual_adjectives',
       'unusual_verbs',
