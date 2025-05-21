@@ -606,6 +606,16 @@ document.addEventListener('DOMContentLoaded', () => {
     requestAnimationFrame(updateGame);
   }
 
+  function updateWPMDisplay() {
+  currentWPM = calculateWPM();
+  const accuracy = calculateAccuracy();
+  const accuracyDisplay = document.getElementById('accuracy');
+  if (accuracyDisplay) {
+    accuracyDisplay.textContent = `Accuracy: ${accuracy}%`;
+  }
+  wpmDisplay.textContent = `WPM: ${currentWPM}`;
+}
+
   function calculateWPM() {
     if (sessionStartTime === null || correctChars === 0) return 0;
     const elapsedTime = (performance.now() - sessionStartTime) / 1000 / 60;
