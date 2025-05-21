@@ -168,6 +168,8 @@ document.addEventListener('DOMContentLoaded', () => {
       'Web_Development_Terms_Definitions',
       'Yearbook_Staff_Editor_Skills_Terms_Definitions',
       'advanced_computer_programming_vocab',
+      'Photography_Terms.csv',
+      'OOP_Programming_Terms.csv',
       'psych_terms_1',
       'psych_terms_2',
       'psych_terms_3',
