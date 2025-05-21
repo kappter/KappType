@@ -493,7 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const x = mode === 'game' ? (minX + Math.random() * xRange) : 50;
 
     const y = 0;
-    const speed = mode === 'game' ? waveSpeeds[wave] : 0.5 + level * 0.1; // Use waveSpeeds array
+    const speed = mode === 'game' ? waveSpeeds[wave] : 0.5 + level * 0.1;
     const word = { prompt: finalPrompt, typedInput: finalTypedInput, displayText: getUnderscoreText(finalTypedInput), x, y, speed, matched: '', definition: finalDefinition, isExiting: false };
     words.push(word);
     userInput.placeholder = finalPrompt;
@@ -554,7 +554,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.font = '18px Arial';
     ctx.textAlign = 'left';
     const computedStyle = window.getComputedStyle(document.body);
-    const textColor = computedStyle.getPropertyValue('--canvas-text')?.trim() || '#ffffff'; // Use updated CSS variable
+    const textColor = computedStyle.getPropertyValue('--canvas-text')?.trim() || '#ffffff';
 
     words = words.filter(word => word.y < canvas.height && !word.isExiting);
     words.forEach(word => {
@@ -593,9 +593,8 @@ document.addEventListener('DOMContentLoaded', () => {
       wave++;
       waveDisplay.textContent = `Wave: ${wave}`;
       timeLeft = 30;
-      words.forEach(word => word.speed = waveSpeeds[wave] || waveSpeeds[waveSpeeds.length - 1]); // Use waveSpeeds array
-      // Update background tint based on wave
-      const lightness = 50 + (wave - 1) * 3; // Increases from 50% to 77% across 10 waves
+      words.forEach(word => word.speed = waveSpeeds[wave] || waveSpeeds[waveSpeeds.length - 1]);
+      const lightness = 50 + (wave - 1) * 3;
       document.documentElement.style.setProperty('--bg-lightness', `${Math.min(lightness, 77)}%`);
     }
     requestAnimationFrame(updateGame);
@@ -603,7 +602,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function calculateWPM() {
     if (sessionStartTime === null || correctChars === 0) return 0;
-    const elapsedTime = (performance.now() - sessionStartTime) / 1000 / 60; // Minutes
+    const elapsedTime = (performance.now() - sessionStartTime) / 1000 / 60;
     if (elapsedTime <= 0) return 0;
     const wpm = Math.round((correctChars / 5) / elapsedTime);
     return Math.min(wpm, 200);
@@ -629,7 +628,7 @@ document.addEventListener('DOMContentLoaded', () => {
       waveDisplay.textContent = `Wave: ${wave}`;
       timeLeft = 30;
       userInput.classList.add('pulse');
-      setTimeout(() => userInput.classList.remove('pulse'), 500); // Remove pulse after animation (0.5s)
+      setTimeout(() => userInput.classList.remove('pulse'), 500);
     }
     setTimeout(updateTimer, 1000);
   }
@@ -787,38 +786,6 @@ document.addEventListener('DOMContentLoaded', () => {
     alert('Certificate .tex file downloaded. Upload it to your Overleaf project at https://www.overleaf.com/project/6827805d3e926f37c9afb11e to compile it into a PDF. If compilation fails, check for errors in Overleaf (e.g., missing packages or syntax issues) or ensure your GitHub repository (https://github.com/kappter/KappType) is synced with your Overleaf project under the "certificate.tex" file.');
   }
 
-  function resetGame() {
-    gameActive = false;
-    words = [];
-    vocabData = [];
-    amalgamateVocab = [];
-    score = 0;
-    wave = 0; // Reset to Wave 0
-    timeLeft = 30;
-    totalTime = 0;
-    sessionStartTime = null;
-    currentWPM = 0;
-    missedWords = [];
-    totalChars = 0;
-    correctChars = 0;
-    vocabIndex = 0;
-    amalgamateIndex = 0;
-    usedVocabIndices = []; // Reset used indices
-    usedAmalgamateIndices = []; // Reset used amalgamate indices
-    scoreDisplay.textContent = `Score: ${score}`;
-    waveDisplay.textContent = `Wave: ${wave}`;
-    timerDisplay.textContent = `Time: ${timeLeft}s`;
-    wpmDisplay.textContent = `WPM: ${currentWPM}`;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    userInput.value = '';
-    userInput.placeholder = 'Prompt will appear here...';
-    gameContainer.classList.add('hidden');
-    startScreen.classList.remove('hidden');
-    startButton.disabled = false;
-    // Reset background tint to initial state
-    document.documentElement.style.setProperty('--bg-lightness', '50%');
-  }
-
   function startGame() {
     if (vocabData.length === 0) {
       vocabData = [...defaultVocabData];
@@ -869,5 +836,7 @@ document.addEventListener('DOMContentLoaded', () => {
     startGame();
   });
 
-  resetButton.addEventListener('click', resetGame);
+  resetButton.addEventListener('click', () => {
+    location.reload(); // Full page reset
+  });
 });
