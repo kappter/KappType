@@ -12,7 +12,7 @@ const defaultVocabData = [
   { Term: "Pseudocode", Definition: "A simplified human-readable description of a program’s logic" },
   { Term: "Flowchart", Definition: "A visual diagram representing the steps of an algorithm or process" },
   { Term: "Pattern Recognition", Definition: "Identifying similarities or trends in data to solve problems" },
-  { Term: "Iteration", Definition: "Repeating a process or set of instructions to achieve a goal" },
+  { Term: "Iteration", Definition: "Repeating a process or set of set of instructions to achieve a goal" },
   { Term: "Data", Definition: "Information processed or stored by a computer such as numbers or text" },
   { Term: "Data Analysis", Definition: "The process of examining data to draw conclusions or identify patterns" },
   { Term: "Binary Number", Definition: "A number system using only 0s and 1s used by computers" },
@@ -122,6 +122,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let vocabIndex = 0;
   let amalgamateIndex = 0;
   let currentWPM = 0;
+  let usedVocabIndices = []; // Track used indices in random mode
+  let usedAmalgamateIndices = []; // Track used indices for amalgamate vocab
 
   const waveSpeeds = [
     0.435,  // Wave 0: ~4.75 WPM (half of Wave 1)
@@ -404,7 +406,24 @@ document.addEventListener('DOMContentLoaded', () => {
     if (sourceArray.length === 0) return null;
     let index;
     if (randomizeTerms) {
-      index = Math.floor(Math.random() * sourceArray.length);
+      const availableIndices = isAmalgamate ? usedAmalgamateIndices : usedVocabIndices;
+      const pool = Array.from({ length: sourceArray.length }, (_, i) => i).filter(i => !availableIndices.includes(i));
+      if (pool.length === 0) {
+        // Reset indices when all terms are used
+        if (isAmalgamate) {
+          usedAmalgamateIndices = [];
+        } else {
+          usedVocabIndices = [];
+        }
+        index = Math.floor(Math.random() * sourceArray.length);
+      } else {
+        index = pool[Math.floor(Math.random() * pool.length)];
+      }
+      if (isAmalgamate) {
+        usedAmalgamateIndices.push(index);
+      } else {
+        usedVocabIndices.push(index);
+      }
     } else {
       if (isAmalgamate) {
         index = amalgamateIndex;
@@ -784,6 +803,8 @@ document.addEventListener('DOMContentLoaded', () => {
     correctChars = 0;
     vocabIndex = 0;
     amalgamateIndex = 0;
+    usedVocabIndices = []; // Reset used indices
+    usedAmalgamateIndices = []; // Reset used amalgamate indices
     scoreDisplay.textContent = `Score: ${score}`;
     waveDisplay.textContent = `Wave: ${wave}`;
     timerDisplay.textContent = `Time: ${timeLeft}s`;
