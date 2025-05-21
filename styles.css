@@ -423,17 +423,6 @@ body.medieval .stats span {
     gap: 0.2rem;
   }
 
-  .game-stats {
-  display: flex;
-  gap: 15px; /* Space between stats */
-  align-items: center;
-  margin: 10px 0;
-}
-
-.game-stats span {
-  font-size: 1.1em;
-}
-
   .stats span {
     font-size: 0.8rem;
     margin: 0 0.1rem;
