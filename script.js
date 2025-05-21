@@ -161,6 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
       'ECS_Hardware_OS_DataStorage_Terms_Definitions',
       'Game_Development_Fundamentals_2_Terms_Definitions',
       'Game_Development_Fundamentals_1_Terms_Definitions',
+      'Game_Development_Terms_2020s',
       'Music_Theory_Terms_Definitions',
       'Short_Testing_Sample',
       'Summer_Job_Preparation_Terms_Definitions',
