@@ -13,7 +13,7 @@ const defaultVocabData = [
   { Term: "Flowchart", Definition: "A visual diagram representing the steps of an algorithm or process" },
   { Term: "Pattern Recognition", Definition: "Identifying similarities or trends in data to solve problems" },
   { Term: "Iteration", Definition: "Repeating a process or set of set of instructions to achieve a goal" },
-  { Term: "Data", Definition: "Information processed or stored by a computer such as numbers or text" },
+  { Term: riva"Data", Definition: "Information processed or stored by a computer such as numbers or text" },
   { Term: "Data Analysis", Definition: "The process of examining data to draw conclusions or identify patterns" },
   { Term: "Binary Number", Definition: "A number system using only 0s and 1s used by computers" },
   { Term: "Bit", Definition: "A single binary digit either 0 or 1" },
@@ -712,6 +712,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function escapeLatex(str) {
+    if (!str) return 'None';
     return str
       .replace(/\\/g, '\\textbackslash{}')
       .replace(/#/g, '\\#')
@@ -727,11 +728,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function generateCertificate() {
     const name = prompt('Enter your name for the certificate:');
-    if (!name) return;
+    if (!name || name.trim() === '') {
+      alert('Please enter a valid name to generate the certificate.');
+      return;
+    }
     const safeName = escapeLatex(name.replace(/[^a-zA-Z0-9\s-]/g, ''));
-    const wpm = currentWPM;
+    const wpm = currentWPM || 0;
     const accuracy = calculateAccuracy();
-    const promptTypeText = escapeLatex(promptSelect.options[promptSelect.selectedIndex].text);
+    const promptTypeText = escapeLatex(promptSelect.options[promptSelect.selectedIndex]?.text || 'Unknown');
     const missedTerms = missedWords.length > 0 ? escapeLatex(missedWords.join(', ')) : 'None';
     const certificateContent = `
 \\documentclass[a4paper,12pt]{article}
@@ -739,7 +743,7 @@ document.addEventListener('DOMContentLoaded', () => {
 \\usepackage{geometry}
 \\geometry{margin=1in}
 \\usepackage{titling}
-\\usepackage{noto}
+\\usepackage{times}
 
 \\title{KappType Certificate}
 \\author{}
@@ -765,7 +769,7 @@ document.addEventListener('DOMContentLoaded', () => {
     Accuracy: & ${accuracy}\\% \\\\
     Wave Reached: & ${wave} \\\\
     Total Time: & ${totalTime} seconds \\\\
-    Missed Terms: & \\begin{minipage}[t]{0.6\\textwidth} ${missedTerms} \\end{minipage} \\\\
+    Missed Terms: & \\begin{minipage}[t]{0.5\\textwidth} ${missedTerms} \\end{minipage} \\\\
     Score: & ${score} \\\\
   \\end{tabular}
   \\vspace{2cm}
@@ -783,7 +787,7 @@ document.addEventListener('DOMContentLoaded', () => {
     a.click();
     URL.revokeObjectURL(url);
 
-    alert('Certificate .tex file downloaded. Upload it to your Overleaf project at https://www.overleaf.com/project/6827805d3e926f37c9afb11e to compile it into a PDF. If compilation fails, check for errors in Overleaf (e.g., missing packages or syntax issues) or ensure your GitHub repository (https://github.com/kappter/KappType) is synced with your Overleaf project under the "certificate.tex" file.');
+    alert('Certificate .tex file downloaded. Upload it to your Overleaf project to compile it into a PDF. If compilation fails, check for errors in Overleaf (e.g., missing packages or special characters in your name or missed terms). Alternatively, you can use a local LaTeX editor like TeXShop or TeXworks to compile it.');
   }
 
   function startGame() {
