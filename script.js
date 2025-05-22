@@ -154,6 +154,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const files = [
       'Exploring_Computer_Science_Vocabulary',
       'Computer_Usage_Terms',
+      'Rogets_Abstract_Relations_Terms',
+      'Rogets_Space_Terms',
+      'Rogets_Matter_Terms',
+      'Rogets_Intellectual_Faculties_Terms',
+      'Rogets_Volition_Terms',
+      'Rogets_Affections_Terms',
+      'Rogets_Consolidated_Terms',
       'ARRL_Ham_Radio_Extra_License_Terms_Definitions',
       'ARRL_Ham_Radio_General_License_Terms_Definitions',
       'ARRL_Ham_Radio_Technician_License_Terms_Definitions',
