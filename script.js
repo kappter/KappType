@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const files = [
       'Exploring_Computer_Science_Vocabulary',
       'Computer_Usage_Terms',
-      'Guitar_Techniques.csv',
+      'Guitar_Techniques',
       'Rogets_Abstract_Relations_Terms',
       'Rogets_Space_Terms',
       'Rogets_Matter_Terms',
