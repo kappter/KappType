@@ -562,7 +562,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const computedStyle = window.getComputedStyle(document.body);
       const baseColor = computedStyle.getPropertyValue('--canvas-text')?.trim() || '#ffffff';
-      const shadowColor = computedStyle.getPropertyValue('--text-shadow')?.trim().split(',')[0] || 'rgba(0, 196, 180, 0.5)';
+      const shadowColor = computedStyle.getPropertyValue('--text-shadow')?.trim() || 'rgba(0, 196, 180, 0.5)';
+      console.log('ShadowColor:', computedStyle.getPropertyValue('--text-shadow')?.trim());
       
       for (let i = 0; i < lines.length; i++) {
         ctx.font = `26px ${lines[i].font}`;
@@ -727,7 +728,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (e.key === 'Shift') {
       document.querySelectorAll('.shift').forEach(shift => shift.classList.remove('pressed'));
     } else if (e.key === 'Control') {
-      document.querySelectorAll('.ctrl').forEach(ctrl => ctrl.classList.remove('pressed'));
+      document.querySelectorAll('.ctrl').forEach(ctrl => shift.classList.remove('pressed'));
     } else if (e.key === 'Alt') {
       document.querySelectorAll('.alt').forEach(alt => alt.classList.remove('pressed'));
     } else if (e.key === 'Meta') {
