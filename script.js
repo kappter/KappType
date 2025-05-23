@@ -154,6 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const files = [
       'Exploring_Computer_Science_Vocabulary',
       'AP_Computer_Science_A_Concepts',
+      'AP_Java_Code_Snippets',
       'Computer_Usage_Terms',
       'OS_Navigation_Capabilities',
       'Guitar_Techniques',
