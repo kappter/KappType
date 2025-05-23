@@ -153,6 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const baseUrl = 'https://raw.githubusercontent.com/kappter/vocab-sets/main/';
     const files = [
       'Exploring_Computer_Science_Vocabulary',
+      'AP_Computer_Science_A_Concepts',
       'Computer_Usage_Terms',
       'OS_Navigation_Capabilities',
       'Guitar_Techniques',
