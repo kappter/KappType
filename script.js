@@ -1,4 +1,3 @@
-// Embedded default vocabulary (53 computer science terms)
 const defaultVocabData = [
   { Term: "Binary", Definition: "A numbering system that uses only 0s and 1s" },
   { Term: "Algorithm", Definition: "A set of rules to be followed in calculations or other problem-solving operations" },
@@ -105,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let vocabSetName = '';
   let amalgamateSetName = '';
   let score = 0;
-  let wave = 0; // Start at Wave 0
+  let wave = 0;
   let timeLeft = 30;
   let gameActive = false;
   let mode = 'game';
@@ -122,21 +121,11 @@ document.addEventListener('DOMContentLoaded', () => {
   let vocabIndex = 0;
   let amalgamateIndex = 0;
   let currentWPM = 0;
-  let usedVocabIndices = []; // Track used indices in random mode
-  let usedAmalgamateIndices = []; // Track used indices for amalgamate vocab
+  let usedVocabIndices = [];
+  let usedAmalgamateIndices = [];
 
   const waveSpeeds = [
-    0.435,  // Wave 0: ~4.75 WPM (half of Wave 1)
-    0.87,   // Wave 1: ~9.49 WPM
-    1.0875, // Wave 2: ~11.86 WPM
-    1.3594, // Wave 3: ~14.83 WPM
-    1.6992, // Wave 4: ~18.54 WPM
-    2.1240, // Wave 5: ~23.17 WPM
-    2.6550, // Wave 6: ~28.97 WPM
-    3.3188, // Wave 7: ~36.21 WPM
-    4.1485, // Wave 8: ~45.26 WPM
-    5.1856, // Wave 9: ~56.58 WPM
-    6.4820  // Wave 10: ~70.72 WPM
+    0.435, 0.87, 1.0875, 1.3594, 1.6992, 2.1240, 2.6550, 3.3188, 4.1485, 5.1856, 6.4820
   ];
 
   const savedTheme = localStorage.getItem('theme') || 'natural-light';
@@ -148,6 +137,15 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.className = selectedTheme;
     localStorage.setItem('theme', selectedTheme);
   });
+
+  // Define theme-specific font pools
+  const themeFonts = {
+    'natural-light': ['Roboto', 'Arial', 'Helvetica'],
+    'natural-dark': ['Roboto', 'Arial', 'Verdana'],
+    'architecture': ['Times New Roman', 'Georgia', 'Garamond'],
+    'space': ['Orbitron', 'Futura', 'Verdana'],
+    'medieval': ['Cinzel', 'EB Garamond', 'Times New Roman']
+  };
 
   function populateVocabDropdown() {
     const baseUrl = 'https://raw.githubusercontent.com/kappter/vocab-sets/main/';
@@ -429,7 +427,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const availableIndices = isAmalgamate ? usedAmalgamateIndices : usedVocabIndices;
       const pool = Array.from({ length: sourceArray.length }, (_, i) => i).filter(i => !availableIndices.includes(i));
       if (pool.length === 0) {
-        // Reset indices when all terms are used
         if (isAmalgamate) {
           usedAmalgamateIndices = [];
         } else {
@@ -505,21 +502,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const finalPrompt = amalgamateVocab.length > 0 && vocab2 ? prompt1 + ' ' + prompt2 : prompt1;
     const finalDefinition = amalgamateVocab.length > 0 && vocab2 ? vocab1.Definition + ' ' + vocab2.Definition : vocab1.Definition;
 
-    const padding = 20; // Increased padding for more buffer
-  ctx.font = '18px Arial'; // Set font here to match rendering in updateGame
-  const textWidth = ctx.measureText(finalTypedInput).width;
-  const maxX = Math.max(0, canvas.width - textWidth - padding); // Ensure maxX is non-negative
-  const minX = padding;
-  const xRange = Math.max(0, maxX - minX);
-  const x = mode === 'game' ? (minX + Math.random() * xRange) : 50;
+    const padding = 20;
+    ctx.font = '18px Arial';
+    const textWidth = ctx.measureText(finalTypedInput).width;
+    const maxX = Math.max(0, canvas.width - textWidth - padding);
+    const minX = padding;
+    const xRange = Math.max(0, maxX - minX);
+    const x = mode === 'game' ? (minX + Math.random() * xRange) : 50;
 
-  const y = 0;
-  const speed = mode === 'game' ? waveSpeeds[wave] : 0.5 + level * 0.1;
-  const word = { prompt: finalPrompt, typedInput: finalTypedInput, displayText: getUnderscoreText(finalTypedInput), x, y, speed, matched: '', definition: finalDefinition, isExiting: false };
-  words.push(word);
-  userInput.placeholder = finalPrompt;
-  updateWPMDisplay();
-  updateTimeIndicator();
+    const y = 0;
+    const speed = mode === 'game' ? waveSpeeds[wave] : 0.5 + level * 0.1;
+    const word = { prompt: finalPrompt, typedInput: finalTypedInput, displayText: getUnderscoreText(finalTypedInput), x, y, speed, matched: '', definition: finalDefinition, isExiting: false };
+    words.push(word);
+    userInput.placeholder = finalPrompt;
+    updateWPMDisplay();
+    updateTimeIndicator();
   }
 
   function updateGame() {
@@ -536,30 +533,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (words.length > 0) {
       const definition = words[0].definition;
-      ctx.font = '20px Arial';
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-      ctx.textAlign = 'center';
-      const maxWidth = canvas.width - 30;
+      const currentTheme = document.body.className || 'natural-light';
+      const availableFonts = themeFonts[currentTheme] || ['Arial'];
+      
+      const maxWidth = canvas.width - 20;
       const wordsArray = definition.split(' ');
-      let line = '';
       let lines = [];
+      let line = '';
+      let currentFontIndex = Math.floor(Math.random() * availableFonts.length);
+
       for (let word of wordsArray) {
         const testLine = line + word + ' ';
+        ctx.font = `26px ${availableFonts[currentFontIndex]}`;
         const metrics = ctx.measureText(testLine);
         if (metrics.width > maxWidth && line !== '') {
-          lines.push(line.trim());
+          lines.push({ text: line.trim(), font: availableFonts[currentFontIndex] });
           line = word + ' ';
+          currentFontIndex = (currentFontIndex + 1) % availableFonts.length;
         } else {
           line = testLine;
         }
       }
-      if (line) lines.push(line.trim());
-      const lineHeight = 25;
+      if (line) lines.push({ text: line.trim(), font: availableFonts[currentFontIndex] });
+
+      const lineHeight = 32;
       const totalHeight = lines.length * lineHeight;
-      const startY = (canvas.height - totalHeight) / 2;
+      const startY = (canvas.height - totalHeight) / 2 - 20;
+      ctx.textAlign = 'center';
+
+      const computedStyle = window.getComputedStyle(document.body);
+      const baseColor = computedStyle.getPropertyValue('--canvas-text')?.trim() || '#ffffff';
+      
       for (let i = 0; i < lines.length; i++) {
-        ctx.fillText(lines[i], canvas.width / 2, startY + i * lineHeight);
+        ctx.font = `26px ${lines[i].font}`;
+        ctx.fillStyle = `rgba(${hexToRgb(baseColor)}, ${0.2 + Math.random() * 0.1})`;
+        ctx.shadowColor = computedStyle.getPropertyValue('--text-shadow')?.split(')')[0] + ')') || 'rgba(0, 196, 180, 0.5)';
+        ctx.shadowBlur = currentTheme === 'space' ? 10 : 5;
+        ctx.fillText(lines[i].text, canvas.width / 2, startY + i * lineHeight);
       }
+      ctx.shadowBlur = 0;
     }
 
     const rectHeight = 20;
@@ -732,6 +744,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function hexToRgb(hex) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `${r}, ${g}, ${b}`;
+  }
+
   function escapeLatex(str) {
     if (!str) return 'None';
     return str
@@ -862,6 +881,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   resetButton.addEventListener('click', () => {
-    location.reload(); // Full page reset
+    location.reload();
   });
 });
