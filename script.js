@@ -138,7 +138,6 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem('theme', selectedTheme);
   });
 
-  // Define theme-specific font pools
   const themeFonts = {
     'natural-light': ['Roboto', 'Arial', 'Helvetica'],
     'natural-dark': ['Roboto', 'Arial', 'Verdana'],
@@ -563,11 +562,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const computedStyle = window.getComputedStyle(document.body);
       const baseColor = computedStyle.getPropertyValue('--canvas-text')?.trim() || '#ffffff';
+      const shadowColor = computedStyle.getPropertyValue('--text-shadow')?.trim().split(',')[0] || 'rgba(0, 196, 180, 0.5)';
       
       for (let i = 0; i < lines.length; i++) {
         ctx.font = `26px ${lines[i].font}`;
         ctx.fillStyle = `rgba(${hexToRgb(baseColor)}, ${0.2 + Math.random() * 0.1})`;
-        ctx.shadowColor = computedStyle.getPropertyValue('--text-shadow')?.split(')')[0] + ')') || 'rgba(0, 196, 180, 0.5)';
+        ctx.shadowColor = shadowColor;
         ctx.shadowBlur = currentTheme === 'space' ? 10 : 5;
         ctx.fillText(lines[i].text, canvas.width / 2, startY + i * lineHeight);
       }
