@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
   themeSelect.addEventListener('change', () => {
     const selectedTheme = themeSelect.value;
     document.body.className = selectedTheme;
-    localStorage.setItem('theme', selectedTheme);
+    localStorage.setPropertyValue('theme', selectedTheme);
   });
 
   const themeFonts = {
@@ -534,45 +534,51 @@ document.addEventListener('DOMContentLoaded', () => {
       const definition = words[0].definition;
       const currentTheme = document.body.className || 'natural-light';
       const availableFonts = themeFonts[currentTheme] || ['Arial'];
-      
-      const maxWidth = canvas.width - 20;
+      const selectedFont = availableFonts[Math.floor(Math.random() * availableFonts.length)]; // Single font per definition
+
+      const maxWidth = canvas.width - 40; // More padding
       const wordsArray = definition.split(' ');
       let lines = [];
       let line = '';
-      let currentFontIndex = Math.floor(Math.random() * availableFonts.length);
 
       for (let word of wordsArray) {
         const testLine = line + word + ' ';
-        ctx.font = `26px ${availableFonts[currentFontIndex]}`;
+        ctx.font = `32px ${selectedFont}`; // Larger font
         const metrics = ctx.measureText(testLine);
         if (metrics.width > maxWidth && line !== '') {
-          lines.push({ text: line.trim(), font: availableFonts[currentFontIndex] });
+          lines.push({ text: line.trim(), font: selectedFont });
           line = word + ' ';
-          currentFontIndex = (currentFontIndex + 1) % availableFonts.length;
         } else {
           line = testLine;
         }
       }
-      if (line) lines.push({ text: line.trim(), font: availableFonts[currentFontIndex] });
+      if (line) lines.push({ text: line.trim(), font: selectedFont });
 
-      const lineHeight = 32;
+      // Limit to 4 lines, truncate if necessary
+      if (lines.length > 4) {
+        lines = lines.slice(0, 3);
+        const lastLine = lines[2].text;
+        ctx.font = `32px ${selectedFont}`;
+        let truncated = lastLine;
+        while (ctx.measureText(truncated + '...').width > maxWidth && truncated.length > 0) {
+          truncated = truncated.slice(0, -1);
+        }
+        lines[2] = { text: truncated + '...', font: selectedFont };
+      }
+
+      const lineHeight = 40; // Increased for larger text
       const totalHeight = lines.length * lineHeight;
       const startY = (canvas.height - totalHeight) / 2 - 20;
       ctx.textAlign = 'center';
 
       const computedStyle = window.getComputedStyle(document.body);
       const baseColor = computedStyle.getPropertyValue('--canvas-text')?.trim() || '#ffffff';
-      const shadowColor = computedStyle.getPropertyValue('--text-shadow')?.trim() || 'rgba(0, 196, 180, 0.5)';
-      console.log('ShadowColor:', computedStyle.getPropertyValue('--text-shadow')?.trim());
-      
+
       for (let i = 0; i < lines.length; i++) {
-        ctx.font = `26px ${lines[i].font}`;
-        ctx.fillStyle = `rgba(${hexToRgb(baseColor)}, ${0.2 + Math.random() * 0.1})`;
-        ctx.shadowColor = shadowColor;
-        ctx.shadowBlur = currentTheme === 'space' ? 10 : 5;
+        ctx.font = `32px ${lines[i].font}`;
+        ctx.fillStyle = `rgba(${hexToRgb(baseColor)}, 0.3)`; // Fixed subtle opacity
         ctx.fillText(lines[i].text, canvas.width / 2, startY + i * lineHeight);
       }
-      ctx.shadowBlur = 0;
     }
 
     const rectHeight = 20;
@@ -728,7 +734,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (e.key === 'Shift') {
       document.querySelectorAll('.shift').forEach(shift => shift.classList.remove('pressed'));
     } else if (e.key === 'Control') {
-      document.querySelectorAll('.ctrl').forEach(ctrl => shift.classList.remove('pressed'));
+      document.querySelectorAll('.ctrl').forEach(ctrl => ctrl.classList.remove('pressed'));
     } else if (e.key === 'Alt') {
       document.querySelectorAll('.alt').forEach(alt => alt.classList.remove('pressed'));
     } else if (e.key === 'Meta') {
