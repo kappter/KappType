@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
   themeSelect.addEventListener('change', () => {
     const selectedTheme = themeSelect.value;
     document.body.className = selectedTheme;
-    localStorage.setPropertyValue('theme', selectedTheme);
+    localStorage.setItem('theme', selectedTheme);
   });
 
   const themeFonts = {
@@ -323,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
             error: function(error) {
               clearTimeout(timeoutId);
               console.error(`Papa Parse error for ${csvUrl}:`, error);
-              alert(`Failed to parse CSV at ${csvUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary for ${isAmalgamate ? 'amalgamation' : 'primary'}.`);
+              alert(`Failed to parse CSV at ${csvUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary for ${isAmalgamate ? 'amalgamate' : 'primary'}.`);
               if (!isAmalgamate) {
                 vocabData = [...defaultVocabData];
                 vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
@@ -339,7 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(error => {
           clearTimeout(timeoutId);
           console.error(`Fetch error for ${csvUrl}:`, error);
-          alert(`Failed to load CSV at ${csvUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary for ${isAmalgamate ? 'amalgamation' : 'primary'}.`);
+          alert(`Failed to load CSV at ${csvUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary for ${isAmalgamate ? 'amalgamate' : 'primary'}.`);
           if (!isAmalgamate) {
             vocabData = [...defaultVocabData];
             vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
@@ -383,7 +383,7 @@ document.addEventListener('DOMContentLoaded', () => {
           targetArray.length = 0;
           const filteredData = results.data.filter(row => row.Term && row.Definition);
           if (filteredData.length === 0) {
-            alert(`No valid terms found in the uploaded CSV. Ensure it has "Term" and "Definition" columns. Using embedded vocabulary for ${isAmalgamate ? 'amalgamation' : 'primary'}.`);
+            alert(`No valid terms found in the uploaded CSV. Ensure it has "Term" and "Definition" columns. Using embedded vocabulary for ${isAmalgamate ? 'amalgamate' : 'primary'}.`);
             if (!isAmalgamate) {
               vocabData = [...defaultVocabData];
               vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
@@ -404,7 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         error: function(error) {
           console.error('Papa Parse error for uploaded file:', error);
-          alert(`Failed to parse the uploaded CSV. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary for ${isAmalgamate ? 'amalgamation' : 'primary'}.`);
+          alert(`Failed to parse the uploaded CSV. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary for ${isAmalgamate ? 'amalgamate' : 'primary'}.`);
           if (!isAmalgamate) {
             vocabData = [...defaultVocabData];
             vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
@@ -511,7 +511,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const y = 0;
     const speed = mode === 'game' ? waveSpeeds[wave] : 0.5 + level * 0.1;
-    const word = { prompt: finalPrompt, typedInput: finalTypedInput, displayText: getUnderscoreText(finalTypedInput), x, y, speed, matched: '', definition: finalDefinition, isExiting: false };
+    const word = { prompt: finalPrompt, typedInput: finalTypedInput, displayText: getUnderscoreText(finalTypedInput), x, y, speed, matched: '', definition: finalDefinition, isExiting: false, opacity: 0, fadeState: 'in' };
     words.push(word);
     userInput.placeholder = finalPrompt;
     updateWPMDisplay();
@@ -522,32 +522,39 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!gameActive) return;
 
     const now = performance.now();
-    if (now - lastFrameTime < 16.67) {
-      requestAnimationFrame(updateGame);
-      return;
-    }
+    const deltaTime = (now - lastFrameTime) / 1000; // Time in seconds
     lastFrameTime = now;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (words.length > 0) {
-      const definition = words[0].definition;
+      const word = words[0];
+      const definition = word.definition;
       const currentTheme = document.body.className || 'natural-light';
       const availableFonts = themeFonts[currentTheme] || ['Arial'];
-      const selectedFont = availableFonts[Math.floor(Math.random() * availableFonts.length)]; // Single font per definition
+      const selectedFont = availableFonts[Math.floor(Math.random() * availableFonts.length)];
 
-      const maxWidth = canvas.width - 40; // More padding
+      // Update opacity based on fadeState
+      const fadeDuration = 2; // 2 seconds
+      const fadeSpeed = 0.3 / fadeDuration; // Opacity change per second (0 to 0.3)
+      if (word.fadeState === 'in') {
+        word.opacity = Math.min(word.opacity + fadeSpeed * deltaTime, 0.3);
+      } else if (word.fadeState === 'out') {
+        word.opacity = Math.max(word.opacity - fadeSpeed * deltaTime, 0);
+      }
+
+      const maxWidth = canvas.width - 40;
       const wordsArray = definition.split(' ');
       let lines = [];
       let line = '';
 
-      for (let word of wordsArray) {
-        const testLine = line + word + ' ';
-        ctx.font = `32px ${selectedFont}`; // Larger font
+      for (let w of wordsArray) {
+        const testLine = line + w + ' ';
+        ctx.font = `32px ${selectedFont}`;
         const metrics = ctx.measureText(testLine);
         if (metrics.width > maxWidth && line !== '') {
           lines.push({ text: line.trim(), font: selectedFont });
-          line = word + ' ';
+          line = w + ' ';
         } else {
           line = testLine;
         }
@@ -566,7 +573,7 @@ document.addEventListener('DOMContentLoaded', () => {
         lines[2] = { text: truncated + '...', font: selectedFont };
       }
 
-      const lineHeight = 40; // Increased for larger text
+      const lineHeight = 40;
       const totalHeight = lines.length * lineHeight;
       const startY = (canvas.height - totalHeight) / 2 - 20;
       ctx.textAlign = 'center';
@@ -576,7 +583,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       for (let i = 0; i < lines.length; i++) {
         ctx.font = `32px ${lines[i].font}`;
-        ctx.fillStyle = `rgba(${hexToRgb(baseColor)}, 0.3)`; // Fixed subtle opacity
+        ctx.fillStyle = `rgba(${hexToRgb(baseColor)}, ${word.opacity})`;
         ctx.fillText(lines[i].text, canvas.width / 2, startY + i * lineHeight);
       }
     }
@@ -618,17 +625,22 @@ document.addEventListener('DOMContentLoaded', () => {
         missedWords.push(word.typedInput);
         totalChars += word.typedInput.length;
         word.isExiting = true;
-        words = [];
-        if (mode === 'game') {
-          gameActive = false;
-          alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
-        } else {
-          spawnWord();
-        }
+        word.fadeState = 'out';
       }
     });
 
-    if (words.length === 0) spawnWord();
+    if (words.length > 0 && words[0].isExiting && words[0].opacity <= 0) {
+      words = [];
+      if (mode === 'game') {
+        gameActive = false;
+        alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
+      } else {
+        spawnWord();
+      }
+    } else if (words.length === 0) {
+      spawnWord();
+    }
+
     if (mode === 'game' && timeLeft <= 0) {
       wave++;
       waveDisplay.textContent = `Wave: ${wave}`;
@@ -695,7 +707,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.target.placeholder = 'Prompt will appear here...';
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         word.isExiting = true;
-        spawnWord();
+        word.fadeState = 'out';
         return false;
       }
       return true;
