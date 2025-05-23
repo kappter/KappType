@@ -156,6 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
       'Computer_Usage_Terms',
       'OS_Navigation_Capabilities',
       'Guitar_Techniques',
+      'Literary_Techniques',
       'Rogets_Abstract_Relations_Terms',
       'Rogets_Space_Terms',
       'Rogets_Matter_Terms',
