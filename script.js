@@ -505,20 +505,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const finalPrompt = amalgamateVocab.length > 0 && vocab2 ? prompt1 + ' ' + prompt2 : prompt1;
     const finalDefinition = amalgamateVocab.length > 0 && vocab2 ? vocab1.Definition + ' ' + vocab2.Definition : vocab1.Definition;
 
-    const padding = 10;
-    const textWidth = ctx.measureText(finalTypedInput).width;
-    const maxX = canvas.width - textWidth - padding;
-    const minX = padding;
-    const xRange = Math.max(0, maxX - minX);
-    const x = mode === 'game' ? (minX + Math.random() * xRange) : 50;
+    const padding = 20; // Increased padding for more buffer
+  ctx.font = '18px Arial'; // Set font here to match rendering in updateGame
+  const textWidth = ctx.measureText(finalTypedInput).width;
+  const maxX = Math.max(0, canvas.width - textWidth - padding); // Ensure maxX is non-negative
+  const minX = padding;
+  const xRange = Math.max(0, maxX - minX);
+  const x = mode === 'game' ? (minX + Math.random() * xRange) : 50;
 
-    const y = 0;
-    const speed = mode === 'game' ? waveSpeeds[wave] : 0.5 + level * 0.1;
-    const word = { prompt: finalPrompt, typedInput: finalTypedInput, displayText: getUnderscoreText(finalTypedInput), x, y, speed, matched: '', definition: finalDefinition, isExiting: false };
-    words.push(word);
-    userInput.placeholder = finalPrompt;
-    updateWPMDisplay();
-    updateTimeIndicator();
+  const y = 0;
+  const speed = mode === 'game' ? waveSpeeds[wave] : 0.5 + level * 0.1;
+  const word = { prompt: finalPrompt, typedInput: finalTypedInput, displayText: getUnderscoreText(finalTypedInput), x, y, speed, matched: '', definition: finalDefinition, isExiting: false };
+  words.push(word);
+  userInput.placeholder = finalPrompt;
+  updateWPMDisplay();
+  updateTimeIndicator();
   }
 
   function updateGame() {
