@@ -138,14 +138,6 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem('theme', selectedTheme);
   });
 
-  const themeFonts = {
-    'natural-light': ['Roboto', 'Arial', 'Helvetica'],
-    'natural-dark': ['Roboto', 'Arial', 'Verdana'],
-    'architecture': ['Times New Roman', 'Georgia', 'Garamond'],
-    'space': ['Orbitron', 'Futura', 'Verdana'],
-    'medieval': ['Cinzel', 'EB Garamond', 'Times New Roman']
-  };
-
   function populateVocabDropdown() {
     const baseUrl = 'https://raw.githubusercontent.com/kappter/vocab-sets/main/';
     const files = [
@@ -517,7 +509,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!gameActive) return;
 
     const now = performance.now();
-    const deltaTime = (now - lastFrameTime) / 1000; // Time in seconds
+    const deltaTime = (now - lastFrameTime) / 1000;
     lastFrameTime = now;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -525,12 +517,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (words.length > 0) {
       const word = words[0];
       const definition = word.definition;
-      const currentTheme = document.body.className || 'natural-light';
-      const availableFonts = themeFonts[currentTheme] || ['Arial'];
-      const selectedFont = availableFonts[Math.floor(Math.random() * availableFonts.length)];
 
       // Update background text opacity
-      const fadeDuration = 4; // Slower fade: 4 seconds
+      const fadeDuration = 4;
       const fadeSpeed = 0.3 / fadeDuration;
       if (word.fadeState === 'in') {
         word.opacity = Math.min(word.opacity + fadeSpeed * deltaTime, 0.3);
@@ -544,29 +533,28 @@ document.addEventListener('DOMContentLoaded', () => {
       let lines = [];
       let line = '';
 
+      ctx.font = '32px Arial';
       for (let w of wordsArray) {
         const testLine = line + w + ' ';
-        ctx.font = `32px ${selectedFont}`;
         const metrics = ctx.measureText(testLine);
         if (metrics.width > maxWidth && line !== '') {
-          lines.push({ text: line.trim(), font: selectedFont });
+          lines.push(line.trim());
           line = w + ' ';
         } else {
           line = testLine;
         }
       }
-      if (line) lines.push({ text: line.trim(), font: selectedFont });
+      if (line) lines.push(line.trim());
 
       // Limit to 4 lines, truncate if necessary
       if (lines.length > 4) {
         lines = lines.slice(0, 3);
-        const lastLine = lines[2].text;
-        ctx.font = `32px ${selectedFont}`;
+        const lastLine = lines[2];
         let truncated = lastLine;
         while (ctx.measureText(truncated + '...').width > maxWidth && truncated.length > 0) {
           truncated = truncated.slice(0, -1);
         }
-        lines[2] = { text: truncated + '...', font: selectedFont };
+        lines[2] = truncated + '...';
       }
 
       const lineHeight = 40;
@@ -578,9 +566,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const baseColor = computedStyle.getPropertyValue('--canvas-text')?.trim() || '#ffffff';
 
       for (let i = 0; i < lines.length; i++) {
-        ctx.font = `32px ${lines[i].font}`;
+        ctx.font = '32px Arial';
         ctx.fillStyle = `rgba(${hexToRgb(baseColor)}, ${word.opacity})`;
-        ctx.fillText(lines[i].text, canvas.width / 2, startY + i * lineHeight);
+        ctx.fillText(lines[i], canvas.width / 2, startY + i * lineHeight);
       }
     }
 
