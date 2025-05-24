@@ -121,6 +121,18 @@ body.medieval .stats span {
   animation: fadeIn 1s ease-in-out;
 }
 
+.time-indicator {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: grey;
+  margin: 10px auto;
+}
+
+.time-indicator.active {
+  background-color: green;
+}
+
 .start-card {
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
