@@ -497,66 +497,129 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 function updateGame() {
-    if (!gameActive) return;
+  if (!gameActive) return;
 
-    const now = performance.now();
-    const deltaTime = (now - lastFrameTime) / 1000;
-    lastFrameTime = now;
+  const now = performance.now();
+  const deltaTime = (now - lastFrameTime) / 1000;
+  lastFrameTime = now;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    if (words.length > 0) {
-      const word = words[0];
-      // ... (definition rendering code remains unchanged)
+  // Define textColor at the start of the function
+  const computedStyle = window.getComputedStyle(document.body);
+  const textColor = computedStyle.getPropertyValue('--canvas-text')?.trim() || '#ffffff';
 
-      words = words.filter(word => {
-        word.y += word.speed;
-        const typed = userInput.value;
-        const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
-        const input = caseSensitive ? typed : typed.toLowerCase();
-        word.matched = target.startsWith(input) ? typed : '';
+  if (words.length > 0) {
+    const word = words[0];
+    const definition = word.definition;
 
-        ctx.clearRect(word.x - 5, word.y - 20, ctx.measureText(word.displayText).width + 10, 25);
-
-        if (word.matched) {
-          ctx.fillStyle = 'red';
-          ctx.fillText(word.matched, word.x, word.y);
-        }
-        const remainingText = word.displayText.slice(word.matched.length);
-        if (remainingText) {
-          ctx.fillStyle = textColor;
-          ctx.fillText(remainingText, word.x + ctx.measureText(word.matched).width, word.y);
-        }
-
-        if (word.y >= canvas.height) {
-          console.log(`Word missed: ${word.typedInput}`);
-          missedWords.push(word.typedInput);
-          coveredTerms.set(word.typedInput, 'Missed');
-          totalChars += word.typedInput.length;
-          word.isExiting = true;
-          word.fadeState = 'out';
-          // Only end if no words are left to type
-          if (words.length === 1 && mode === 'game') {
-            gameActive = false;
-            alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
-            return false;
-          }
-        }
-        return !word.isExiting;
-      });
-
-      if (words.length > 0 && words[0].isExiting && words[0].opacity <= 0) {
-        words = [];
-        if (mode !== 'game') {
-          spawnWord();
-        }
-      } else if (words.length === 0) {
-        spawnWord();
-      }
+    const fadeDuration = 4;
+    const fadeSpeed = 0.3 / fadeDuration;
+    if (word.fadeState === 'in') {
+      word.opacity = Math.min(word.opacity + fadeSpeed * deltaTime, 0.3);
+    } else if (word.fadeState === 'out') {
+      word.opacity = Math.max(word.opacity - fadeSpeed * deltaTime, 0);
     }
 
-    requestAnimationFrame(updateGame);
+    const maxWidth = canvas.width - 40;
+    const wordsArray = definition.split(' ');
+    let lines = [];
+    let line = '';
+
+    ctx.font = '32px Arial';
+    for (let w of wordsArray) {
+      const testLine = line + w + ' ';
+      const metrics = ctx.measureText(testLine);
+      if (metrics.width > maxWidth && line !== '') {
+        lines.push(line.trim());
+        line = w + ' ';
+      } else {
+        line = testLine;
+      }
+    }
+    if (line) lines.push(line.trim());
+
+    if (lines.length > 4) {
+      lines = lines.slice(0, 3);
+      const lastLine = lines[2];
+      let truncated = lastLine;
+      while (ctx.measureText(truncated + '...').width > maxWidth && truncated.length > 0) {
+        truncated = truncated.slice(0, -1);
+      }
+      lines[2] = truncated + '...';
+    }
+
+    const lineHeight = 40;
+    const totalHeight = lines.length * lineHeight;
+    const startY = (canvas.height - totalHeight) / 2 - 20;
+    ctx.textAlign = 'center';
+
+    for (let i = 0; i < lines.length; i++) {
+      ctx.font = '32px Arial';
+      ctx.fillStyle = `rgba(${hexToRgb(textColor)}, ${word.opacity})`;
+      ctx.fillText(lines[i], canvas.width / 2, startY + i * lineHeight);
+    }
   }
+
+  const rectHeight = 20;
+  const rectY = canvas.height - rectHeight;
+  ctx.beginPath();
+  ctx.roundRect(0, rectY, canvas.width, rectHeight, 8);
+  ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+  ctx.fill();
+  ctx.strokeStyle = '#333333';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.font = '18px Arial';
+  ctx.textAlign = 'left';
+
+  words = words.filter(word => {
+    word.y += word.speed;
+    const typed = userInput.value;
+    const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
+    const input = caseSensitive ? typed : typed.toLowerCase();
+    word.matched = target.startsWith(input) ? typed : '';
+
+    ctx.clearRect(word.x - 5, word.y - 20, ctx.measureText(word.displayText).width + 10, 25);
+
+    if (word.matched) {
+      ctx.fillStyle = 'red';
+      ctx.fillText(word.matched, word.x, word.y);
+    }
+    const remainingText = word.displayText.slice(word.matched.length);
+    if (remainingText) {
+      ctx.fillStyle = textColor; // Now accessible
+      ctx.fillText(remainingText, word.x + ctx.measureText(word.matched).width, word.y);
+    }
+
+    if (word.y >= canvas.height) {
+      console.log(`Word missed: ${word.typedInput}`);
+      missedWords.push(word.typedInput);
+      coveredTerms.set(word.typedInput, 'Missed');
+      totalChars += word.typedInput.length;
+      word.isExiting = true;
+      word.fadeState = 'out';
+      if (words.length === 1 && mode === 'game') {
+        gameActive = false;
+        alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
+        return false;
+      }
+    }
+    return !word.isExiting;
+  });
+
+  if (words.length > 0 && words[0].isExiting && words[0].opacity <= 0) {
+    words = [];
+    if (mode !== 'game') {
+      spawnWord();
+    }
+  } else if (words.length === 0) {
+    spawnWord();
+  }
+
+  requestAnimationFrame(updateGame);
+}
 
   function calculateWPM() {
     if (sessionStartTime === null || correctChars === 0) return 0;
