@@ -121,12 +121,18 @@ body.medieval .stats span {
   animation: fadeIn 1s ease-in-out;
 }
 
+.time-indicator-wrapper {
+  display: flex;
+  align-items: center;
+  margin-left: 10px; /* Space from stats */
+}
+
 .time-indicator {
-  width: 20px;
-  height: 20px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background-color: grey;
-  margin: 10px auto;
+  margin: 0; /* Remove auto margin since it's in a flex container */
 }
 
 .time-indicator.active {
@@ -260,6 +266,9 @@ body.medieval .stats span {
 }
 
 .stats-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   width: 100%;
   max-width: 800px;
   margin: 0.25rem 0;
