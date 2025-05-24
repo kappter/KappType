@@ -46,75 +46,101 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="icon" href="data:,">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 </head>
 <body>
   <div id="startScreen">
-    <h1>KappType</h1>
-    <label for="levelInput">Level (1-10):</label>
-    <input type="number" id="levelInput" min="1" max="10" value="1">
-    <label for="modeSelect">Mode:</label>
-    <select id="modeSelect">
-      <option value="game">Game</option>
-      <option value="practice">Practice</option>
-    </select>
-    <label for="promptSelect">Prompt Type:</label>
-    <select id="promptSelect">
-      <option value="definition">Definition</option>
-      <option value="term">Term</option>
-      <option value="random">Random</option>
-    </select>
-    <label for="caseSelect">Case Sensitivity:</label>
-    <select id="caseSelect">
-      <option value="insensitive">Insensitive</option>
-      <option value="sensitive">Sensitive</option>
-    </select>
-    <label for="vocabSelect">Vocabulary Set:</label>
-    <select id="vocabSelect"></select>
-    <label for="customVocabInput">Upload Custom Vocabulary (CSV):</label>
-    <input type="file" id="customVocabInput" accept=".csv">
-    <label for="amalgamateSelect">Amalgamate Vocabulary Set:</label>
-    <select id="amalgamateSelect"></select>
-    <label for="customVocabInput2">Upload Amalgamate Vocabulary (CSV):</label>
-    <input type="file" id="customVocabInput2" accept=".csv">
-    <label><input type="checkbox" id="randomizeTerms" checked> Randomize Terms</label>
-    <label for="themeSelect">Theme:</label>
-    <select id="themeSelect">
-      <option value="natural-light">Natural Light</option>
-      <option value="dark-mode">Dark Mode</option>
-      <option value="ocean-breeze">Ocean Breeze</option>
-      <option value="sunset-glow">Sunset Glow</option>
-      <option value="forest-calm">Forest Calm</option>
-    </select>
-    <button id="startButton">Start</button>
-    <div id="loadingIndicator" class="hidden">Loading...</div>
+    <div class="start-card">
+      <h1>KappType</h1>
+      <label for="themeSelect">Theme:</label>
+      <select id="themeSelect">
+        <option value="natural-light">Natural Light</option>
+        <option value="natural-dark">Natural Dark</option>
+        <option value="architecture">Architecture</option>
+        <option value="space">Space</option>
+        <option value="medieval">Medieval</option>
+      </select>
+      
+      <label for="levelInput">Level (1-10):</label>
+      <input type="number" id="levelInput" value="1" min="1" max="10">
+      
+      <label for="modeSelect">Mode:</label>
+      <select id="modeSelect">
+        <option value="game">Game</option>
+        <option value="practice">Practice</option>
+      </select>
+
+      <label for="promptSelect">Prompt Type:</label>
+      <select id="promptSelect">
+        <option value="definition">Definition</option>
+        <option value="term">Term</option>
+        <option value="random">Random</option>
+      </select>
+
+      <label for="caseSelect">Case Sensitivity:</label>
+      <select id="caseSelect">
+        <option value="insensitive">Insensitive</option>
+        <option value="sensitive">Sensitive</option>
+      </select>
+
+      <label for="vocabSelect">Vocabulary Set:</label>
+      <select id="vocabSelect"></select>
+
+      <label for="amalgamateSelect">Amalgamate Set:</label>
+      <select id="amalgamateSelect"></select>
+
+      <label for="customVocabInput">Custom Vocabulary (CSV):</label>
+      <input type="file" id="customVocabInput" accept=".csv">
+
+      <label for="customVocabInput2">Amalgamation Vocabulary (CSV):</label>
+      <input type="file" id="customVocabInput2" accept=".csv">
+
+      <label for="randomizeTerms" class="checkbox-label">
+        <input type="checkbox" id="randomizeTerms" checked>
+        Randomize Terms
+      </label>
+
+      <button id="startButton">Start Game</button>
+      <div id="loadingIndicator" class="hidden">Loading...</div>
+    </div>
   </div>
+
   <div id="gameContainer" class="hidden">
     <h2 id="vocabSetTitle"></h2>
     <canvas id="gameCanvas"></canvas>
-    <input type="text" id="userInput" placeholder="Prompt will appear here..." autocomplete="off">
-    <div id="stats">
-      <span id="score">Score: 0</span>
-      <span id="wave">Wave: 0</span>
-      <span id="timer">Time: 30s</span>
-      <span id="wpm">WPM: 0</span>
-      <span id="termsLeft">Terms Left: 10</span>
-      <span id="timeIndicator">Time Indicator: Inactive</span>
+    <div class="stats-container">
+      <div class="stats">
+        <span id="score">Score: 0</span>
+        <span id="wave">Wave: 1</span>
+        <span id="timer">Time: 30s</span>
+        <span id="wpm">WPM: 0</span>
+        <span id="timeIndicator"></span>
+      </div>
     </div>
-    <button id="certificateButton">Generate Certificate</button>
-    <button id="resetButton">Reset</button>
-    <div id="keyboard">
-      <!-- Keyboard layout remains unchanged -->
+    <input type="text" id="userInput" placeholder="Prompt will appear here...">
+    <div class="button-group">
+      <button id="certificateButton">Generate Certificate</button>
+      <button id="resetButton">Reset Game</button>
+    </div>
+    <div class="keyboard">
+      <div class="row">
+        <span class="key" data-key="~">~</span><span class="key" data-key="1">1</span><span class="key" data-key="2">2</span><span class="key" data-key="3">3</span><span class="key" data-key="4">4</span><span class="key" data-key="5">5</span><span class="key" data-key="6">6</span><span class="key" data-key="7">7</span><span class="key" data-key="8">8</span><span class="key" data-key="9">9</span><span class="key" data-key="0">0</span><span class="key" data-key="-">-</span><span class="key" data-key="=">=</span><span class="key backspace" data-key="Backspace">Backspace</span>
+      </div>
+      <div class="row">
+        <span class="key tab" data-key="Tab">Tab</span><span class="key" data-key="q">q</span><span class="key" data-key="w">w</span><span class="key" data-key="e">e</span><span class="key" data-key="r">r</span><span class="key" data-key="t">t</span><span class="key" data-key="y">y</span><span class="key" data-key="u">u</span><span class="key" data-key="i">i</span><span class="key" data-key="o">o</span><span class="key" data-key="p">p</span><span class="key" data-key="[">[</span><span class="key" data-key="]">]</span><span class="key" data-key="\\">\</span>
+      </div>
+      <div class="row">
+        <span class="key caps-lock" data-key="CapsLock">Caps Lock</span><span class="key" data-key="a">a</span><span class="key" data-key="s">s</span><span class="key" data-key="d">d</span><span class="key" data-key="f">f</span><span class="key" data-key="g">g</span><span class="key" data-key="h">h</span><span class="key" data-key="j">j</span><span class="key" data-key="k">k</span><span class="key" data-key="l">l</span><span class="key" data-key=";">;</span><span class="key" data-key="'">'</span><span class="key enter" data-key="Enter">Enter</span>
+      </div>
+      <div class="row">
+        <span class="key shift" data-key="Shift">Shift</span><span class="key" data-key="z">z</span><span class="key" data-key="x">x</span><span class="key" data-key="c">c</span><span class="key" data-key="v">v</span><span class="key" data-key="b">b</span><span class="key" data-key="n">n</span><span class="key" data-key="m">m</span><span class="key" data-key=",">,</span><span class="key" data-key=".">.</span><span class="key" data-key="/">/</span><span class="key shift" data-key="Shift">Shift</span>
+      </div>
+      <div class="row">
+        <span class="key ctrl" data-key="Control">Ctrl</span><span class="key win" data-key="Meta">Win</span><span class="key alt" data-key="Alt">Alt</span><span class="key space" data-key=" ">Space</span><span class="key alt" data-key="Alt">Alt</span><span class="key win" data-key="Meta">Win</span><span class="key ctrl" data-key="Control">Ctrl</span>
+      </div>
     </div>
   </div>
-  <footer class="footer-themed text-white text-center py-4 fixed bottom-0 w-full">
-    <p class="text-footer">© 2025 Ken Kapptie | For educational use only | All rights reserved.</p>
-    <div class="mt-2">
-      <a href="https://kappter.github.io/portfolio/" class="footer-link mx-2">More tools like this</a> |
-      <a href="https://kappter.github.io/portfolio/proposal.html" class="footer-link mx-2">Want your own?</a> |
-      <a href="https://kappter.github.io/KappType/" class="footer-link mx-2">Learn by Typing</a>
-    </div>
-  </footer>
+
+  <script src="papaparse.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
