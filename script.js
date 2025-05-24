@@ -71,6 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentWPM = 0;
   let usedVocabIndices = [];
   let usedAmalgamateIndices = [];
+  let coveredTerms = new Map(); // Map to track terms and their status (correct or missed)
 
   const waveSpeeds = [
     0.435, 0.87, 1.0875, 1.3594, 1.6992, 2.1240, 2.6550, 3.3188, 4.1485, 5.1856, 6.4820
@@ -596,6 +597,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (word.y >= canvas.height) {
         missedWords.push(word.typedInput);
+        coveredTerms.set(word.typedInput, 'Missed');
         totalChars += word.typedInput.length;
         word.isExiting = true;
         word.fadeState = 'out';
@@ -634,6 +636,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function calculateAccuracy() {
     return totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 100;
+  }
+
+  function calculateTermAccuracy() {
+    const totalAttempts = correctTermsCount + missedWords.length;
+    return totalAttempts > 0 ? Math.round((correctTermsCount / totalAttempts) * 100) : 100;
   }
 
   function updateTimer() {
@@ -677,6 +684,7 @@ document.addEventListener('DOMContentLoaded', () => {
         totalChars += word.typedInput.length;
         score += word.typedInput.length;
         correctTermsCount++;
+        coveredTerms.set(word.typedInput, 'Correct');
         console.log(`Term completed. CorrectTermsCount: ${correctTermsCount}, Wave: ${wave}`);
         scoreDisplay.textContent = `Score: ${score}`;
         e.target.value = '';
@@ -768,83 +776,154 @@ document.addEventListener('DOMContentLoaded', () => {
     return `${r}, ${g}, ${b}`;
   }
 
-  function escapeLatex(str) {
+  function escapeHtml(str) {
     if (!str) return 'None';
     return str
-      .replace(/\\/g, '\\textbackslash{}')
-      .replace(/#/g, '\\#')
-      .replace(/%/g, '\\%')
-      .replace(/&/g, '\\&')
-      .replace(/_/g, '\\_')
-      .replace(/\$/g, '\\$')
-      .replace(/{/g, '\\{')
-      .replace(/}/g, '\\}')
-      .replace(/~/g, '\\textasciitilde{}')
-      .replace(/\^/g, '\\textasciicircum{}');
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   function generateCertificate() {
-    const name = prompt('Enter your name for the certificate:');
+    const name = prompt('Enter your name for the report:');
     if (!name || name.trim() === '') {
-      alert('Please enter a valid name to generate the certificate.');
+      alert('Please enter a valid name to generate the report.');
       return;
     }
-    const safeName = escapeLatex(name.replace(/[^a-zA-Z0-9\s-]/g, ''));
+    const safeName = escapeHtml(name);
     const wpm = currentWPM || 0;
-    const accuracy = calculateAccuracy();
-    const promptTypeText = escapeLatex(promptSelect.options[promptSelect.selectedIndex]?.text || 'Unknown');
-    const missedTerms = missedWords.length > 0 ? escapeLatex(missedWords.join(', ')) : 'None';
+    const charAccuracy = calculateAccuracy();
+    const termAccuracy = calculateTermAccuracy();
+    const promptTypeText = escapeHtml(promptSelect.options[promptSelect.selectedIndex]?.text || 'Unknown');
+    const totalTerms = vocabData.length + (amalgamateVocab.length > 0 ? amalgamateVocab.length : 0);
+    const termsCoveredCount = coveredTerms.size;
+    const allTermsCompleted = termsCoveredCount === totalTerms;
+
+    // Build the terms table
+    let termsTableRows = '';
+    for (const [term, status] of coveredTerms.entries()) {
+      termsTableRows += `
+        <tr>
+          <td>${escapeHtml(term)}</td>
+          <td>${status}</td>
+        </tr>
+      `;
+    }
+    if (termsTableRows === '') {
+      termsTableRows = '<tr><td colspan="2">No terms covered.</td></tr>';
+    }
+
     const certificateContent = `
-\\documentclass[a4paper,12pt]{article}
-\\usepackage[utf8]{inputenc}
-\\usepackage{geometry}
-\\geometry{margin=1in}
-\\usepackage{titling}
-\\usepackage{times}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KappType Performance Report</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      line-height: 1.6;
+      text-align: center;
+    }
+    h1 {
+      color: #333;
+    }
+    .certificate {
+      border: 2px solid #333;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: #f9f9f9;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    .stats {
+      margin: 20px 0;
+      text-align: left;
+      display: inline-block;
+    }
+    .stats p {
+      margin: 5px 0;
+    }
+    .completion-status {
+      font-weight: bold;
+      color: ${allTermsCompleted ? 'green' : 'red'};
+    }
+    @media print {
+      body {
+        margin: 0;
+      }
+      .certificate {
+        border: none;
+        background-color: white;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="certificate">
+    <h1>KappType Performance Report</h1>
+    <h2>Certificate of Achievement</h2>
+    <p>This certifies that <strong>${safeName}</strong> has completed a session in KappType with the following results:</p>
+    
+    <div class="stats">
+      <p><strong>Prompt Type:</strong> ${promptTypeText}</p>
+      <p><strong>Typing Speed:</strong> ${wpm} WPM</p>
+      <p><strong>Character Accuracy:</strong> ${charAccuracy}%</p>
+      <p><strong>Term Accuracy:</strong> ${termAccuracy}%</p>
+      <p><strong>Wave Reached:</strong> ${wave}</p>
+      <p><strong>Total Time:</strong> ${totalTime} seconds</p>
+      <p><strong>Score:</strong> ${score}</p>
+    </div>
 
-\\title{KappType Certificate}
-\\author{}
-\\date{}
+    <h3>Terms Covered</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Term</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${termsTableRows}
+      </tbody>
+    </table>
 
-\\begin{document}
+    <p><strong>Total Terms Covered:</strong> ${termsCoveredCount} out of ${totalTerms}</p>
+    <p class="completion-status">
+      ${allTermsCompleted ? 'Congratulations! All terms in the set were covered.' : 'Not all terms were covered in this session.'}
+    </p>
 
-\\maketitle
-\\vspace{2cm}
-
-\\begin{center}
-  \\Large{\\textbf{Certificate of Achievement}}
-  \\vspace{1cm}
-  \\normalsize{This certifies that}
-  \\vspace{0.5cm}
-  \\Large{\\textbf{${safeName}}}
-  \\vspace{0.5cm}
-  \\normalsize{has successfully completed a session in KappType with the following results:}
-  \\vspace{1cm}
-  \\begin{tabular}{ll}
-    Prompt Type: & ${promptTypeText} \\\\
-    Typing Speed: & ${wpm} WPM \\\\
-    Accuracy: & ${accuracy}\\% \\\\
-    Wave Reached: & ${wave} \\\\
-    Total Time: & ${totalTime} seconds \\\\
-    Missed Terms: & \\begin{minipage}[t]{0.5\\textwidth} ${missedTerms} \\end{minipage} \\\\
-    Score: & ${score} \\\\
-  \\end{tabular}
-  \\vspace{2cm}
-  \\normalsize{Awarded on ${new Date().toLocaleDateString()}}
-\\end{center}
-
-\\end{document}
+    <p>Awarded on ${new Date().toLocaleDateString()}</p>
+  </div>
+</body>
+</html>
     `;
 
-    const blob = new Blob([certificateContent], { type: 'text/plain' });
+    const blob = new Blob([certificateContent], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'certificate.tex';
+    a.download = 'kapp-type-report.html';
     a.click();
     URL.revokeObjectURL(url);
 
-    alert('Certificate .tex file downloaded. Upload it to your Overleaf project to compile it into a PDF. If compilation fails, check for errors in Overleaf (e.g., missing packages or special characters in your name or missed terms). Alternatively, you can use a local LaTeX editor like TeXShop or TeXworks to compile it.');
+    alert('Performance report downloaded as an HTML file. Open it in a browser to view or print it (use Ctrl+P or Cmd+P to print).');
   }
 
   function startGame() {
