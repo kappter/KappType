@@ -63,6 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const waveDisplay = document.getElementById('wave');
   const timerDisplay = document.getElementById('timer');
   const wpmDisplay = document.getElementById('wpm');
+  const termsLeftDisplay = document.getElementById('termsLeft');
   const startScreen = document.getElementById('startScreen');
   const gameContainer = document.getElementById('gameContainer');
   const startButton = document.getElementById('startButton');
@@ -82,8 +83,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const timeIndicator = document.getElementById('timeIndicator');
   const themeSelect = document.getElementById('themeSelect');
 
-  if (!canvas || !ctx || !userInput || !timeIndicator || !startButton || !resetButton || !randomizeTermsCheckbox || !themeSelect) {
-    console.error('Required elements not found:', { canvas, ctx, userInput, timeIndicator, startButton, resetButton, randomizeTermsCheckbox, themeSelect });
+  if (!canvas || !ctx || !userInput || !timeIndicator || !startButton || !resetButton || !randomizeTermsCheckbox || !themeSelect || !termsLeftDisplay) {
+    console.error('Required elements not found:', { canvas, ctx, userInput, timeIndicator, startButton, resetButton, randomizeTermsCheckbox, themeSelect, termsLeftDisplay });
     alert('Critical elements are missing from the page. Please check the HTML structure and try again.');
     return;
   }
@@ -143,8 +144,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const baseUrl = 'https://raw.githubusercontent.com/kappter/vocab-sets/main/';
     const files = [
       'Exploring_Computer_Science_Vocabulary',
-      'Study_Skills_High_School',
-     'Financial_Management_Tips',
       'AP_Computer_Science_A_Concepts',
       'AP_Java_Code_Snippets',
       'AP_Astronomy_Concepts',
@@ -190,7 +189,9 @@ document.addEventListener('DOMContentLoaded', () => {
       'Rare_English_Words',
       'common_appetizers_usa',
       'common_us_entrees',
-      'common_us_side_dishes'
+      'common_us_side_dishes',
+      'Study_Skills_High_School',
+      'Financial_Management_Tips'
     ];
     const vocabSelectElement = document.getElementById('vocabSelect');
     const amalgamateSelectElement = document.getElementById('amalgamateSelect');
@@ -689,14 +690,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function triggerConfetti() {
     if (typeof confetti === 'undefined') {
-      console.warn('Confetti library not loaded. Ensure you are running via an HTTP server (e.g., python -m http.server).');
+      console.warn('Confetti library not loaded. Ensure you are running via an HTTP server (e.g., python -m http.server) and check network connectivity.');
+      alert('Confetti effect failed to load. Please run the game via an HTTP server (e.g., python -m http.server) and ensure internet access.');
       return;
     }
+    console.log('Confetti triggered for Wave:', wave);
     confetti({
-      particleCount: 150,
+      particleCount: 200,
       spread: 90,
       origin: { y: 0.5 },
-      zIndex: 10000
+      zIndex: 10000,
+      colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff']
     });
   }
 
@@ -717,17 +721,19 @@ document.addEventListener('DOMContentLoaded', () => {
         correctTermsCount++;
         console.log(`Term completed. CorrectTermsCount: ${correctTermsCount}, Wave: ${wave}`);
         scoreDisplay.textContent = `Score: ${score}`;
+        termsLeftDisplay.textContent = `Terms Left: ${10 - correctTermsCount}`;
         e.target.value = '';
         e.target.placeholder = 'Prompt will appear here...';
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         word.isExiting = true;
         word.fadeState = 'out';
 
-        if (mode === 'game' && correctTermsCount >= 20) {
+        if (mode === 'game' && correctTermsCount >= 10) {
           console.log(`Advancing to Wave ${wave + 1}`);
           wave++;
           correctTermsCount = 0;
           waveDisplay.textContent = `Wave: ${wave}`;
+          termsLeftDisplay.textContent = `Terms Left: 10`;
           words.forEach(word => {
             word.speed = waveSpeeds[word.spawnWave] || waveSpeeds[waveSpeeds.length - 1];
           });
