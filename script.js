@@ -801,35 +801,41 @@ function updateTimer() {
   }
 
   function generateCertificate() {
-    const name = prompt('Enter your name for the report:');
-    if (!name || name.trim() === '') {
-      alert('Please enter a valid name to generate the report.');
-      return;
-    }
-    const safeName = escapeHtml(name);
-    const wpm = currentWPM || 0;
-    const charAccuracy = calculateAccuracy();
-    const termAccuracy = calculateTermAccuracy();
-    const promptTypeText = escapeHtml(promptSelect.options[promptSelect.selectedIndex]?.text || 'Unknown');
-    const totalTerms = vocabData.length + (amalgamateVocab.length > 0 ? amalgamateVocab.length : 0);
-    const termsCoveredCount = coveredTerms.size;
-    const allTermsCompleted = termsCoveredCount === totalTerms;
+  const name = prompt('Enter your name for the report:');
+  if (!name || name.trim() === '') {
+    alert('Please enter a valid name to generate the report.');
+    return;
+  }
+  const safeName = escapeHtml(name);
+  const wpm = currentWPM || 0;
+  const charAccuracy = calculateAccuracy();
+  const termAccuracy = calculateTermAccuracy();
+  const promptTypeText = escapeHtml(promptSelect.options[promptSelect.selectedIndex]?.text || 'Unknown');
+  const totalTerms = vocabData.length + (amalgamateVocab.length > 0 ? amalgamateVocab.length : 0);
+  const termsCoveredCount = coveredTerms.size;
+  const allTermsCompleted = termsCoveredCount === totalTerms;
 
-    // Build the terms table
-    let termsTableRows = '';
-    for (const [term, status] of coveredTerms.entries()) {
-      termsTableRows += `
-        <tr>
-          <td>${escapeHtml(term)}</td>
-          <td>${status}</td>
-        </tr>
-      `;
-    }
-    if (termsTableRows === '') {
-      termsTableRows = '<tr><td colspan="2">No terms covered.</td></tr>';
-    }
+  // Debug log to verify term counts
+  console.log('Total Terms in vocabData:', vocabData.length);
+  console.log('Total Terms in amalgamateVocab:', amalgamateVocab.length);
+  console.log('Total Terms:', totalTerms);
+  console.log('Terms Covered:', termsCoveredCount);
 
-    const certificateContent = `
+  // Build the terms table
+  let termsTableRows = '';
+  for (const [term, status] of coveredTerms.entries()) {
+    termsTableRows += `
+      <tr>
+        <td>${escapeHtml(term)}</td>
+        <td>${status}</td>
+      </tr>
+    `;
+  }
+  if (termsTableRows === '') {
+    termsTableRows = '<tr><td colspan="2">No terms covered.</td></tr>';
+  }
+
+  const certificateContent = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -927,18 +933,18 @@ function updateTimer() {
   </div>
 </body>
 </html>
-    `;
+  `;
 
-    const blob = new Blob([certificateContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'kapp-type-report.html';
-    a.click();
-    URL.revokeObjectURL(url);
+  const blob = new Blob([certificateContent], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'kapp-type-report.html';
+  a.click();
+  URL.revokeObjectURL(url);
 
-    alert('Performance report downloaded as an HTML file. Open it in a browser to view or print it (use Ctrl+P or Cmd+P to print).');
-  }
+  alert('Performance report downloaded as an HTML file. Open it in a browser to view or print it (use Ctrl+P or Cmd+P to print).');
+}
 
   function startGame() {
     if (vocabData.length === 0) {
