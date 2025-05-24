@@ -323,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
             error: function(error) {
               clearTimeout(timeoutId);
               console.error(`Papa Parse error for ${csvUrl}:`, error);
-              alert(`Failed to parse CSV at ${csvUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary for ${isAmalgamate ? 'amalgamate' : 'primary'}.`);
+              alert(`Failed to parse CSV at ${cssUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary for ${isAmalgamate ? 'amalgamate' : 'primary'}.`);
               if (!isAmalgamate) {
                 vocabData = [...defaultVocabData];
                 vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
@@ -339,7 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(error => {
           clearTimeout(timeoutId);
           console.error(`Fetch error for ${csvUrl}:`, error);
-          alert(`Failed to load CSV at ${csvUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary for ${isAmalgamate ? 'amalgamate' : 'primary'}.`);
+          alert(`Failed to load CSV at ${cssUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary for ${isAmalgamate ? 'amalgamate' : 'primary'}.`);
           if (!isAmalgamate) {
             vocabData = [...defaultVocabData];
             vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
@@ -527,8 +527,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const y = 0;
     const speed = mode === 'game' ? waveSpeeds[wave] : 0.5 + level * 0.1;
-    const fontSize = Math.floor(30 + Math.random() * 5); // 30-34px
-    const word = { prompt: finalPrompt, typedInput: finalTypedInput, displayText: getUnderscoreText(finalTypedInput), x, y, speed, matched: '', definition: finalDefinition, isExiting: false, opacity: 0, fadeState: 'in', fontSize };
+    const word = { prompt: finalPrompt, typedInput: finalTypedInput, displayText: getUnderscoreText(finalTypedInput), x, y, speed, matched: '', definition: finalDefinition, isExiting: false, opacity: 0, fadeState: 'in', descOpacity: 0, descFadeState: 'in' };
     words.push(word);
     userInput.placeholder = finalPrompt;
     updateWPMDisplay();
@@ -551,13 +550,22 @@ document.addEventListener('DOMContentLoaded', () => {
       const availableFonts = themeFonts[currentTheme] || ['Arial'];
       const selectedFont = availableFonts[Math.floor(Math.random() * availableFonts.length)];
 
-      // Update opacity
-      const fadeDuration = 2;
+      // Update background text opacity
+      const fadeDuration = 4; // Slower fade: 4 seconds
       const fadeSpeed = 0.3 / fadeDuration;
       if (word.fadeState === 'in') {
         word.opacity = Math.min(word.opacity + fadeSpeed * deltaTime, 0.3);
       } else if (word.fadeState === 'out') {
         word.opacity = Math.max(word.opacity - fadeSpeed * deltaTime, 0);
+      }
+
+      // Update descending text opacity
+      const descFadeDuration = 2;
+      const descFadeSpeed = 1 / descFadeDuration;
+      if (word.descFadeState === 'in') {
+        word.descOpacity = Math.min(word.descOpacity + descFadeSpeed * deltaTime, 1);
+      } else if (word.descFadeState === 'out') {
+        word.descOpacity = Math.max(word.descOpacity - descFadeSpeed * deltaTime, 0);
       }
 
       // Background definition text
@@ -568,7 +576,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       for (let w of wordsArray) {
         const testLine = line + w + ' ';
-        ctx.font = `${word.fontSize}px ${selectedFont}`;
+        ctx.font = `32px ${selectedFont}`;
         const metrics = ctx.measureText(testLine);
         if (metrics.width > maxWidth && line !== '') {
           lines.push({ text: line.trim(), font: selectedFont });
@@ -583,7 +591,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (lines.length > 4) {
         lines = lines.slice(0, 3);
         const lastLine = lines[2].text;
-        ctx.font = `${word.fontSize}px ${selectedFont}`;
+        ctx.font = `32px ${selectedFont}`;
         let truncated = lastLine;
         while (ctx.measureText(truncated + '...').width > maxWidth && truncated.length > 0) {
           truncated = truncated.slice(0, -1);
@@ -600,7 +608,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const baseColor = computedStyle.getPropertyValue('--canvas-text')?.trim() || '#ffffff';
 
       for (let i = 0; i < lines.length; i++) {
-        ctx.font = `${word.fontSize}px ${lines[i].font}`;
+        ctx.font = `32px ${lines[i].font}`;
         ctx.fillStyle = `rgba(${hexToRgb(baseColor)}, ${word.opacity})`;
         ctx.fillText(lines[i].text, canvas.width / 2, startY + i * lineHeight);
       }
@@ -678,12 +686,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let xOffset = word.x;
         if (matchedText) {
-          ctx.fillStyle = 'red';
+          ctx.fillStyle = `rgba(255, 0, 0, ${word.descOpacity})`;
           ctx.fillText(matchedText, xOffset, lineY);
           xOffset += ctx.measureText(matchedText).width;
         }
         if (unmatchedText) {
-          ctx.fillStyle = textColor;
+          ctx.fillStyle = `rgba(${hexToRgb(textColor)}, ${word.descOpacity})`;
           ctx.fillText(unmatchedText, xOffset, lineY);
         }
 
@@ -695,10 +703,11 @@ document.addEventListener('DOMContentLoaded', () => {
         totalChars += word.typedInput.length;
         word.isExiting = true;
         word.fadeState = 'out';
+        word.descFadeState = 'out';
       }
     });
 
-    if (words.length > 0 && words[0].isExiting && words[0].opacity <= 0) {
+    if (words.length > 0 && words[0].isExiting && words[0].opacity <= 0 && words[0].descOpacity <= 0) {
       words = [];
       if (mode === 'game') {
         gameActive = false;
@@ -723,7 +732,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function calculateWPM() {
     if (sessionStartTime === null || correctChars === 0) return 0;
-    const elapsedTime = (performance.now() - sessionStartTime) / 1000 / 60;
+    const elapsedTime = (now - sessionStartTime) / 1000 / 60;
     if (elapsedTime <= 0) return 0;
     const wpm = Math.round((correctChars / 5) / elapsedTime);
     return Math.min(wpm, 200);
@@ -748,8 +757,7 @@ document.addEventListener('DOMContentLoaded', () => {
       wave++;
       waveDisplay.textContent = `Wave: ${wave}`;
       timeLeft = 30;
-      userInput.classList.add('pulse');
-      setTimeout(() => userInput.classList.remove('pulse'), 500);
+      // Removed pulse animation
     }
     setTimeout(updateTimer, 1000);
   }
@@ -777,6 +785,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         word.isExiting = true;
         word.fadeState = 'out';
+        word.descFadeState = 'out';
         return false;
       }
       return true;
@@ -799,7 +808,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (e.key === 'Control') {
       document.querySelectorAll('.ctrl').forEach(ctrl => ctrl.classList.add('pressed'));
     } else if (e.key === 'Alt') {
-      document.querySelectorAll('.alt').forEach(alt => alt.classList.add('pressed'));
+      document.querySelectorAll('.alt').forEach(alt => ctrl.classList.add('pressed'));
     } else if (e.key === 'Meta') {
       document.querySelectorAll('.win').forEach(win => win.classList.add('pressed'));
     }
