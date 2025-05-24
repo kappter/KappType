@@ -1,58 +1,3 @@
-const defaultVocabData = [
-  { Term: "Binary", Definition: "A numbering system that uses only 0s and 1s" },
-  { Term: "Algorithm", Definition: "A set of rules to be followed in calculations or other problem-solving operations" },
-  { Term: "Variable", Definition: "A named storage location in a program that can hold different values" },
-  { Term: "Computer Science", Definition: "The study of computers and computational systems including programming and problem-solving" },
-  { Term: "Computational Thinking", Definition: "A problem-solving approach using decomposition abstraction algorithms and data" },
-  { Term: "Decomposition", Definition: "Breaking a complex problem into smaller manageable parts" },
-  { Term: "Abstraction", Definition: "Simplifying a problem by focusing on essential details and ignoring irrelevant ones" },
-  { Term: "Career Pathway", Definition: "A sequence of courses and experiences preparing students for computer science careers" },
-  { Term: "Computer Scientist", Definition: "A professional who designs and develops computational systems or software" },
-  { Term: "Pseudocode", Definition: "A simplified human-readable description of a program’s logic" },
-  { Term: "Flowchart", Definition: "A visual diagram representing the steps of an algorithm or process" },
-  { Term: "Pattern Recognition", Definition: "Identifying similarities or trends in data to solve problems" },
-  { Term: "Iteration", Definition: "Repeating a process or set of instructions to achieve a goal" },
-  { Term: "Data", Definition: "Information processed or stored by a computer such as numbers or text" },
-  { Term: "Data Analysis", Definition: "The process of examining data to draw conclusions or identify patterns" },
-  { Term: "Binary Number", Definition: "A number system using only 0s and 1s used by computers" },
-  { Term: "Bit", Definition: "A single binary digit either 0 or 1" },
-  { Term: "Byte", Definition: "A group of 8 bits used to represent a character or number" },
-  { Term: "Spreadsheet", Definition: "A digital tool for organizing analyzing and visualizing data in rows and columns" },
-  { Term: "Data Visualization", Definition: "Representing data graphically such as in charts or graphs" },
-  { Term: "Data Type", Definition: "A classification of data such as integer string or boolean" },
-  { Term: "Integer", Definition: "A whole number data type without decimal points" },
-  { Term: "String", Definition: "A sequence of characters such as text used in programming" },
-  { Term: "Boolean", Definition: "A data type with two values: true or false" },
-  { Term: "Operator", Definition: "A symbol that performs operations like addition (+) or comparison (==)" },
-  { Term: "Conditional Statement", Definition: "A programming construct like “if-then-else” that executes code based on a condition" },
-  { Term: "Loop", Definition: "A programming construct that repeats a block of code until a condition is met" },
-  { Term: "Function", Definition: "A reusable block of code that performs a specific task" },
-  { Term: "Debugging", Definition: "The process of finding and fixing errors in a program" },
-  { Term: "Syntax Error", Definition: "A mistake in the code’s structure that prevents it from running" },
-  { Term: "Logic Error", Definition: "A flaw in the program’s logic causing incorrect results" },
-  { Term: "Web Development", Definition: "The process of creating and maintaining websites" },
-  { Term: "HTML", Definition: "HyperText Markup Language used to structure content on the web" },
-  { Term: "Tag", Definition: "An HTML element like <p> or <div> used to define content structure" },
-  { Term: "Attribute", Definition: "Additional information in an HTML tag like “class” or “id”" },
-  { Term: "CSS", Definition: "Sheets used to style and format web content" },
-  { Term: "Web Browser", Definition: "A software application for accessing and viewing websites" },
-  { Term: "URL", Definition: "Uniform Resource Locator the address of a web resource" },
-  { Term: "Hyperlink", Definition: "A clickable link that connects one web page to another" },
-  { Term: "Digital Footprint", Definition: "The trail of data left by a user’s online activities" },
-  { Term: "Digital Citizenship", Definition: "Responsible and ethical behavior in the digital world" },
-  { Term: "Cybersecurity", Definition: "Protecting computers and data from unauthorized access or attacks" },
-  { Term: "Encryption", Definition: "Converting data into a coded form to protect it from unauthorized access" },
-  { Term: "Password", Definition: "A secret string of characters used to verify a user’s identity" },
-  { Term: "Ethics", Definition: "Moral principles guiding responsible use of technology" },
-  { Term: "Intellectual Property", Definition: "Creations like software or designs protected by law" },
-  { Term: "Copyright", Definition: "A legal right protecting original works from unauthorized use" },
-  { Term: "Fair Use", Definition: "A legal doctrine allowing limited use of copyrighted material without permission" },
-  { Term: "Social Impact", Definition: "The effect of computing technologies on society such as privacy or accessibility" },
-  { Term: "Accessibility", Definition: "Designing technology to be usable by people with diverse abilities" },
-  { Term: "Collaboration", Definition: "Working with others to solve problems or create projects in computer science" },
-  { Term: "Portfolio", Definition: "A collection of projects showcasing computer science skills and experience" }
-];
-
 document.addEventListener('DOMContentLoaded', () => {
   console.log('DOM fully loaded and parsed');
   
@@ -145,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
       'Exploring_Computer_Science_Vocabulary',
       'Periodic_Table_Elements',
       'Study_Skills_High_School',
-     'Financial_Management_Tips',
+      'Financial_Management_Tips',
       'AP_Computer_Science_A_Concepts',
       'AP_Java_Code_Snippets',
       'AP_Astronomy_Concepts',
@@ -664,7 +609,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function calculateWPM() {
     if (sessionStartTime === null || correctChars === 0) return 0;
-    const elapsedTime = (performance.now() - sessionStartTime) / 1000 / 60;
+    const elapsedTime = Math.max(0, (performance.now() - sessionStartTime) / 1000 / 60); // Ensure no negative time
     if (elapsedTime <= 0) return 0;
     const wpm = Math.round((correctChars / 5) / elapsedTime);
     return Math.min(wpm, 200);
@@ -681,24 +626,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateTimer() {
     if (!gameActive) return;
-    timeLeft--;
+    timeLeft = Math.max(0, timeLeft - 1); // Prevent negative time
     totalTime++;
     timerDisplay.textContent = `Time: ${timeLeft}s`;
     updateWPMDisplay();
-    setTimeout(updateTimer, 1000);
-  }
-
-  function triggerConfetti() {
-    if (typeof confetti === 'undefined') {
-      console.warn('Confetti library not loaded. Ensure you are running via an HTTP server (e.g., python -m http.server).');
-      return;
+    if (timeLeft > 0) {
+      setTimeout(updateTimer, 1000);
+    } else if (mode === 'game') {
+      gameActive = false;
+      alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
     }
-    confetti({
-      particleCount: 150,
-      spread: 90,
-      origin: { y: 0.5 },
-      zIndex: 10000
-    });
   }
 
   function handleInput(e) {
@@ -724,7 +661,7 @@ document.addEventListener('DOMContentLoaded', () => {
         word.isExiting = true;
         word.fadeState = 'out';
 
-        if (mode === 'game' && correctTermsCount >= 20) {
+        if (mode === 'game' && correctTermsCount >= 10) { // Changed to 10 words per wave
           console.log(`Advancing to Wave ${wave + 1}`);
           wave++;
           correctTermsCount = 0;
@@ -734,7 +671,6 @@ document.addEventListener('DOMContentLoaded', () => {
           });
           const lightness = 50 + (wave - 1) * 3;
           document.documentElement.style.setProperty('--bg-lightness', `${Math.min(lightness, 77)}%`);
-          triggerConfetti();
           userInput.classList.add('pulse');
           setTimeout(() => userInput.classList.remove('pulse'), 1000);
         }
@@ -938,4 +874,31 @@ document.addEventListener('DOMContentLoaded', () => {
   resetButton.addEventListener('click', () => {
     location.reload();
   });
+
+  // Update stats display with new counts
+  function updateStatsDisplay() {
+    const termsCovered = correctTermsCount + missedWords.length;
+    const totalTerms = vocabData.length + (amalgamateVocab.length > 0 ? amalgamateVocab.length : 0);
+    const termsToWave = 10 - correctTermsCount; // 10 words per wave
+    scoreDisplay.textContent = `Score: ${score}`;
+    waveDisplay.textContent = `Wave: ${wave}`;
+    timerDisplay.textContent = `Time: ${timeLeft >= 0 ? timeLeft : 0}s`; // Ensure non-negative time
+    wpmDisplay.textContent = `WPM: ${currentWPM}`;
+    // Add new stats
+    const termsDisplay = document.createElement('span');
+    termsDisplay.textContent = `Terms: ${termsCovered}/${totalTerms}`;
+    const waveCountdownDisplay = document.createElement('span');
+    waveCountdownDisplay.textContent = `To Wave: ${termsToWave}`;
+    const stats = document.querySelector('.stats');
+    stats.appendChild(termsDisplay);
+    stats.appendChild(waveCountdownDisplay);
+  }
+
+  // Call updateStatsDisplay initially and on score/wave change
+  updateStatsDisplay();
+  const originalHandleInput = handleInput;
+  handleInput = function(e) {
+    originalHandleInput(e);
+    updateStatsDisplay();
+  };
 });
