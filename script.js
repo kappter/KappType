@@ -421,80 +421,79 @@ document.addEventListener('DOMContentLoaded', () => {
     return displayText;
   }
 
-  function spawnWord() {
-    if (vocabData.length === 0) {
-      vocabData = [...defaultVocabData];
-      vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
-    }
-
-    const vocab1 = getRandomVocab(vocabData, false);
-    if (!vocab1) return;
-
-    let prompt1, typedInput1;
-    if (promptType === 'definition') {
-      prompt1 = vocab1.Definition;
-      typedInput1 = vocab1.Term;
-    } else if (promptType === 'term') {
-      prompt1 = vocab1.Term;
-      typedInput1 = vocab1.Definition;
-    } else {
-      const randomType = Math.random() < 0.5 ? 'definition' : 'term';
-      prompt1 = randomType === 'definition' ? vocab1.Definition : vocab1.Term;
-      typedInput1 = randomType === 'definition' ? vocab1.Term : vocab1.Definition;
-    }
-
-    let prompt2 = '', typedInput2 = '', vocab2 = null;
-    if (amalgamateVocab.length > 0) {
-      vocab2 = getRandomVocab(amalgamateVocab, true);
-      if (vocab2) {
-        if (promptType === 'definition') {
-          prompt2 = vocab2.Definition;
-          typedInput2 = vocab2.Term;
-        } else if (promptType === 'term') {
-          prompt2 = vocab2.Term;
-          typedInput2 = vocab2.Definition;
-        } else {
-          const randomType = Math.random() < 0.5 ? 'definition' : 'term';
-          prompt2 = randomType === 'definition' ? vocab2.Definition : vocab2.Term;
-          typedInput2 = randomType === 'definition' ? vocab2.Term : vocab2.Definition;
-        }
-      }
-    }
-
-    const finalTypedInput = amalgamateVocab.length > 0 && vocab2 ? typedInput1 + ' ' + typedInput2 : typedInput1;
-    const finalPrompt = amalgamateVocab.length > 0 && vocab2 ? prompt1 + ' ' + prompt2 : prompt1;
-    const finalDefinition = amalgamateVocab.length > 0 && vocab2 ? vocab1.Definition + ' ' + vocab2.Definition : vocab1.Definition;
-
-    const displayText = getUnderscoreText(finalTypedInput, 0);
-    ctx.font = '18px Arial';
-    const textWidth = ctx.measureText(displayText).width;
-
-    const padding = 20;
-    const maxX = canvas.width - textWidth - padding;
-    const minX = padding;
-    const x = mode === 'game' ? (minX + Math.random() * (maxX - minX)) : minX;
-
-    const y = 0;
-    const speed = mode === 'game' ? (waveSpeeds[wave] || waveSpeeds[waveSpeeds.length - 1]) : 0.5 + level * 0.1;
-    const word = { 
-      prompt: finalPrompt, 
-      typedInput: finalTypedInput, 
-      displayText: displayText, 
-      x, 
-      y, 
-      speed, 
-      matched: '', 
-      definition: finalDefinition, 
-      isExiting: false, 
-      opacity: 0, 
-      fadeState: 'in',
-      spawnWave: wave
-    };
-    words.push(word);
-    userInput.placeholder = finalPrompt;
-    updateWPMDisplay();
-    updateTimeIndicator();
+function spawnWord() {
+  if (vocabData.length === 0) {
+    vocabData = [...defaultVocabData];
+    vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
   }
+
+  const allVocab = [...vocabData, ...amalgamateVocab].filter(v => v && v.Term && v.Definition);
+  if (allVocab.length === 0) return;
+
+  let index;
+  const usedIndices = [...usedVocabIndices, ...usedAmalgamateIndices];
+  const availableIndices = Array.from({ length: allVocab.length }, (_, i) => i).filter(i => !usedIndices.includes(i));
+
+  if (availableIndices.length > 0) {
+    index = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+  } else {
+    // All terms used, reset indices
+    usedVocabIndices = [];
+    usedAmalgamateIndices = [];
+    index = Math.floor(Math.random() * allVocab.length);
+  }
+
+  const vocab = allVocab[index];
+  let prompt, typedInput;
+  if (promptType === 'definition') {
+    prompt = vocab.Definition;
+    typedInput = vocab.Term;
+  } else if (promptType === 'term') {
+    prompt = vocab.Term;
+    typedInput = vocab.Definition;
+  } else {
+    const randomType = Math.random() < 0.5 ? 'definition' : 'term';
+    prompt = randomType === 'definition' ? vocab.Definition : vocab.Term;
+    typedInput = randomType === 'definition' ? vocab.Term : vocab.Definition;
+  }
+
+  const displayText = getUnderscoreText(typedInput, 0);
+  ctx.font = '18px Arial';
+  const textWidth = ctx.measureText(displayText).width;
+
+  const padding = 20;
+  const maxX = canvas.width - textWidth - padding;
+  const minX = padding;
+  const x = mode === 'game' ? (minX + Math.random() * (maxX - minX)) : minX;
+
+  const y = 0;
+  const speed = mode === 'game' ? (waveSpeeds[wave] || waveSpeeds[waveSpeeds.length - 1]) : 0.5 + level * 0.1;
+  const word = { 
+    prompt: prompt, 
+    typedInput: typedInput, 
+    displayText: displayText, 
+    x: x, 
+    y: y, 
+    speed: speed, 
+    matched: '', 
+    definition: vocab.Definition, 
+    isExiting: false, 
+    opacity: 0, 
+    fadeState: 'in',
+    spawnWave: wave
+  };
+
+  if (index < vocabData.length) {
+    usedVocabIndices.push(index);
+  } else {
+    usedAmalgamateIndices.push(index - vocabData.length);
+  }
+
+  words.push(word);
+  userInput.placeholder = prompt;
+  updateWPMDisplay();
+  updateTimeIndicator();
+}
 
 function updateGame() {
   if (!gameActive) return;
