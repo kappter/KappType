@@ -515,7 +515,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const y = 0;
     const speed = mode === 'game' ? (waveSpeeds[wave] || waveSpeeds[waveSpeeds.length - 1]) : 0.5 + level * 0.1;
-    const word = { prompt: finalPrompt, typedInput: finalTypedInput, displayText: displayText, x, y, speed, matched: '', definition: finalDefinition, isExiting: false, opacity: 0, fadeState: 'in' };
+    const word = { 
+      prompt: finalPrompt, 
+      typedInput: finalTypedInput, 
+      displayText: displayText, 
+      x, 
+      y, 
+      speed, 
+      matched: '', 
+      definition: finalDefinition, 
+      isExiting: false, 
+      opacity: 0, 
+      fadeState: 'in',
+      spawnWave: wave
+    };
     words.push(word);
     userInput.placeholder = finalPrompt;
     updateWPMDisplay();
@@ -674,14 +687,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function triggerConfetti() {
     if (typeof confetti === 'undefined') {
-      console.warn('Confetti library not loaded.');
+      console.warn('Confetti library not loaded. Ensure you are running via an HTTP server (e.g., python -m http.server).');
       return;
     }
     confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 },
-      zIndex: 1000
+      particleCount: 150,
+      spread: 90,
+      origin: { y: 0.5 },
+      zIndex: 10000
     });
   }
 
@@ -700,6 +713,7 @@ document.addEventListener('DOMContentLoaded', () => {
         totalChars += word.typedInput.length;
         score += word.typedInput.length;
         correctTermsCount++;
+        console.log(`Term completed. CorrectTermsCount: ${correctTermsCount}, Wave: ${wave}`);
         scoreDisplay.textContent = `Score: ${score}`;
         e.target.value = '';
         e.target.placeholder = 'Prompt will appear here...';
@@ -708,10 +722,13 @@ document.addEventListener('DOMContentLoaded', () => {
         word.fadeState = 'out';
 
         if (mode === 'game' && correctTermsCount >= 20) {
+          console.log(`Advancing to Wave ${wave + 1}`);
           wave++;
           correctTermsCount = 0;
           waveDisplay.textContent = `Wave: ${wave}`;
-          words.forEach(word => word.speed = waveSpeeds[wave] || waveSpeeds[waveSpeeds.length - 1]);
+          words.forEach(word => {
+            word.speed = waveSpeeds[word.spawnWave] || waveSpeeds[waveSpeeds.length - 1];
+          });
           const lightness = 50 + (wave - 1) * 3;
           document.documentElement.style.setProperty('--bg-lightness', `${Math.min(lightness, 77)}%`);
           triggerConfetti();
