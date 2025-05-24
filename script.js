@@ -323,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
             error: function(error) {
               clearTimeout(timeoutId);
               console.error(`Papa Parse error for ${csvUrl}:`, error);
-              alert(`Failed to parse CSV at ${cssUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary for ${isAmalgamate ? 'amalgamate' : 'primary'}.`);
+              alert(`Failed to parse CSV at ${csvUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary for ${isAmalgamate ? 'amalgamate' : 'primary'}.`);
               if (!isAmalgamate) {
                 vocabData = [...defaultVocabData];
                 vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
@@ -339,7 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(error => {
           clearTimeout(timeoutId);
           console.error(`Fetch error for ${csvUrl}:`, error);
-          alert(`Failed to load CSV at ${cssUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary for ${isAmalgamate ? 'amalgamate' : 'primary'}.`);
+          alert(`Failed to load CSV at ${csvUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary for ${isAmalgamate ? 'amalgamate' : 'primary'}.`);
           if (!isAmalgamate) {
             vocabData = [...defaultVocabData];
             vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
@@ -453,7 +453,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function getUnderscoreText(text) {
-    return text; // Removed underscore logic since wrapping handles long text
+    if (text.length > 50) {
+      return text.substring(0, 47) + '...';
+    }
+    return text;
   }
 
   function spawnWord() {
@@ -500,34 +503,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const finalPrompt = amalgamateVocab.length > 0 && vocab2 ? prompt1 + ' ' + prompt2 : prompt1;
     const finalDefinition = amalgamateVocab.length > 0 && vocab2 ? vocab1.Definition + ' ' + vocab2.Definition : vocab1.Definition;
 
-    // Calculate wrapped text width for x-position
-    ctx.font = '24px Arial';
-    const maxWidth = canvas.width - 40;
-    const wordsArray = finalTypedInput.split(' ');
-    let lines = [];
-    let line = '';
-    for (let word of wordsArray) {
-      const testLine = line + word + ' ';
-      const metrics = ctx.measureText(testLine);
-      if (metrics.width > maxWidth && line !== '') {
-        lines.push(line.trim());
-        line = word + ' ';
-      } else {
-        line = testLine;
-      }
-    }
-    if (line) lines.push(line.trim());
-    const maxTextWidth = Math.max(...lines.map(l => ctx.measureText(l).width), 0);
-
-    const padding = 20;
-    const maxX = Math.max(0, canvas.width - maxTextWidth - padding);
-    const minX = padding;
-    const xRange = Math.max(0, maxX - minX);
-    const x = mode === 'game' ? (minX + Math.random() * xRange) : 50;
-
+    const x = mode === 'game' ? (50 + Math.random() * (canvas.width - 100)) : 50;
     const y = 0;
     const speed = mode === 'game' ? waveSpeeds[wave] : 0.5 + level * 0.1;
-    const word = { prompt: finalPrompt, typedInput: finalTypedInput, displayText: getUnderscoreText(finalTypedInput), x, y, speed, matched: '', definition: finalDefinition, isExiting: false, opacity: 0, fadeState: 'in', descOpacity: 0, descFadeState: 'in' };
+    const word = { prompt: finalPrompt, typedInput: finalTypedInput, displayText: getUnderscoreText(finalTypedInput), x, y, speed, matched: '', definition: finalDefinition, isExiting: false, opacity: 0, fadeState: 'in' };
     words.push(word);
     userInput.placeholder = finalPrompt;
     updateWPMDisplay();
@@ -557,15 +536,6 @@ document.addEventListener('DOMContentLoaded', () => {
         word.opacity = Math.min(word.opacity + fadeSpeed * deltaTime, 0.3);
       } else if (word.fadeState === 'out') {
         word.opacity = Math.max(word.opacity - fadeSpeed * deltaTime, 0);
-      }
-
-      // Update descending text opacity
-      const descFadeDuration = 2;
-      const descFadeSpeed = 1 / descFadeDuration;
-      if (word.descFadeState === 'in') {
-        word.descOpacity = Math.min(word.descOpacity + descFadeSpeed * deltaTime, 1);
-      } else if (word.descFadeState === 'out') {
-        word.descOpacity = Math.max(word.descOpacity - descFadeSpeed * deltaTime, 0);
       }
 
       // Background definition text
@@ -626,76 +596,32 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.stroke();
 
     // Descending text
-    ctx.font = '24px Arial';
+    ctx.font = '18px Arial';
     ctx.textAlign = 'left';
     const computedStyle = window.getComputedStyle(document.body);
     const textColor = computedStyle.getPropertyValue('--canvas-text')?.trim() || '#ffffff';
 
     words = words.filter(word => word.y < canvas.height && !word.isExiting);
     words.forEach(word => {
-      const maxWidth = canvas.width - 40;
-      const wordsArray = word.typedInput.split(' ');
-      let lines = [];
-      let line = '';
-      for (let w of wordsArray) {
-        const testLine = line + w + ' ';
-        const metrics = ctx.measureText(testLine);
-        if (metrics.width > maxWidth && line !== '') {
-          lines.push(line.trim());
-          line = w + ' ';
-        } else {
-          line = testLine;
-        }
-      }
-      if (line) lines.push(line.trim());
-
-      const lineHeight = 30;
-      const totalHeight = lines.length * lineHeight;
-      const startY = word.y - 20;
-
-      // Clear area for text
-      const maxTextWidth = Math.max(...lines.map(l => ctx.measureText(l).width), 0);
-      ctx.clearRect(word.x - 5, startY, maxTextWidth + 10, totalHeight + 5);
-
       word.y += word.speed;
       const typed = userInput.value;
       const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
       const input = caseSensitive ? typed : typed.toLowerCase();
       word.matched = target.startsWith(input) ? typed : '';
 
-      // Render each line
-      let currentIndex = 0;
-      for (let i = 0; i < lines.length; i++) {
-        const lineText = lines[i];
-        const lineY = startY + i * lineHeight;
+      // Clear area for text
+      ctx.clearRect(word.x - 5, word.y - 20, ctx.measureText(word.displayText).width + 10, 25);
 
-        // Find matched portion in this line
-        const lineLength = lineText.length;
-        let matchedText = '';
-        let unmatchedText = lineText;
-        if (currentIndex < word.matched.length) {
-          const remainingMatch = word.matched.slice(currentIndex);
-          if (remainingMatch.length >= lineLength) {
-            matchedText = lineText;
-            unmatchedText = '';
-          } else {
-            matchedText = remainingMatch;
-            unmatchedText = lineText.slice(remainingMatch.length);
-          }
-        }
-
-        let xOffset = word.x;
-        if (matchedText) {
-          ctx.fillStyle = `rgba(255, 0, 0, ${word.descOpacity})`;
-          ctx.fillText(matchedText, xOffset, lineY);
-          xOffset += ctx.measureText(matchedText).width;
-        }
-        if (unmatchedText) {
-          ctx.fillStyle = `rgba(${hexToRgb(textColor)}, ${word.descOpacity})`;
-          ctx.fillText(unmatchedText, xOffset, lineY);
-        }
-
-        currentIndex += lineLength + 1; // +1 for space
+      // Render matched portion
+      if (word.matched) {
+        ctx.fillStyle = 'red';
+        ctx.fillText(word.matched, word.x, word.y);
+      }
+      // Render remaining text
+      const remainingText = word.displayText.slice(word.matched.length);
+      if (remainingText) {
+        ctx.fillStyle = textColor;
+        ctx.fillText(remainingText, word.x + ctx.measureText(word.matched).width, word.y);
       }
 
       if (word.y >= canvas.height) {
@@ -703,11 +629,10 @@ document.addEventListener('DOMContentLoaded', () => {
         totalChars += word.typedInput.length;
         word.isExiting = true;
         word.fadeState = 'out';
-        word.descFadeState = 'out';
       }
     });
 
-    if (words.length > 0 && words[0].isExiting && words[0].opacity <= 0 && words[0].descOpacity <= 0) {
+    if (words.length > 0 && words[0].isExiting && words[0].opacity <= 0) {
       words = [];
       if (mode === 'game') {
         gameActive = false;
@@ -732,7 +657,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function calculateWPM() {
     if (sessionStartTime === null || correctChars === 0) return 0;
-    const elapsedTime = (now - sessionStartTime) / 1000 / 60;
+    const elapsedTime = (performance.now() - sessionStartTime) / 1000 / 60;
     if (elapsedTime <= 0) return 0;
     const wpm = Math.round((correctChars / 5) / elapsedTime);
     return Math.min(wpm, 200);
@@ -757,7 +682,6 @@ document.addEventListener('DOMContentLoaded', () => {
       wave++;
       waveDisplay.textContent = `Wave: ${wave}`;
       timeLeft = 30;
-      // Removed pulse animation
     }
     setTimeout(updateTimer, 1000);
   }
@@ -773,7 +697,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
       const input = caseSensitive ? typed : typed.toLowerCase();
       if (typed.length === 1 && target.startsWith(input)) {
-        word.displayText = word.typedInput; // Update to full text for wrapping
+        word.displayText = getUnderscoreText(word.typedInput);
       }
       if (target === input) {
         correctChars += word.typedInput.length;
@@ -785,7 +709,6 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         word.isExiting = true;
         word.fadeState = 'out';
-        word.descFadeState = 'out';
         return false;
       }
       return true;
@@ -806,9 +729,9 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (e.key === 'Shift') {
       document.querySelectorAll('.shift').forEach(shift => shift.classList.add('pressed'));
     } else if (e.key === 'Control') {
-      document.querySelectorAll('.ctrl').forEach(ctrl => ctrl.classList.add('pressed'));
+      document.querySelectorAll('.ctrl').forEach(ctrl => shift.classList.add('pressed'));
     } else if (e.key === 'Alt') {
-      document.querySelectorAll('.alt').forEach(alt => ctrl.classList.add('pressed'));
+      document.querySelectorAll('.alt').forEach(alt => alt.classList.add('pressed'));
     } else if (e.key === 'Meta') {
       document.querySelectorAll('.win').forEach(win => win.classList.add('pressed'));
     }
