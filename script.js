@@ -483,10 +483,16 @@ function spawnWord() {
     spawnWave: wave
   };
 
+  // Add the index to the correct array based on vocab source
   if (index < vocabData.length) {
-    usedVocabIndices.push(index);
+    if (!usedVocabIndices.includes(index)) {
+      usedVocabIndices.push(index);
+    }
   } else {
-    usedAmalgamateIndices.push(index - vocabData.length);
+    const amalgamateIndex = index - vocabData.length;
+    if (!usedAmalgamateIndices.includes(amalgamateIndex)) {
+      usedAmalgamateIndices.push(amalgamateIndex);
+    }
   }
 
   words.push(word);
@@ -952,21 +958,26 @@ function updateTimer() {
 }
 
   function startGame() {
-    if (vocabData.length === 0) {
-      vocabData = [...defaultVocabData];
-      vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
-    }
-    vocabSetTitle.textContent = vocabSetName + (amalgamateSetName ? ' + ' + amalgamateSetName : '');
-    gameActive = true;
-    userInput.focus();
-    userInput.addEventListener('input', handleInput);
-    document.addEventListener('keydown', highlightKeys);
-    document.addEventListener('keyup', keyUpHandler);
-    certificateButton.addEventListener('click', generateCertificate);
-    spawnWord();
-    updateGame();
-    updateTimer();
+  if (vocabData.length === 0) {
+    vocabData = [...defaultVocabData];
+    vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
   }
+  vocabSetTitle.textContent = vocabSetName + (amalgamateSetName ? ' + ' + amalgamateSetName : '');
+  
+  // Reset indices to ensure no duplicates until all terms are used
+  usedVocabIndices = [];
+  usedAmalgamateIndices = [];
+  
+  gameActive = true;
+  userInput.focus();
+  userInput.addEventListener('input', handleInput);
+  document.addEventListener('keydown', highlightKeys);
+  document.addEventListener('keyup', keyUpHandler);
+  certificateButton.addEventListener('click', generateCertificate);
+  spawnWord();
+  updateGame();
+  updateTimer();
+}
 
   populateVocabDropdown();
   startButton.addEventListener('click', async () => {
