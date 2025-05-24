@@ -665,9 +665,14 @@ function updateTimer() {
   if (timeLeft > 0) {
     setTimeout(updateTimer, 1000);
   } else if (mode === 'game') {
-    gameActive = false;
-    console.log(`Game Over due to timer. Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
-    alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
+    // Only end the game if there are no words left
+    if (words.length === 0) {
+      gameActive = false;
+      console.log(`Game Over due to timer (no words left). Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
+      alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
+    } else {
+      console.log(`Timer ran out, but words are still on screen. Game continues until words are missed or completed.`);
+    }
   }
 }
 
