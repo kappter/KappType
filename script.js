@@ -301,7 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
               targetArray.length = 0;
               const filteredData = results.data.filter(row => row.Term && row.Definition);
               if (filteredData.length === 0) {
-                alert(`No valid terms found in the CSV at ${csvUrl}. Ensure it has "Term" and "Definition" columns. Using embedded vocabulary for ${isAmalgamate ? 'amalgamation' : 'primary'}.`);
+                alert(`No valid terms found in the CSV at ${csvUrl}. Ensure it has "Term" and "Definition" columns. Using embedded vocabulary for ${isAmalgamate ? 'amalgamate' : 'primary'}.`);
                 if (!isAmalgamate) {
                   vocabData = [...defaultVocabData];
                   vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
@@ -453,8 +453,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function getUnderscoreText(text) {
-    if (text.length > 50) text = text.slice(0, 47) + '...';
-    return text[0] + '_'.repeat(text.length - 1);
+    return text; // Removed underscore logic since wrapping handles long text
   }
 
   function spawnWord() {
@@ -501,17 +500,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const finalPrompt = amalgamateVocab.length > 0 && vocab2 ? prompt1 + ' ' + prompt2 : prompt1;
     const finalDefinition = amalgamateVocab.length > 0 && vocab2 ? vocab1.Definition + ' ' + vocab2.Definition : vocab1.Definition;
 
+    // Calculate wrapped text width for x-position
+    ctx.font = '24px Arial';
+    const maxWidth = canvas.width - 40;
+    const wordsArray = finalTypedInput.split(' ');
+    let lines = [];
+    let line = '';
+    for (let word of wordsArray) {
+      const testLine = line + word + ' ';
+      const metrics = ctx.measureText(testLine);
+      if (metrics.width > maxWidth && line !== '') {
+        lines.push(line.trim());
+        line = word + ' ';
+      } else {
+        line = testLine;
+      }
+    }
+    if (line) lines.push(line.trim());
+    const maxTextWidth = Math.max(...lines.map(l => ctx.measureText(l).width), 0);
+
     const padding = 20;
-    ctx.font = '18px Arial';
-    const textWidth = ctx.measureText(finalTypedInput).width;
-    const maxX = Math.max(0, canvas.width - textWidth - padding);
+    const maxX = Math.max(0, canvas.width - maxTextWidth - padding);
     const minX = padding;
     const xRange = Math.max(0, maxX - minX);
     const x = mode === 'game' ? (minX + Math.random() * xRange) : 50;
 
     const y = 0;
     const speed = mode === 'game' ? waveSpeeds[wave] : 0.5 + level * 0.1;
-    const word = { prompt: finalPrompt, typedInput: finalTypedInput, displayText: getUnderscoreText(finalTypedInput), x, y, speed, matched: '', definition: finalDefinition, isExiting: false, opacity: 0, fadeState: 'in' };
+    const fontSize = Math.floor(30 + Math.random() * 5); // 30-34px
+    const word = { prompt: finalPrompt, typedInput: finalTypedInput, displayText: getUnderscoreText(finalTypedInput), x, y, speed, matched: '', definition: finalDefinition, isExiting: false, opacity: 0, fadeState: 'in', fontSize };
     words.push(word);
     userInput.placeholder = finalPrompt;
     updateWPMDisplay();
@@ -534,15 +551,16 @@ document.addEventListener('DOMContentLoaded', () => {
       const availableFonts = themeFonts[currentTheme] || ['Arial'];
       const selectedFont = availableFonts[Math.floor(Math.random() * availableFonts.length)];
 
-      // Update opacity based on fadeState
-      const fadeDuration = 2; // 2 seconds
-      const fadeSpeed = 0.3 / fadeDuration; // Opacity change per second (0 to 0.3)
+      // Update opacity
+      const fadeDuration = 2;
+      const fadeSpeed = 0.3 / fadeDuration;
       if (word.fadeState === 'in') {
         word.opacity = Math.min(word.opacity + fadeSpeed * deltaTime, 0.3);
       } else if (word.fadeState === 'out') {
         word.opacity = Math.max(word.opacity - fadeSpeed * deltaTime, 0);
       }
 
+      // Background definition text
       const maxWidth = canvas.width - 40;
       const wordsArray = definition.split(' ');
       let lines = [];
@@ -550,7 +568,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       for (let w of wordsArray) {
         const testLine = line + w + ' ';
-        ctx.font = `32px ${selectedFont}`;
+        ctx.font = `${word.fontSize}px ${selectedFont}`;
         const metrics = ctx.measureText(testLine);
         if (metrics.width > maxWidth && line !== '') {
           lines.push({ text: line.trim(), font: selectedFont });
@@ -565,7 +583,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (lines.length > 4) {
         lines = lines.slice(0, 3);
         const lastLine = lines[2].text;
-        ctx.font = `32px ${selectedFont}`;
+        ctx.font = `${word.fontSize}px ${selectedFont}`;
         let truncated = lastLine;
         while (ctx.measureText(truncated + '...').width > maxWidth && truncated.length > 0) {
           truncated = truncated.slice(0, -1);
@@ -582,12 +600,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const baseColor = computedStyle.getPropertyValue('--canvas-text')?.trim() || '#ffffff';
 
       for (let i = 0; i < lines.length; i++) {
-        ctx.font = `32px ${lines[i].font}`;
+        ctx.font = `${word.fontSize}px ${lines[i].font}`;
         ctx.fillStyle = `rgba(${hexToRgb(baseColor)}, ${word.opacity})`;
         ctx.fillText(lines[i].text, canvas.width / 2, startY + i * lineHeight);
       }
     }
 
+    // Red rectangle at bottom
     const rectHeight = 20;
     const rectY = canvas.height - rectHeight;
     ctx.beginPath();
@@ -598,28 +617,78 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    ctx.font = '18px Arial';
+    // Descending text
+    ctx.font = '24px Arial';
     ctx.textAlign = 'left';
     const computedStyle = window.getComputedStyle(document.body);
     const textColor = computedStyle.getPropertyValue('--canvas-text')?.trim() || '#ffffff';
 
     words = words.filter(word => word.y < canvas.height && !word.isExiting);
     words.forEach(word => {
-      const textWidth = ctx.measureText(word.typedInput).width;
-      ctx.clearRect(word.x - 5, word.y - 20, textWidth + 10, 25);
+      const maxWidth = canvas.width - 40;
+      const wordsArray = word.typedInput.split(' ');
+      let lines = [];
+      let line = '';
+      for (let w of wordsArray) {
+        const testLine = line + w + ' ';
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && line !== '') {
+          lines.push(line.trim());
+          line = w + ' ';
+        } else {
+          line = testLine;
+        }
+      }
+      if (line) lines.push(line.trim());
+
+      const lineHeight = 30;
+      const totalHeight = lines.length * lineHeight;
+      const startY = word.y - 20;
+
+      // Clear area for text
+      const maxTextWidth = Math.max(...lines.map(l => ctx.measureText(l).width), 0);
+      ctx.clearRect(word.x - 5, startY, maxTextWidth + 10, totalHeight + 5);
 
       word.y += word.speed;
       const typed = userInput.value;
       const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
       const input = caseSensitive ? typed : typed.toLowerCase();
       word.matched = target.startsWith(input) ? typed : '';
-      
-      ctx.fillStyle = 'red';
-      ctx.fillText(word.matched, word.x, word.y);
-      
-      const matchedWidth = ctx.measureText(word.matched).width;
-      ctx.fillStyle = textColor;
-      ctx.fillText(word.displayText.slice(word.matched.length), word.x + matchedWidth, word.y);
+
+      // Render each line
+      let currentIndex = 0;
+      for (let i = 0; i < lines.length; i++) {
+        const lineText = lines[i];
+        const lineY = startY + i * lineHeight;
+
+        // Find matched portion in this line
+        const lineLength = lineText.length;
+        let matchedText = '';
+        let unmatchedText = lineText;
+        if (currentIndex < word.matched.length) {
+          const remainingMatch = word.matched.slice(currentIndex);
+          if (remainingMatch.length >= lineLength) {
+            matchedText = lineText;
+            unmatchedText = '';
+          } else {
+            matchedText = remainingMatch;
+            unmatchedText = lineText.slice(remainingMatch.length);
+          }
+        }
+
+        let xOffset = word.x;
+        if (matchedText) {
+          ctx.fillStyle = 'red';
+          ctx.fillText(matchedText, xOffset, lineY);
+          xOffset += ctx.measureText(matchedText).width;
+        }
+        if (unmatchedText) {
+          ctx.fillStyle = textColor;
+          ctx.fillText(unmatchedText, xOffset, lineY);
+        }
+
+        currentIndex += lineLength + 1; // +1 for space
+      }
 
       if (word.y >= canvas.height) {
         missedWords.push(word.typedInput);
@@ -696,7 +765,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
       const input = caseSensitive ? typed : typed.toLowerCase();
       if (typed.length === 1 && target.startsWith(input)) {
-        word.displayText = word.typedInput;
+        word.displayText = word.typedInput; // Update to full text for wrapping
       }
       if (target === input) {
         correctChars += word.typedInput.length;
