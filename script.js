@@ -8,8 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const waveDisplay = document.getElementById('wave');
   const timerDisplay = document.getElementById('timer');
   const wpmDisplay = document.getElementById('wpm');
-  const termsToWaveDisplay = document.getElementById('termsToWave'); // New element
-  const termsCoveredDisplay = document.getElementById('termsCovered'); // New element
+  const termsToWaveDisplay = document.getElementById('termsToWave');
+  const termsCoveredDisplay = document.getElementById('termsCovered');
   const startScreen = document.getElementById('startScreen');
   const gameContainer = document.getElementById('gameContainer');
   const startButton = document.getElementById('startButton');
@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         loadingIndicator.classList.add('hidden');
         startButton.disabled = false;
-        updateStatsDisplay(); // Update stats after loading vocab
+        updateStatsDisplay();
         resolve();
         return;
       }
@@ -746,7 +746,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (e.key === 'Control') {
       document.querySelectorAll('.ctrl').forEach(ctrl => ctrl.classList.remove('pressed'));
     } else if (e.key === 'Alt') {
-      document.querySelectorAll('.alt').forEach(alt => alt.classList.add('pressed'));
+      document.querySelectorAll('.alt').forEach(alt => alt.classList.remove('pressed'));
     } else if (e.key === 'Meta') {
       document.querySelectorAll('.win').forEach(win => win.classList.remove('pressed'));
     }
