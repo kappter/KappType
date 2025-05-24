@@ -117,6 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let missedWords = [];
   let totalChars = 0;
   let correctChars = 0;
+  let correctTermsCount = 0;
   let lastFrameTime = performance.now();
   let vocabIndex = 0;
   let amalgamateIndex = 0;
@@ -142,8 +143,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const baseUrl = 'https://raw.githubusercontent.com/kappter/vocab-sets/main/';
     const files = [
       'Exploring_Computer_Science_Vocabulary',
-      'Financial_Management_Tips',
-      'Study_Skills_High_School',
       'AP_Computer_Science_A_Concepts',
       'AP_Java_Code_Snippets',
       'AP_Astronomy_Concepts',
@@ -515,7 +514,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const x = mode === 'game' ? (minX + Math.random() * (maxX - minX)) : minX;
 
     const y = 0;
-    const speed = mode === 'game' ? waveSpeeds[wave] : 0.5 + level * 0.1;
+    const speed = mode === 'game' ? (waveSpeeds[wave] || waveSpeeds[waveSpeeds.length - 1]) : 0.5 + level * 0.1;
     const word = { prompt: finalPrompt, typedInput: finalTypedInput, displayText: displayText, x, y, speed, matched: '', definition: finalDefinition, isExiting: false, opacity: 0, fadeState: 'in' };
     words.push(word);
     userInput.placeholder = finalPrompt;
@@ -644,14 +643,6 @@ document.addEventListener('DOMContentLoaded', () => {
       spawnWord();
     }
 
-    if (mode === 'game' && timeLeft <= 0) {
-      wave++;
-      waveDisplay.textContent = `Wave: ${wave}`;
-      timeLeft = 30;
-      words.forEach(word => word.speed = waveSpeeds[wave] || waveSpeeds[waveSpeeds.length - 1]);
-      const lightness = 50 + (wave - 1) * 3;
-      document.documentElement.style.setProperty('--bg-lightness', `${Math.min(lightness, 77)}%`);
-    }
     requestAnimationFrame(updateGame);
   }
 
@@ -678,12 +669,20 @@ document.addEventListener('DOMContentLoaded', () => {
     totalTime++;
     timerDisplay.textContent = `Time: ${timeLeft}s`;
     updateWPMDisplay();
-    if (timeLeft <= 0) {
-      wave++;
-      waveDisplay.textContent = `Wave: ${wave}`;
-      timeLeft = 30;
-    }
     setTimeout(updateTimer, 1000);
+  }
+
+  function triggerConfetti() {
+    if (typeof confetti === 'undefined') {
+      console.warn('Confetti library not loaded.');
+      return;
+    }
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 },
+      zIndex: 1000
+    });
   }
 
   function handleInput(e) {
@@ -700,12 +699,26 @@ document.addEventListener('DOMContentLoaded', () => {
         correctChars += word.typedInput.length;
         totalChars += word.typedInput.length;
         score += word.typedInput.length;
+        correctTermsCount++;
         scoreDisplay.textContent = `Score: ${score}`;
         e.target.value = '';
         e.target.placeholder = 'Prompt will appear here...';
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         word.isExiting = true;
         word.fadeState = 'out';
+
+        if (mode === 'game' && correctTermsCount >= 20) {
+          wave++;
+          correctTermsCount = 0;
+          waveDisplay.textContent = `Wave: ${wave}`;
+          words.forEach(word => word.speed = waveSpeeds[wave] || waveSpeeds[waveSpeeds.length - 1]);
+          const lightness = 50 + (wave - 1) * 3;
+          document.documentElement.style.setProperty('--bg-lightness', `${Math.min(lightness, 77)}%`);
+          triggerConfetti();
+          userInput.classList.add('pulse');
+          setTimeout(() => userInput.classList.remove('pulse'), 1000);
+        }
+
         return false;
       }
       if (target.startsWith(input)) {
