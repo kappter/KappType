@@ -142,5 +142,22 @@
       </div>
     </div>
   </div>
+
+  <!-- Include Papa Parse -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+
+  <!-- Define defaultVocabData -->
+  <script>
+    const defaultVocabData = [
+      { Term: "Algorithm", Definition: "A set of steps to solve a problem or complete a task." },
+      { Term: "Variable", Definition: "A storage location with a symbolic name that holds a value." },
+      // Add more terms as needed (up to 53 as referenced)
+      { Term: "Loop", Definition: "A sequence of instructions that repeats until a condition is met." },
+      // ... (add 49 more pairs for a total of 53)
+    ];
+  </script>
+
+  <!-- Load the game script -->
+  <script src="script.js"></script>
 </body>
 </html>
