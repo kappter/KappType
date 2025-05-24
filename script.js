@@ -444,11 +444,13 @@ document.addEventListener('DOMContentLoaded', () => {
     return sourceArray[index];
   }
 
-  function getUnderscoreText(text) {
-    if (text.length > 50) {
-      return text.substring(0, 47) + '...';
+  function getUnderscoreText(text, typedLength = 0) {
+    const maxLength = 50;
+    let displayText = text.slice(0, typedLength) + text.slice(typedLength, typedLength + 1) + '_'.repeat(Math.min(text.length - typedLength - 1, maxLength - typedLength - 1));
+    if (text.length > maxLength) {
+      displayText = displayText.slice(0, 47) + '...';
     }
-    return text;
+    return displayText;
   }
 
   function spawnWord() {
@@ -496,7 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const finalDefinition = amalgamateVocab.length > 0 && vocab2 ? vocab1.Definition + ' ' + vocab2.Definition : vocab1.Definition;
 
     // Measure text width for descending text
-    const displayText = getUnderscoreText(finalTypedInput);
+    const displayText = getUnderscoreText(finalTypedInput, 0);
     ctx.font = '18px Arial';
     const textWidth = ctx.measureText(displayText).width;
 
@@ -696,8 +698,10 @@ document.addEventListener('DOMContentLoaded', () => {
     words = words.filter(word => {
       const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
       const input = caseSensitive ? typed : typed.toLowerCase();
-      if (typed.length === 1 && target.startsWith(input)) {
-        word.displayText = getUnderscoreText(word.typedInput);
+      if (target.startsWith(input)) {
+        word.displayText = getUnderscoreText(word.typedInput, input.length);
+      } else {
+        word.displayText = getUnderscoreText(word.typedInput, 0);
       }
       if (target === input) {
         correctChars += word.typedInput.length;
@@ -729,7 +733,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (e.key === 'Shift') {
       document.querySelectorAll('.shift').forEach(shift => shift.classList.add('pressed'));
     } else if (e.key === 'Control') {
-      document.querySelectorAll('.ctrl').forEach(ctrl => shift.classList.add('pressed'));
+      document.querySelectorAll('.ctrl').forEach(ctrl => ctrl.classList.add('pressed'));
     } else if (e.key === 'Alt') {
       document.querySelectorAll('.alt').forEach(alt => alt.classList.add('pressed'));
     } else if (e.key === 'Meta') {
