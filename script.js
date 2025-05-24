@@ -574,7 +574,7 @@ function updateGame() {
   ctx.font = '18px Arial';
   ctx.textAlign = 'left';
 
-  words = words.filter(word => {
+    words = words.filter(word => {
     word.y += word.speed;
     const typed = userInput.value;
     const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
@@ -589,12 +589,12 @@ function updateGame() {
     }
     const remainingText = word.displayText.slice(word.matched.length);
     if (remainingText) {
-      ctx.fillStyle = textColor; // Now accessible
+      ctx.fillStyle = textColor;
       ctx.fillText(remainingText, word.x + ctx.measureText(word.matched).width, word.y);
     }
 
     if (word.y >= canvas.height) {
-      console.log(`Word missed: ${word.typedInput}`);
+      console.log(`Word missed: ${word.typedInput}, Time Left: ${timeLeft}s`);
       missedWords.push(word.typedInput);
       coveredTerms.set(word.typedInput, 'Missed');
       totalChars += word.typedInput.length;
@@ -602,6 +602,7 @@ function updateGame() {
       word.fadeState = 'out';
       if (words.length === 1 && mode === 'game') {
         gameActive = false;
+        console.log(`Game Over due to missed word. Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
         alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
         return false;
       }
@@ -643,19 +644,20 @@ function updateGame() {
     return totalAttempts > 0 ? Math.round((correctTermsCount / totalAttempts) * 100) : 100;
   }
 
-   function updateTimer() {
-    if (!gameActive) return;
-    timeLeft = Math.max(0, timeLeft - 1);
-    totalTime++;
-    timerDisplay.textContent = `Time: ${timeLeft}s`;
-    updateWPMDisplay();
-    if (timeLeft > 0) {
-      setTimeout(updateTimer, 1000); // Ensure 1-second intervals
-    } else if (mode === 'game') {
-      gameActive = false;
-      alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
-    }
+function updateTimer() {
+  if (!gameActive) return;
+  timeLeft = Math.max(0, timeLeft - 1);
+  totalTime++;
+  timerDisplay.textContent = `Time: ${timeLeft}s`;
+  updateWPMDisplay();
+  if (timeLeft > 0) {
+    setTimeout(updateTimer, 1000);
+  } else if (mode === 'game') {
+    gameActive = false;
+    console.log(`Game Over due to timer. Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
+    alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
   }
+}
 
   function updateStatsDisplay() {
     const termsCovered = correctTermsCount + missedWords.length;
