@@ -142,6 +142,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const baseUrl = 'https://raw.githubusercontent.com/kappter/vocab-sets/main/';
     const files = [
       'Exploring_Computer_Science_Vocabulary',
+      'Financial_Management_Tips',
+      'Study_Skills_High_School',
       'AP_Computer_Science_A_Concepts',
       'AP_Java_Code_Snippets',
       'AP_Astronomy_Concepts',
