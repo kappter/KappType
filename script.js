@@ -446,8 +446,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function getUnderscoreText(text, typedLength = 0) {
     const maxLength = 50;
-    const underscoreCount = Math.max(0, Math.min(text.length - typedLength - 1, maxLength - typedLength - 1));
-    let displayText = text.slice(0, typedLength) + (typedLength < text.length ? text.slice(typedLength, typedLength + 1) : '') + '_'.repeat(underscoreCount);
+    let displayText;
+    if (typedLength === 0) {
+      const underscoreCount = Math.min(text.length - 1, maxLength - 1);
+      displayText = text.slice(0, 1) + '_'.repeat(underscoreCount);
+    } else {
+      displayText = text;
+    }
     if (text.length > maxLength) {
       displayText = displayText.slice(0, 47) + '...';
     }
@@ -702,7 +707,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return false;
       }
       if (target.startsWith(input)) {
-        word.displayText = getUnderscoreText(word.typedInput, input.length);
+        word.displayText = getUnderscoreText(word.typedInput, input.length > 0 ? 1 : 0);
       } else {
         word.displayText = getUnderscoreText(word.typedInput, 0);
       }
