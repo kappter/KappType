@@ -574,7 +574,7 @@ function updateGame() {
   ctx.font = '18px Arial';
   ctx.textAlign = 'left';
 
-    words = words.filter(word => {
+  words = words.filter(word => {
     word.y += word.speed;
     const typed = userInput.value;
     const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
@@ -589,7 +589,7 @@ function updateGame() {
     }
     const remainingText = word.displayText.slice(word.matched.length);
     if (remainingText) {
-      ctx.fillStyle = textColor;
+      ctx.fillStyle = textColor; // Should now be defined
       ctx.fillText(remainingText, word.x + ctx.measureText(word.matched).width, word.y);
     }
 
