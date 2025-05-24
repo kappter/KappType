@@ -495,10 +495,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const finalPrompt = amalgamateVocab.length > 0 && vocab2 ? prompt1 + ' ' + prompt2 : prompt1;
     const finalDefinition = amalgamateVocab.length > 0 && vocab2 ? vocab1.Definition + ' ' + vocab2.Definition : vocab1.Definition;
 
-    const x = mode === 'game' ? (50 + Math.random() * (canvas.width - 100)) : 50;
+    // Measure text width for descending text
+    const displayText = getUnderscoreText(finalTypedInput);
+    ctx.font = '18px Arial';
+    const textWidth = ctx.measureText(displayText).width;
+
+    // Calculate x-position to keep text within canvas
+    const padding = 20;
+    const maxX = canvas.width - textWidth - padding;
+    const minX = padding;
+    const x = mode === 'game' ? (minX + Math.random() * (maxX - minX)) : minX;
+
     const y = 0;
     const speed = mode === 'game' ? waveSpeeds[wave] : 0.5 + level * 0.1;
-    const word = { prompt: finalPrompt, typedInput: finalTypedInput, displayText: getUnderscoreText(finalTypedInput), x, y, speed, matched: '', definition: finalDefinition, isExiting: false, opacity: 0, fadeState: 'in' };
+    const word = { prompt: finalPrompt, typedInput: finalTypedInput, displayText: displayText, x, y, speed, matched: '', definition: finalDefinition, isExiting: false, opacity: 0, fadeState: 'in' };
     words.push(word);
     userInput.placeholder = finalPrompt;
     updateWPMDisplay();
@@ -617,15 +627,17 @@ document.addEventListener('DOMContentLoaded', () => {
         totalChars += word.typedInput.length;
         word.isExiting = true;
         word.fadeState = 'out';
+        if (mode === 'game') {
+          gameActive = false;
+          alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
+          return;
+        }
       }
     });
 
     if (words.length > 0 && words[0].isExiting && words[0].opacity <= 0) {
       words = [];
-      if (mode === 'game') {
-        gameActive = false;
-        alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
-      } else {
+      if (mode !== 'game') {
         spawnWord();
       }
     } else if (words.length === 0) {
