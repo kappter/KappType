@@ -128,16 +128,16 @@ body.medieval .stats span {
 }
 
 .time-indicator {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background-color: grey;
-  margin: 0; /* Remove auto margin since it's in a flex container */
-}
+       width: 12px;
+       height: 12px;
+       border-radius: 50%;
+       background-color: grey;
+       margin: 5px auto;
+     }
 
-.time-indicator.active {
-  background-color: green;
-}
+     .time-indicator.active {
+       background-color: green;
+     }
 
 .start-card {
   background: var(--glass-bg);
