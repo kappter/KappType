@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const waveDisplay = document.getElementById('wave');
   const timerDisplay = document.getElementById('timer');
   const wpmDisplay = document.getElementById('wpm');
+  const termsToWaveDisplay = document.getElementById('termsToWave'); // New element
+  const termsCoveredDisplay = document.getElementById('termsCovered'); // New element
   const startScreen = document.getElementById('startScreen');
   const gameContainer = document.getElementById('gameContainer');
   const startButton = document.getElementById('startButton');
@@ -27,8 +29,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const timeIndicator = document.getElementById('timeIndicator');
   const themeSelect = document.getElementById('themeSelect');
 
-  if (!canvas || !ctx || !userInput || !timeIndicator || !startButton || !resetButton || !randomizeTermsCheckbox || !themeSelect) {
-    console.error('Required elements not found:', { canvas, ctx, userInput, timeIndicator, startButton, resetButton, randomizeTermsCheckbox, themeSelect });
+  if (!canvas || !ctx || !userInput || !timeIndicator || !startButton || !resetButton || !randomizeTermsCheckbox || !themeSelect || !termsToWaveDisplay || !termsCoveredDisplay) {
+    console.error('Required elements not found:', { canvas, ctx, userInput, timeIndicator, startButton, resetButton, randomizeTermsCheckbox, themeSelect, termsToWaveDisplay, termsCoveredDisplay });
     alert('Critical elements are missing from the page. Please check the HTML structure and try again.');
     return;
   }
@@ -175,6 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         loadingIndicator.classList.add('hidden');
         startButton.disabled = false;
+        updateStatsDisplay(); // Update stats after loading vocab
         resolve();
         return;
       }
@@ -189,6 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         loadingIndicator.classList.add('hidden');
         startButton.disabled = false;
+        updateStatsDisplay();
         resolve();
         return;
       }
@@ -203,6 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         loadingIndicator.classList.add('hidden');
         startButton.disabled = false;
+        updateStatsDisplay();
         resolve();
         return;
       }
@@ -217,6 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         loadingIndicator.classList.add('hidden');
         startButton.disabled = false;
+        updateStatsDisplay();
         resolve();
         return;
       }
@@ -259,6 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
               }
               loadingIndicator.classList.add('hidden');
               startButton.disabled = false;
+              updateStatsDisplay();
               resolve();
             },
             error: function(error) {
@@ -273,6 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
               }
               loadingIndicator.classList.add('hidden');
               startButton.disabled = false;
+              updateStatsDisplay();
               resolve();
             }
           });
@@ -289,6 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
           loadingIndicator.classList.add('hidden');
           startButton.disabled = false;
+          updateStatsDisplay();
           resolve();
         });
     });
@@ -311,6 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         loadingIndicator.classList.add('hidden');
         startButton.disabled = false;
+        updateStatsDisplay();
         resolve();
         return;
       }
@@ -341,6 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
           loadingIndicator.classList.add('hidden');
           startButton.disabled = false;
+          updateStatsDisplay();
           resolve();
         },
         error: function(error) {
@@ -354,6 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
           loadingIndicator.classList.add('hidden');
           startButton.disabled = false;
+          updateStatsDisplay();
           resolve();
         }
       });
@@ -609,7 +621,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function calculateWPM() {
     if (sessionStartTime === null || correctChars === 0) return 0;
-    const elapsedTime = Math.max(0, (performance.now() - sessionStartTime) / 1000 / 60); // Ensure no negative time
+    const elapsedTime = Math.max(0, (performance.now() - sessionStartTime) / 1000 / 60);
     if (elapsedTime <= 0) return 0;
     const wpm = Math.round((correctChars / 5) / elapsedTime);
     return Math.min(wpm, 200);
@@ -626,7 +638,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateTimer() {
     if (!gameActive) return;
-    timeLeft = Math.max(0, timeLeft - 1); // Prevent negative time
+    timeLeft = Math.max(0, timeLeft - 1);
     totalTime++;
     timerDisplay.textContent = `Time: ${timeLeft}s`;
     updateWPMDisplay();
@@ -636,6 +648,18 @@ document.addEventListener('DOMContentLoaded', () => {
       gameActive = false;
       alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
     }
+  }
+
+  function updateStatsDisplay() {
+    const termsCovered = correctTermsCount + missedWords.length;
+    const totalTerms = vocabData.length + (amalgamateVocab.length > 0 ? amalgamateVocab.length : 0);
+    const termsToWave = 10 - correctTermsCount;
+    scoreDisplay.textContent = `Score: ${score}`;
+    waveDisplay.textContent = `Wave: ${wave}`;
+    timerDisplay.textContent = `Time: ${timeLeft >= 0 ? timeLeft : 0}s`;
+    wpmDisplay.textContent = `WPM: ${currentWPM}`;
+    termsToWaveDisplay.textContent = `To Wave: ${termsToWave}`;
+    termsCoveredDisplay.textContent = `Terms: ${termsCovered}/${totalTerms}`;
   }
 
   function handleInput(e) {
@@ -661,7 +685,7 @@ document.addEventListener('DOMContentLoaded', () => {
         word.isExiting = true;
         word.fadeState = 'out';
 
-        if (mode === 'game' && correctTermsCount >= 10) { // Changed to 10 words per wave
+        if (mode === 'game' && correctTermsCount >= 10) {
           console.log(`Advancing to Wave ${wave + 1}`);
           wave++;
           correctTermsCount = 0;
@@ -675,6 +699,7 @@ document.addEventListener('DOMContentLoaded', () => {
           setTimeout(() => userInput.classList.remove('pulse'), 1000);
         }
 
+        updateStatsDisplay();
         return false;
       }
       if (target.startsWith(input)) {
@@ -686,6 +711,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     updateTimeIndicator();
+    updateStatsDisplay();
   }
 
   function highlightKeys(e) {
@@ -720,7 +746,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (e.key === 'Control') {
       document.querySelectorAll('.ctrl').forEach(ctrl => ctrl.classList.remove('pressed'));
     } else if (e.key === 'Alt') {
-      document.querySelectorAll('.alt').forEach(alt => alt.classList.remove('pressed'));
+      document.querySelectorAll('.alt').forEach(alt => alt.classList.add('pressed'));
     } else if (e.key === 'Meta') {
       document.querySelectorAll('.win').forEach(win => win.classList.remove('pressed'));
     }
@@ -875,30 +901,5 @@ document.addEventListener('DOMContentLoaded', () => {
     location.reload();
   });
 
-  // Update stats display with new counts
-  function updateStatsDisplay() {
-    const termsCovered = correctTermsCount + missedWords.length;
-    const totalTerms = vocabData.length + (amalgamateVocab.length > 0 ? amalgamateVocab.length : 0);
-    const termsToWave = 10 - correctTermsCount; // 10 words per wave
-    scoreDisplay.textContent = `Score: ${score}`;
-    waveDisplay.textContent = `Wave: ${wave}`;
-    timerDisplay.textContent = `Time: ${timeLeft >= 0 ? timeLeft : 0}s`; // Ensure non-negative time
-    wpmDisplay.textContent = `WPM: ${currentWPM}`;
-    // Add new stats
-    const termsDisplay = document.createElement('span');
-    termsDisplay.textContent = `Terms: ${termsCovered}/${totalTerms}`;
-    const waveCountdownDisplay = document.createElement('span');
-    waveCountdownDisplay.textContent = `To Wave: ${termsToWave}`;
-    const stats = document.querySelector('.stats');
-    stats.appendChild(termsDisplay);
-    stats.appendChild(waveCountdownDisplay);
-  }
-
-  // Call updateStatsDisplay initially and on score/wave change
   updateStatsDisplay();
-  const originalHandleInput = handleInput;
-  handleInput = function(e) {
-    originalHandleInput(e);
-    updateStatsDisplay();
-  };
 });

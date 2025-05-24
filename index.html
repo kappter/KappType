@@ -44,10 +44,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KappType</title>
   <link rel="stylesheet" href="styles.css">
-  <link rel="icon" href="data:,">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
 </head>
-<body>
+<body class="natural-light">
   <div id="startScreen">
     <div class="start-card">
       <h1>KappType</h1>
@@ -59,9 +57,9 @@
         <option value="space">Space</option>
         <option value="medieval">Medieval</option>
       </select>
-      
+
       <label for="levelInput">Level (1-10):</label>
-      <input type="number" id="levelInput" value="1" min="1" max="10">
+      <input type="number" id="levelInput" min="1" max="10" value="1">
       
       <label for="modeSelect">Mode:</label>
       <select id="modeSelect">
@@ -94,7 +92,7 @@
       <label for="customVocabInput2">Amalgamation Vocabulary (CSV):</label>
       <input type="file" id="customVocabInput2" accept=".csv">
 
-      <label for="randomizeTerms" class="checkbox-label">
+      <label class="checkbox-label">
         <input type="checkbox" id="randomizeTerms" checked>
         Randomize Terms
       </label>
@@ -107,26 +105,31 @@
   <div id="gameContainer" class="hidden">
     <h2 id="vocabSetTitle"></h2>
     <canvas id="gameCanvas"></canvas>
+    
     <div class="stats-container">
       <div class="stats">
         <span id="score">Score: 0</span>
         <span id="wave">Wave: 1</span>
         <span id="timer">Time: 30s</span>
         <span id="wpm">WPM: 0</span>
-        <span id="timeIndicator"></span>
+        <span id="termsToWave">To Wave: 10</span>
+        <span id="termsCovered">Terms: 0/0</span>
       </div>
     </div>
-    <input type="text" id="userInput" placeholder="Prompt will appear here...">
+    
+    <input type="text" id="userInput" placeholder="Prompt will appear here..." autocomplete="off">
+    
     <div class="button-group">
       <button id="certificateButton">Generate Certificate</button>
       <button id="resetButton">Reset Game</button>
     </div>
+    
     <div class="keyboard">
       <div class="row">
         <span class="key" data-key="~">~</span><span class="key" data-key="1">1</span><span class="key" data-key="2">2</span><span class="key" data-key="3">3</span><span class="key" data-key="4">4</span><span class="key" data-key="5">5</span><span class="key" data-key="6">6</span><span class="key" data-key="7">7</span><span class="key" data-key="8">8</span><span class="key" data-key="9">9</span><span class="key" data-key="0">0</span><span class="key" data-key="-">-</span><span class="key" data-key="=">=</span><span class="key backspace" data-key="Backspace">Backspace</span>
       </div>
       <div class="row">
-        <span class="key tab" data-key="Tab">Tab</span><span class="key" data-key="q">q</span><span class="key" data-key="w">w</span><span class="key" data-key="e">e</span><span class="key" data-key="r">r</span><span class="key" data-key="t">t</span><span class="key" data-key="y">y</span><span class="key" data-key="u">u</span><span class="key" data-key="i">i</span><span class="key" data-key="o">o</span><span class="key" data-key="p">p</span><span class="key" data-key="[">[</span><span class="key" data-key="]">]</span><span class="key" data-key="\\">\</span>
+        <span class="key tab" data-key="Tab">Tab</span><span class="key" data-key="q">q</span><span class="key" data-key="w">w</span><span class="key" data-key="e">e</span><span class="key" data-key="r">r</span><span class="key" data-key="t">t</span><span class="key" data-key="y">y</span><span class="key" data-key="u">u</span><span class="key" data-key="i">i</span><span class="key" data-key="o">o</span><span class="key" data-key="p">p</span><span class="key" data-key="[">[</span><span class="key" data-key="]">]</span><span class="key" data-key="\">\\</span>
       </div>
       <div class="row">
         <span class="key caps-lock" data-key="CapsLock">Caps Lock</span><span class="key" data-key="a">a</span><span class="key" data-key="s">s</span><span class="key" data-key="d">d</span><span class="key" data-key="f">f</span><span class="key" data-key="g">g</span><span class="key" data-key="h">h</span><span class="key" data-key="j">j</span><span class="key" data-key="k">k</span><span class="key" data-key="l">l</span><span class="key" data-key=";">;</span><span class="key" data-key="'">'</span><span class="key enter" data-key="Enter">Enter</span>
@@ -139,8 +142,5 @@
       </div>
     </div>
   </div>
-
-  <script src="papaparse.min.js"></script>
-  <script src="script.js"></script>
 </body>
 </html>
