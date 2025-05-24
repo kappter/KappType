@@ -446,7 +446,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function getUnderscoreText(text, typedLength = 0) {
     const maxLength = 50;
-    let displayText = text.slice(0, typedLength) + text.slice(typedLength, typedLength + 1) + '_'.repeat(Math.min(text.length - typedLength - 1, maxLength - typedLength - 1));
+    const underscoreCount = Math.max(0, Math.min(text.length - typedLength - 1, maxLength - typedLength - 1));
+    let displayText = text.slice(0, typedLength) + (typedLength < text.length ? text.slice(typedLength, typedLength + 1) : '') + '_'.repeat(underscoreCount);
     if (text.length > maxLength) {
       displayText = displayText.slice(0, 47) + '...';
     }
@@ -497,12 +498,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const finalPrompt = amalgamateVocab.length > 0 && vocab2 ? prompt1 + ' ' + prompt2 : prompt1;
     const finalDefinition = amalgamateVocab.length > 0 && vocab2 ? vocab1.Definition + ' ' + vocab2.Definition : vocab1.Definition;
 
-    // Measure text width for descending text
     const displayText = getUnderscoreText(finalTypedInput, 0);
     ctx.font = '18px Arial';
     const textWidth = ctx.measureText(displayText).width;
 
-    // Calculate x-position to keep text within canvas
     const padding = 20;
     const maxX = canvas.width - textWidth - padding;
     const minX = padding;
@@ -530,7 +529,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const word = words[0];
       const definition = word.definition;
 
-      // Update background text opacity
       const fadeDuration = 4;
       const fadeSpeed = 0.3 / fadeDuration;
       if (word.fadeState === 'in') {
@@ -539,7 +537,6 @@ document.addEventListener('DOMContentLoaded', () => {
         word.opacity = Math.max(word.opacity - fadeSpeed * deltaTime, 0);
       }
 
-      // Background definition text
       const maxWidth = canvas.width - 40;
       const wordsArray = definition.split(' ');
       let lines = [];
@@ -558,7 +555,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (line) lines.push(line.trim());
 
-      // Limit to 4 lines, truncate if necessary
       if (lines.length > 4) {
         lines = lines.slice(0, 3);
         const lastLine = lines[2];
@@ -584,7 +580,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // Red rectangle at bottom
     const rectHeight = 20;
     const rectY = canvas.height - rectHeight;
     ctx.beginPath();
@@ -595,7 +590,6 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Descending text
     ctx.font = '18px Arial';
     ctx.textAlign = 'left';
     const computedStyle = window.getComputedStyle(document.body);
@@ -609,15 +603,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const input = caseSensitive ? typed : typed.toLowerCase();
       word.matched = target.startsWith(input) ? typed : '';
 
-      // Clear area for text
       ctx.clearRect(word.x - 5, word.y - 20, ctx.measureText(word.displayText).width + 10, 25);
 
-      // Render matched portion
       if (word.matched) {
         ctx.fillStyle = 'red';
         ctx.fillText(word.matched, word.x, word.y);
       }
-      // Render remaining text
       const remainingText = word.displayText.slice(word.matched.length);
       if (remainingText) {
         ctx.fillStyle = textColor;
@@ -698,11 +689,6 @@ document.addEventListener('DOMContentLoaded', () => {
     words = words.filter(word => {
       const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
       const input = caseSensitive ? typed : typed.toLowerCase();
-      if (target.startsWith(input)) {
-        word.displayText = getUnderscoreText(word.typedInput, input.length);
-      } else {
-        word.displayText = getUnderscoreText(word.typedInput, 0);
-      }
       if (target === input) {
         correctChars += word.typedInput.length;
         totalChars += word.typedInput.length;
@@ -714,6 +700,11 @@ document.addEventListener('DOMContentLoaded', () => {
         word.isExiting = true;
         word.fadeState = 'out';
         return false;
+      }
+      if (target.startsWith(input)) {
+        word.displayText = getUnderscoreText(word.typedInput, input.length);
+      } else {
+        word.displayText = getUnderscoreText(word.typedInput, 0);
       }
       return true;
     });
