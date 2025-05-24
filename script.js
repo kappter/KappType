@@ -508,6 +508,19 @@ function updateGame() {
   // Define textColor at the start of the function
   const computedStyle = window.getComputedStyle(document.body);
   const textColor = computedStyle.getPropertyValue('--canvas-text')?.trim() || '#ffffff';
+  console.log('textColor initialized:', textColor); // Debug log
+
+  // Robust hexToRgb function
+  function hexToRgb(hex) {
+    if (!hex || typeof hex !== 'string') return '255, 255, 255'; // Fallback to white
+    hex = hex.replace(/^#/, ''); // Remove # if present
+    if (hex.length === 3) hex = hex.split('').map(h => h + h).join(''); // Expand shorthand (e.g., #fff to #ffffff)
+    if (hex.length !== 6) return '255, 255, 255'; // Invalid hex, fallback
+    const r = parseInt(hex.slice(0, 2), 16);
+    const g = parseInt(hex.slice(2, 4), 16);
+    const b = parseInt(hex.slice(4, 6), 16);
+    return `${r}, ${g}, ${b}`;
+  }
 
   if (words.length > 0) {
     const word = words[0];
@@ -589,7 +602,7 @@ function updateGame() {
     }
     const remainingText = word.displayText.slice(word.matched.length);
     if (remainingText) {
-      ctx.fillStyle = textColor; // Should now be defined
+      ctx.fillStyle = textColor; // Use textColor directly for remaining text
       ctx.fillText(remainingText, word.x + ctx.measureText(word.matched).width, word.y);
     }
 
