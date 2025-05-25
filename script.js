@@ -694,7 +694,7 @@ function calculateTermAccuracy() {
   return totalAttempts > 0 ? Math.round((correctTermsCount / totalAttempts) * 100) : 100;
 }
 
-  let currentTermStartTime = null; // Track start time for each term
+  //let currentTermStartTime = null; // Track start time for each term
 
   function handleInput(e) {
   const typed = e.target.value;
