@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   canvas.width = 800;
-  canvas.height = 650; //was 500
+  canvas.height = 400; //was 500
 
   let words = [];
   let vocabData = [];
