@@ -667,12 +667,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function calculateWPM() {
-    if (sessionStartTime === null || correctChars === 0) return 0;
-    const elapsedTime = Math.max(0, (sessionEndTime || performance.now() - sessionStartTime) / 1000 / 60);
-    if (elapsedTime <= 0) return 0;
-    const wpm = Math.round((correctChars / 5) / elapsedTime);
-    return Math.min(wpm, 200);
-  }
+  if (sessionStartTime === null || correctTermsCount === 0) return 0;
+  const totalCompletionTimeMs = words
+    .filter(word => word.completionTime)
+    .reduce((sum, word) => sum + word.completionTime, 0);
+  const totalCompletionTimeMin = totalCompletionTimeMs / 1000 / 60 || 1; // Avoid division by zero
+  const wpm = Math.round((correctChars / 5) / totalCompletionTimeMin);
+  return Math.min(wpm, 200);
+}
 
   function updateWPMDisplay() {
     currentWPM = calculateWPM();
@@ -689,62 +691,64 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function handleInput(e) {
-    const typed = e.target.value;
-    if (sessionStartTime === null && typed.length > 0) {
-      sessionStartTime = performance.now();
-    }
-
-    words = words.filter(word => {
-      const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
-      const input = caseSensitive ? typed : typed.toLowerCase();
-      totalChars += typed.length; // Increment total characters typed
-      correctChars += calculateCorrectChars(target, input); // Calculate correct chars for partial input
-
-      if (target === input) {
-        totalChars += word.typedInput.length; // Ensure full term is counted
-        correctChars += word.typedInput.length; // Full term is correct
-        score += word.typedInput.length;
-        correctTermsCount++;
-        coveredTerms.set(word.typedInput, 'Correct');
-        console.log(`Term completed. CorrectTermsCount: ${correctTermsCount}, Wave: ${wave}`);
-        scoreDisplay.textContent = `Score: ${score}`;
-        e.target.value = '';
-        e.target.placeholder = 'Prompt will appear here...';
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        word.isExiting = true;
-        word.fadeState = 'out';
-
-        if (mode === 'game' && correctTermsCount >= 10) {
-          console.log(`Advancing to Wave ${wave + 1}`);
-          wave++;
-          correctTermsCount = 0;
-          waveDisplay.textContent = `Wave: ${wave}`;
-          words.forEach(word => {
-            word.speed = waveSpeeds[word.spawnWave] || waveSpeeds[waveSpeeds.length - 1];
-          });
-          const lightness = 50 + (wave - 1) * 3;
-          document.documentElement.style.setProperty('--bg-lightness', `${Math.min(lightness, 77)}%`);
-          userInput.classList.add('pulse');
-          setTimeout(() => userInput.classList.remove('pulse'), 1000);
-        }
-
-        updateStatsDisplay();
-        return false;
-      }
-      if (target.startsWith(input)) {
-        word.displayText = getUnderscoreText(word.typedInput, input.length > 0 ? 1 : 0);
-      } else {
-        word.displayText = getUnderscoreText(word.typedInput, 0);
-      }
-      return true;
-    });
-
-    if (typed === '' && words.length === 0) {
-      spawnWord();
-    }
-    updateTimeIndicator();
-    updateStatsDisplay();
+  const typed = e.target.value;
+  if (sessionStartTime === null && typed.length > 0) {
+    sessionStartTime = performance.now();
   }
+
+  words = words.filter(word => {
+    const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
+    const input = caseSensitive ? typed : typed.toLowerCase();
+    totalChars += typed.length;
+    correctChars += calculateCorrectChars(target, input);
+
+    if (target === input) {
+      const completionTime = performance.now();
+      word.completionTime = completionTime - (sessionStartTime || performance.now()); // Time taken for this term
+      totalChars += word.typedInput.length;
+      correctChars += word.typedInput.length;
+      score += word.typedInput.length;
+      correctTermsCount++;
+      coveredTerms.set(word.typedInput, 'Correct');
+      console.log(`Term completed. CorrectTermsCount: ${correctTermsCount}, Wave: ${wave}, Time Taken: ${word.completionTime / 1000}s`);
+      scoreDisplay.textContent = `Score: ${score}`;
+      e.target.value = '';
+      e.target.placeholder = 'Prompt will appear here...';
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      word.isExiting = true;
+      word.fadeState = 'out';
+
+      if (mode === 'game' && correctTermsCount >= 10) {
+        console.log(`Advancing to Wave ${wave + 1}`);
+        wave++;
+        correctTermsCount = 0;
+        waveDisplay.textContent = `Wave: ${wave}`;
+        words.forEach(word => {
+          word.speed = waveSpeeds[word.spawnWave] || waveSpeeds[waveSpeeds.length - 1];
+        });
+        const lightness = 50 + (wave - 1) * 3;
+        document.documentElement.style.setProperty('--bg-lightness', `${Math.min(lightness, 77)}%`);
+        userInput.classList.add('pulse');
+        setTimeout(() => userInput.classList.remove('pulse'), 1000);
+      }
+
+      updateStatsDisplay();
+      return false;
+    }
+    if (target.startsWith(input)) {
+      word.displayText = getUnderscoreText(word.typedInput, input.length > 0 ? 1 : 0);
+    } else {
+      word.displayText = getUnderscoreText(word.typedInput, 0);
+    }
+    return true;
+  });
+
+  if (typed === '' && words.length === 0) {
+    spawnWord();
+  }
+  updateTimeIndicator();
+  updateStatsDisplay();
+}
 
   function updateStatsDisplay() {
     const termsCovered = correctTermsCount + missedWords.length;
@@ -823,52 +827,54 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function generateCertificate() {
-    const name = prompt('Enter your name for the report:');
-    if (!name || name.trim() === '') {
-      alert('Please enter a valid name to generate the report.');
-      return;
-    }
-    const safeName = escapeHtml(name);
-    const wpm = calculateWPM();
-    const charAccuracy = calculateAccuracy();
-    const termAccuracy = calculateTermAccuracy();
-    const promptTypeText = escapeHtml(promptSelect.options[promptSelect.selectedIndex]?.text || 'Unknown');
-    const totalTerms = vocabData.length + (amalgamateVocab.length > 0 ? amalgamateVocab.length : 0);
-    const termsCoveredCount = coveredTerms.size;
-    const allTermsCompleted = termsCoveredCount === totalTerms;
+  const name = prompt('Enter your name for the report:');
+  if (!name || name.trim() === '') {
+    alert('Please enter a valid name to generate the report.');
+    return;
+  }
+  const safeName = escapeHtml(name);
+  const wpm = calculateWPM();
+  const charAccuracy = calculateAccuracy();
+  const termAccuracy = calculateTermAccuracy();
+  const promptTypeText = escapeHtml(promptSelect.options[promptSelect.selectedIndex]?.text || 'Unknown');
+  const totalTerms = vocabData.length + (amalgamateVocab.length > 0 ? amalgamateVocab.length : 0);
+  const termsCoveredCount = coveredTerms.size;
+  const allTermsCompleted = termsCoveredCount === totalTerms;
 
-    const startDate = new Date(sessionStartTime).toLocaleString();
-    const endDate = sessionEndTime ? new Date(sessionEndTime).toLocaleString() : new Date().toLocaleString();
-    const durationMs = (sessionEndTime || performance.now()) - sessionStartTime;
-    const durationSeconds = Math.floor(durationMs / 1000);
-    const hours = Math.floor(durationSeconds / 3600);
-    const minutes = Math.floor((durationSeconds % 3600) / 60);
-    const seconds = durationSeconds % 60;
-    const durationStr = `${hours}h ${minutes}m ${seconds}s`;
+  // Convert performance.now() to local time
+  const baseDate = new Date(0); // Unix epoch start
+  const startDate = new Date(baseDate.getTime() + (sessionStartTime || 0)).toLocaleString();
+  const endDate = sessionEndTime ? new Date(baseDate.getTime() + sessionEndTime).toLocaleString() : new Date().toLocaleString();
+  const durationMs = (sessionEndTime || performance.now()) - sessionStartTime;
+  const durationSeconds = Math.floor(durationMs / 1000);
+  const hours = Math.floor(durationSeconds / 3600);
+  const minutes = Math.floor((durationSeconds % 3600) / 60);
+  const seconds = durationSeconds % 60;
+  const durationStr = `${hours}h ${minutes}m ${seconds}s`;
 
-    console.log('Session Start:', startDate);
-    console.log('Session End:', endDate);
-    console.log('Duration (ms):', durationMs);
-    console.log('Duration (h:m:s):', durationStr);
-    console.log('Total Terms in vocabData:', vocabData.length);
-    console.log('Total Terms in amalgamateVocab:', amalgamateVocab.length);
-    console.log('Total Terms:', totalTerms);
-    console.log('Terms Covered:', termsCoveredCount);
+  console.log('Session Start:', startDate);
+  console.log('Session End:', endDate);
+  console.log('Duration (ms):', durationMs);
+  console.log('Duration (h:m:s):', durationStr);
+  console.log('Total Terms in vocabData:', vocabData.length);
+  console.log('Total Terms in amalgamateVocab:', amalgamateVocab.length);
+  console.log('Total Terms:', totalTerms);
+  console.log('Terms Covered:', termsCoveredCount);
 
-    let termsTableRows = '';
-    for (const [term, status] of coveredTerms.entries()) {
-      termsTableRows += `
-        <tr>
-          <td>${escapeHtml(term)}</td>
-          <td>${status}</td>
-        </tr>
-      `;
-    }
-    if (termsTableRows === '') {
-      termsTableRows = '<tr><td colspan="2">No terms covered.</td></tr>';
-    }
+  let termsTableRows = '';
+  for (const [term, status] of coveredTerms.entries()) {
+    termsTableRows += `
+      <tr>
+        <td>${escapeHtml(term)}</td>
+        <td>${status}</td>
+      </tr>
+    `;
+  }
+  if (termsTableRows === '') {
+    termsTableRows = '<tr><td colspan="2">No terms covered.</td></tr>';
+  }
 
-    const certificateContent = `
+  const certificateContent = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -928,18 +934,18 @@ document.addEventListener('DOMContentLoaded', () => {
   </div>
 </body>
 </html>
-    `;
+  `;
 
-    const blob = new Blob([certificateContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'kapp-type-report.html';
-    a.click();
-    URL.revokeObjectURL(url);
+  const blob = new Blob([certificateContent], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'kapp-type-report.html';
+  a.click();
+  URL.revokeObjectURL(url);
 
-    alert('Performance report downloaded as an HTML file. Open it in a browser to view or print it (use Ctrl+P or Cmd+P to print).');
-  }
+  alert('Performance report downloaded as an HTML file. Open it in a browser to view or print it (use Ctrl+P or Cmd+P to print).');
+}
 
   function startGame() {
     if (vocabData.length === 0) {
