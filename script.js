@@ -579,20 +579,20 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (word.y >= canvas.height) {
-        console.log(`Word missed: ${word.typedInput}, Time Left: ${timeLeft}s`);
-        missedWords.push(word.typedInput);
-        coveredTerms.set(word.typedInput, 'Missed');
-        totalChars += word.typedInput.length;
-        word.isExiting = true;
-        word.fadeState = 'out';
-        if (words.length === 1 && mode === 'game') {
-          gameActive = false;
-          sessionEndTime = performance.now();
-          console.log(`Game Over due to missed word. Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
-          alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
-          return false;
-        }
-      }
+  console.log(`Word missed: ${word.typedInput}, Time Left: ${timeLeft}s, CorrectTermsCount: ${correctTermsCount}`);
+  missedWords.push(word.typedInput);
+  coveredTerms.set(word.typedInput, 'Missed');
+  totalChars += word.typedInput.length;
+  word.isExiting = true;
+  word.fadeState = 'out';
+  if (words.length === 1 && mode === 'game') {
+    gameActive = false;
+    sessionEndTime = performance.now();
+    console.log(`Game Over due to missed word. Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
+    alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
+    return false;
+  }
+}
       return !word.isExiting;
     });
 
@@ -617,20 +617,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateTimer() {
-    if (!gameActive) return;
-    timeLeft = Math.max(0, timeLeft - 1);
-    totalTime++;
-    timerDisplay.textContent = `Time: ${timeLeft}s`;
-    updateWPMDisplay();
-    if (timeLeft === 0 && mode === 'game') {
-      gameActive = false;
-      sessionEndTime = sessionEndTime || performance.now();
-      console.log(`Game Over due to timer. Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
-      alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
-    } else if (timeLeft > 0) {
-      setTimeout(updateTimer, 1000);
-    }
+  if (!gameActive) return;
+  timeLeft = Math.max(0, timeLeft - 1);
+  totalTime++;
+  timerDisplay.textContent = `Time: ${timeLeft}s`;
+  updateWPMDisplay();
+  if (timeLeft === 0 && mode === 'game') {
+    timeLeft = 30; // Reset timer to allow more playtime
+    console.log(`Timer reset: Added 30 seconds. Continue playing! CorrectTermsCount: ${correctTermsCount}`);
+    setTimeout(updateTimer, 1000);
+  } else if (timeLeft > 0) {
+    setTimeout(updateTimer, 1000);
   }
+}
 
   function calculateWPM() {
     const correctTermsFromCovered = Array.from(coveredTerms.values()).filter(status => status === 'Correct').length;
