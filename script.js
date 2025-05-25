@@ -640,6 +640,34 @@ function updateGame() {
   requestAnimationFrame(updateGame);
 }
 
+  function calculateCorrectChars(target, input) {
+    let correct = 0;
+    for (let i = 0; i < Math.min(target.length, input.length); i++) {
+      if (target[i] === input[i]) correct++;
+    }
+    return correct;
+  }
+
+  function updateTimer() {
+    if (!gameActive) return;
+    timeLeft = Math.max(0, timeLeft - 1);
+    totalTime++;
+    timerDisplay.textContent = `Time: ${timeLeft}s`;
+    updateWPMDisplay();
+    if (timeLeft > 0) {
+      setTimeout(updateTimer, 1000);
+    } else if (mode === 'game') {
+      if (words.length === 0) {
+        gameActive = false;
+        sessionEndTime = performance.now();
+        console.log(`Game Over due to timer (no words left). Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
+        alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
+      } else {
+        console.log(`Timer ran out, but words are still on screen. Game continues until words are missed or completed.`);
+      }
+    }
+  }
+
   function calculateWPM() {
     if (sessionStartTime === null || correctChars === 0) return 0;
     const elapsedTime = Math.max(0, (sessionEndTime || performance.now() - sessionStartTime) / 1000 / 60);
@@ -661,6 +689,7 @@ function updateGame() {
     const totalAttempts = correctTermsCount + missedWords.length;
     return totalAttempts > 0 ? Math.round((correctTermsCount / totalAttempts) * 100) : 100;
   }
+
 
 function handleInput(e) {
     const typed = e.target.value;
@@ -977,7 +1006,7 @@ function handleInput(e) {
     alert('Performance report downloaded as an HTML file. Open it in a browser to view or print it (use Ctrl+P or Cmd+P to print).');
   }
 
-let sessionStartTime = null;
+ let sessionStartTime = null;
   let sessionEndTime = null;
   let missedWords = [];
   let totalChars = 0;
@@ -1017,7 +1046,6 @@ let sessionStartTime = null;
     updateGame();
     updateTimer();
   }
-
   populateVocabDropdown();
   startButton.addEventListener('click', async () => {
     level = Math.max(1, Math.min(10, parseInt(levelInput.value)));
