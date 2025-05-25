@@ -672,15 +672,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const correctTermsFromCovered = Array.from(coveredTerms.values()).filter(status => status === 'Correct').length;
   if (correctTermsFromCovered === 0) return 0;
 
-  // Calculate total typing time for debugging, but don't use it for WPM
-  const totalTypingTimeMs = words
-    .filter(word => word.completionTime)
-    .reduce((sum, word) => sum + word.completionTime, 0);
   const sessionTimeMs = (sessionEndTime || performance.now()) - sessionStartTime || 1;
-  // Use session time as the time base for WPM calculation
   const sessionTimeMin = sessionTimeMs / 1000 / 60;
-  const wpm = Math.round((correctChars / 5) / sessionTimeMin);
-  console.log('WPM calc - totalTypingTimeMs:', totalTypingTimeMs, 'sessionTimeMs:', sessionTimeMs, 'sessionTimeMin:', sessionTimeMin, 'wpm:', wpm);
+  // Use score (total length of correctly completed terms) instead of correctChars
+  const wpm = Math.round((score / 5) / sessionTimeMin);
+  console.log('WPM calc - sessionTimeMs:', sessionTimeMs, 'sessionTimeMin:', sessionTimeMin, 'score:', score, 'wpm:', wpm);
   return Math.min(wpm, 200);
 }
 
@@ -719,7 +715,7 @@ function calculateTermAccuracy() {
       const completionTime = performance.now();
       word.completionTime = completionTime - currentTermStartTime;
       totalChars += word.typedInput.length;
-      correctChars += word.typedInput.length;
+      correctChars += word.typedInput.length; // Only add full term length on completion
       score += word.typedInput.length;
       correctTermsCount++;
       coveredTerms.set(word.typedInput, 'Correct');
