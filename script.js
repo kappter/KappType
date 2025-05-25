@@ -669,14 +669,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function calculateWPM() {
-    if (correctTermsCount === 0) return 0;
-    const totalTypingTimeMs = words
-      .filter(word => word.completionTime)
-      .reduce((sum, word) => sum + word.completionTime, 0);
-    const totalTypingTimeMin = totalTypingTimeMs / 1000 / 60 || 1; // Avoid division by zero
-    const wpm = Math.round((correctChars / 5) / totalTypingTimeMin);
-    return Math.min(wpm, 200);
-  }
+  if (correctTermsCount === 0) return 0;
+  const totalTypingTimeMs = words
+    .filter(word => word.completionTime)
+    .reduce((sum, word) => sum + word.completionTime, 0);
+  const sessionTimeMs = (sessionEndTime || performance.now()) - sessionStartTime || 1; // Fallback to session time
+  const totalTypingTimeMin = Math.max(totalTypingTimeMs / 1000 / 60, sessionTimeMs / 1000 / 60) || 1; // Use larger of typing or session time
+  const wpm = Math.round((correctChars / 5) / totalTypingTimeMin);
+  return Math.min(wpm, 200);
+}
 
   function updateWPMDisplay() {
     currentWPM = calculateWPM();
@@ -834,56 +835,56 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function generateCertificate() {
-    const name = prompt('Enter your name for the report:');
-    if (!name || name.trim() === '') {
-      alert('Please enter a valid name to generate the report.');
-      return;
-    }
-    const safeName = escapeHtml(name);
-    const wpm = calculateWPM();
-    const charAccuracy = calculateAccuracy();
-    const termAccuracy = calculateTermAccuracy();
-    const promptTypeText = escapeHtml(promptSelect.options[promptSelect.selectedIndex]?.text || 'Unknown');
-    const totalTerms = vocabData.length + (amalgamateVocab.length > 0 ? amalgamateVocab.length : 0);
-    const termsCoveredCount = coveredTerms.size;
-    const allTermsCompleted = termsCoveredCount === totalTerms;
+  const name = prompt('Enter your name for the report:');
+  if (!name || name.trim() === '') {
+    alert('Please enter a valid name to generate the report.');
+    return;
+  }
+  const safeName = escapeHtml(name);
+  const wpm = calculateWPM();
+  const charAccuracy = calculateAccuracy();
+  const termAccuracy = calculateTermAccuracy();
+  const promptTypeText = escapeHtml(promptSelect.options[promptSelect.selectedIndex]?.text || 'Unknown');
+  const totalTerms = vocabData.length + (amalgamateVocab.length > 0 ? amalgamateVocab.length : 0);
+  const termsCoveredCount = coveredTerms.size;
+  const allTermsCompleted = termsCoveredCount === totalTerms;
 
-    // Calculate actual timestamps using the current time as a reference
-    const now = new Date();
-    const elapsedSincePageLoad = performance.now() - pageLoadTime;
-    const pageLoadDate = new Date(now.getTime() - elapsedSincePageLoad);
-    const startDate = new Date(pageLoadDate.getTime() + (sessionStartTime || 0)).toLocaleString();
-    const endDate = sessionEndTime ? new Date(pageLoadDate.getTime() + sessionEndTime).toLocaleString() : new Date().toLocaleString();
-    const durationMs = (sessionEndTime || performance.now()) - sessionStartTime;
-    const durationSeconds = Math.floor(durationMs / 1000);
-    const hours = Math.floor(durationSeconds / 3600);
-    const minutes = Math.floor((durationSeconds % 3600) / 60);
-    const seconds = durationSeconds % 60;
-    const durationStr = `${hours}h ${minutes}m ${seconds}s`;
+  // Calculate actual timestamps using the current time as a reference
+  const now = new Date();
+  const elapsedSincePageLoad = performance.now() - pageLoadTime;
+  const pageLoadDate = new Date(now.getTime() - elapsedSincePageLoad);
+  const startDate = new Date(pageLoadDate.getTime() + (sessionStartTime || 0)).toLocaleString();
+  const endDate = sessionEndTime ? new Date(pageLoadDate.getTime() + sessionEndTime).toLocaleString() : new Date().toLocaleString();
+  const durationMs = (sessionEndTime || performance.now()) - sessionStartTime;
+  const durationSeconds = Math.floor(durationMs / 1000);
+  const hours = Math.floor(durationSeconds / 3600);
+  const minutes = Math.floor((durationSeconds % 3600) / 60);
+  const seconds = durationSeconds % 60;
+  const durationStr = `${hours}h ${minutes}m ${seconds}s`;
 
-    console.log('Session Start:', startDate);
-    console.log('Session End:', endDate);
-    console.log('Duration (ms):', durationMs);
-    console.log('Duration (h:m:s):', durationStr);
-    console.log('Total Terms in vocabData:', vocabData.length);
-    console.log('Total Terms in amalgamateVocab:', amalgamateVocab.length);
-    console.log('Total Terms:', totalTerms);
-    console.log('Terms Covered:', termsCoveredCount);
+  console.log('Session Start:', startDate);
+  console.log('Session End:', endDate);
+  console.log('Duration (ms):', durationMs);
+  console.log('Duration (h:m:s):', durationStr);
+  console.log('Total Terms in vocabData:', vocabData.length);
+  console.log('Total Terms in amalgamateVocab:', amalgamateVocab.length);
+  console.log('Total Terms:', totalTerms);
+  console.log('Terms Covered:', termsCoveredCount);
 
-    let termsTableRows = '';
-    for (const [term, status] of coveredTerms.entries()) {
-      termsTableRows += `
-        <tr>
-          <td>${escapeHtml(term)}</td>
-          <td>${status}</td>
-        </tr>
-      `;
-    }
-    if (termsTableRows === '') {
-      termsTableRows = '<tr><td colspan="2">No terms covered.</td></tr>';
-    }
+  let termsTableRows = '';
+  for (const [term, status] of coveredTerms.entries()) {
+    termsTableRows += `
+      <tr>
+        <td>${escapeHtml(term)}</td>
+        <td>${status}</td>
+      </tr>
+    `;
+  }
+  if (termsTableRows === '') {
+    termsTableRows = '<tr><td colspan="2">No terms covered.</td></tr>';
+  }
 
-    const certificateContent = `
+  const certificateContent = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -943,18 +944,18 @@ document.addEventListener('DOMContentLoaded', () => {
   </div>
 </body>
 </html>
-    `;
+  `;
 
-    const blob = new Blob([certificateContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'kapp-type-report.html';
-    a.click();
-    URL.revokeObjectURL(url);
+  const blob = new Blob([certificateContent], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'kapp-type-report.html';
+  a.click();
+  URL.revokeObjectURL(url);
 
-    alert('Performance report downloaded as an HTML file. Open it in a browser to view or print it (use Ctrl+P or Cmd+P to print).');
-  }
+  alert('Performance report downloaded as an HTML file. Open it in a browser to view or print it (use Ctrl+P or Cmd+P to print).');
+}
 
   function startGame() {
     if (vocabData.length === 0) {
