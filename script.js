@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   canvas.width = 900;
-  canvas.height = 300; //was 500
+  canvas.height = 300;
 
   let words = [];
   let vocabData = [];
@@ -61,6 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let level = 1;
   let totalTime = 0;
   let sessionStartTime = null;
+  let sessionEndTime = null;
   let missedWords = [];
   let totalChars = 0;
   let correctChars = 0;
@@ -71,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentWPM = 0;
   let usedVocabIndices = [];
   let usedAmalgamateIndices = [];
-  let coveredTerms = new Map(); // Map to track terms and their status (correct or missed)
+  let coveredTerms = new Map();
 
   const waveSpeeds = [
     0.435, 0.87, 1.0875, 1.3594, 1.6992, 2.1240, 2.6550, 3.3188, 4.1485, 5.1856, 6.4820
@@ -421,224 +422,221 @@ document.addEventListener('DOMContentLoaded', () => {
     return displayText;
   }
 
-function spawnWord() {
-  if (vocabData.length === 0) {
-    vocabData = [...defaultVocabData];
-    vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
-  }
-
-  const allVocab = [...vocabData, ...amalgamateVocab].filter(v => v && v.Term && v.Definition);
-  if (allVocab.length === 0) return;
-
-  let index;
-  const usedIndices = [...usedVocabIndices, ...usedAmalgamateIndices];
-  const availableIndices = Array.from({ length: allVocab.length }, (_, i) => i).filter(i => !usedIndices.includes(i));
-
-  if (availableIndices.length > 0) {
-    index = availableIndices[Math.floor(Math.random() * availableIndices.length)];
-  } else {
-    // All terms used, reset indices
-    usedVocabIndices = [];
-    usedAmalgamateIndices = [];
-    index = Math.floor(Math.random() * allVocab.length);
-  }
-
-  const vocab = allVocab[index];
-  let prompt, typedInput;
-  if (promptType === 'definition') {
-    prompt = vocab.Definition;
-    typedInput = vocab.Term;
-  } else if (promptType === 'term') {
-    prompt = vocab.Term;
-    typedInput = vocab.Definition;
-  } else {
-    const randomType = Math.random() < 0.5 ? 'definition' : 'term';
-    prompt = randomType === 'definition' ? vocab.Definition : vocab.Term;
-    typedInput = randomType === 'definition' ? vocab.Term : vocab.Definition;
-  }
-
-  const displayText = getUnderscoreText(typedInput, 0);
-  ctx.font = '18px Arial';
-  const textWidth = ctx.measureText(displayText).width;
-
-  const padding = 20;
-  const maxX = canvas.width - textWidth - padding;
-  const minX = padding;
-  const x = mode === 'game' ? (minX + Math.random() * (maxX - minX)) : minX;
-
-  const y = 0;
-  const speed = mode === 'game' ? (waveSpeeds[wave] || waveSpeeds[waveSpeeds.length - 1]) : 0.5 + level * 0.1;
-  const word = { 
-    prompt: prompt, 
-    typedInput: typedInput, 
-    displayText: displayText, 
-    x: x, 
-    y: y, 
-    speed: speed, 
-    matched: '', 
-    definition: vocab.Definition, 
-    isExiting: false, 
-    opacity: 0, 
-    fadeState: 'in',
-    spawnWave: wave
-  };
-
-  // Add the index to the correct array based on vocab source
-  if (index < vocabData.length) {
-    if (!usedVocabIndices.includes(index)) {
-      usedVocabIndices.push(index);
-    }
-  } else {
-    const amalgamateIndex = index - vocabData.length;
-    if (!usedAmalgamateIndices.includes(amalgamateIndex)) {
-      usedAmalgamateIndices.push(amalgamateIndex);
-    }
-  }
-
-  words.push(word);
-  userInput.placeholder = prompt;
-  updateWPMDisplay();
-  updateTimeIndicator();
-}
-
-function updateGame() {
-  if (!gameActive) return;
-
-  const now = performance.now();
-  const deltaTime = (now - lastFrameTime) / 1000;
-  lastFrameTime = now;
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Define textColor at the start of the function
-  const computedStyle = window.getComputedStyle(document.body);
-  const textColor = computedStyle.getPropertyValue('--canvas-text')?.trim() || '#ffffff';
-  console.log('textColor initialized:', textColor); // Debug log
-
-  // Robust hexToRgb function
-  function hexToRgb(hex) {
-    if (!hex || typeof hex !== 'string') return '255, 255, 255'; // Fallback to white
-    hex = hex.replace(/^#/, ''); // Remove # if present
-    if (hex.length === 3) hex = hex.split('').map(h => h + h).join(''); // Expand shorthand (e.g., #fff to #ffffff)
-    if (hex.length !== 6) return '255, 255, 255'; // Invalid hex, fallback
-    const r = parseInt(hex.slice(0, 2), 16);
-    const g = parseInt(hex.slice(2, 4), 16);
-    const b = parseInt(hex.slice(4, 6), 16);
-    return `${r}, ${g}, ${b}`;
-  }
-
-  if (words.length > 0) {
-    const word = words[0];
-    const definition = word.definition;
-
-    const fadeDuration = 4;
-    const fadeSpeed = 0.3 / fadeDuration;
-    if (word.fadeState === 'in') {
-      word.opacity = Math.min(word.opacity + fadeSpeed * deltaTime, 0.3);
-    } else if (word.fadeState === 'out') {
-      word.opacity = Math.max(word.opacity - fadeSpeed * deltaTime, 0);
+  function spawnWord() {
+    if (vocabData.length === 0) {
+      vocabData = [...defaultVocabData];
+      vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
     }
 
-    const maxWidth = canvas.width - 40;
-    const wordsArray = definition.split(' ');
-    let lines = [];
-    let line = '';
+    const allVocab = [...vocabData, ...amalgamateVocab].filter(v => v && v.Term && v.Definition);
+    if (allVocab.length === 0) return;
 
-    ctx.font = '32px Arial';
-    for (let w of wordsArray) {
-      const testLine = line + w + ' ';
-      const metrics = ctx.measureText(testLine);
-      if (metrics.width > maxWidth && line !== '') {
-        lines.push(line.trim());
-        line = w + ' ';
-      } else {
-        line = testLine;
+    let index;
+    const usedIndices = [...usedVocabIndices, ...usedAmalgamateIndices];
+    const availableIndices = Array.from({ length: allVocab.length }, (_, i) => i).filter(i => !usedIndices.includes(i));
+
+    if (availableIndices.length > 0) {
+      index = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+    } else {
+      usedVocabIndices = [];
+      usedAmalgamateIndices = [];
+      index = Math.floor(Math.random() * allVocab.length);
+    }
+
+    const vocab = allVocab[index];
+    let prompt, typedInput;
+    if (promptType === 'definition') {
+      prompt = vocab.Definition;
+      typedInput = vocab.Term;
+    } else if (promptType === 'term') {
+      prompt = vocab.Term;
+      typedInput = vocab.Definition;
+    } else {
+      const randomType = Math.random() < 0.5 ? 'definition' : 'term';
+      prompt = randomType === 'definition' ? vocab.Definition : vocab.Term;
+      typedInput = randomType === 'definition' ? vocab.Term : vocab.Definition;
+    }
+
+    const displayText = getUnderscoreText(typedInput, 0);
+    ctx.font = '18px Arial';
+    const textWidth = ctx.measureText(displayText).width;
+
+    const padding = 20;
+    const maxX = canvas.width - textWidth - padding;
+    const minX = padding;
+    const x = mode === 'game' ? (minX + Math.random() * (maxX - minX)) : minX;
+
+    const y = 0;
+    const speed = mode === 'game' ? (waveSpeeds[wave] || waveSpeeds[waveSpeeds.length - 1]) : 0.5 + level * 0.1;
+    const word = { 
+      prompt: prompt, 
+      typedInput: typedInput, 
+      displayText: displayText, 
+      x: x, 
+      y: y, 
+      speed: speed, 
+      matched: '', 
+      definition: vocab.Definition, 
+      isExiting: false, 
+      opacity: 0, 
+      fadeState: 'in',
+      spawnWave: wave
+    };
+
+    if (index < vocabData.length) {
+      if (!usedVocabIndices.includes(index)) {
+        usedVocabIndices.push(index);
+      }
+    } else {
+      const amalgamateIndex = index - vocabData.length;
+      if (!usedAmalgamateIndices.includes(amalgamateIndex)) {
+        usedAmalgamateIndices.push(amalgamateIndex);
       }
     }
-    if (line) lines.push(line.trim());
 
-    if (lines.length > 4) {
-      lines = lines.slice(0, 3);
-      const lastLine = lines[2];
-      let truncated = lastLine;
-      while (ctx.measureText(truncated + '...').width > maxWidth && truncated.length > 0) {
-        truncated = truncated.slice(0, -1);
-      }
-      lines[2] = truncated + '...';
+    words.push(word);
+    userInput.placeholder = prompt;
+    updateWPMDisplay();
+    updateTimeIndicator();
+  }
+
+  function updateGame() {
+    if (!gameActive) return;
+
+    const now = performance.now();
+    const deltaTime = (now - lastFrameTime) / 1000;
+    lastFrameTime = now;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const computedStyle = window.getComputedStyle(document.body);
+    const textColor = computedStyle.getPropertyValue('--canvas-text')?.trim() || '#ffffff';
+    console.log('textColor initialized:', textColor);
+
+    function hexToRgb(hex) {
+      if (!hex || typeof hex !== 'string') return '255, 255, 255';
+      hex = hex.replace(/^#/, '');
+      if (hex.length === 3) hex = hex.split('').map(h => h + h).join('');
+      if (hex.length !== 6) return '255, 255, 255';
+      const r = parseInt(hex.slice(0, 2), 16);
+      const g = parseInt(hex.slice(2, 4), 16);
+      const b = parseInt(hex.slice(4, 6), 16);
+      return `${r}, ${g}, ${b}`;
     }
 
-    const lineHeight = 40;
-    const totalHeight = lines.length * lineHeight;
-    const startY = (canvas.height - totalHeight) / 2 - 20;
-    ctx.textAlign = 'center';
+    if (words.length > 0) {
+      const word = words[0];
+      const definition = word.definition;
 
-    for (let i = 0; i < lines.length; i++) {
+      const fadeDuration = 4;
+      const fadeSpeed = 0.3 / fadeDuration;
+      if (word.fadeState === 'in') {
+        word.opacity = Math.min(word.opacity + fadeSpeed * deltaTime, 0.3);
+      } else if (word.fadeState === 'out') {
+        word.opacity = Math.max(word.opacity - fadeSpeed * deltaTime, 0);
+      }
+
+      const maxWidth = canvas.width - 40;
+      const wordsArray = definition.split(' ');
+      let lines = [];
+      let line = '';
+
       ctx.font = '32px Arial';
-      ctx.fillStyle = `rgba(${hexToRgb(textColor)}, ${word.opacity})`;
-      ctx.fillText(lines[i], canvas.width / 2, startY + i * lineHeight);
-    }
-  }
+      for (let w of wordsArray) {
+        const testLine = line + w + ' ';
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && line !== '') {
+          lines.push(line.trim());
+          line = w + ' ';
+        } else {
+          line = testLine;
+        }
+      }
+      if (line) lines.push(line.trim());
 
-  const rectHeight = 20;
-  const rectY = canvas.height - rectHeight;
-  ctx.beginPath();
-  ctx.roundRect(0, rectY, canvas.width, rectHeight, 8);
-  ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
-  ctx.fill();
-  ctx.strokeStyle = '#333333';
-  ctx.lineWidth = 2;
-  ctx.stroke();
+      if (lines.length > 4) {
+        lines = lines.slice(0, 3);
+        const lastLine = lines[2];
+        let truncated = lastLine;
+        while (ctx.measureText(truncated + '...').width > maxWidth && truncated.length > 0) {
+          truncated = truncated.slice(0, -1);
+        }
+        lines[2] = truncated + '...';
+      }
 
-  ctx.font = '18px Arial';
-  ctx.textAlign = 'left';
+      const lineHeight = 40;
+      const totalHeight = lines.length * lineHeight;
+      const startY = (canvas.height - totalHeight) / 2 - 20;
+      ctx.textAlign = 'center';
 
-  words = words.filter(word => {
-    word.y += word.speed;
-    const typed = userInput.value;
-    const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
-    const input = caseSensitive ? typed : typed.toLowerCase();
-    word.matched = target.startsWith(input) ? typed : '';
-
-    ctx.clearRect(word.x - 5, word.y - 20, ctx.measureText(word.displayText).width + 10, 25);
-
-    if (word.matched) {
-      ctx.fillStyle = 'red';
-      ctx.fillText(word.matched, word.x, word.y);
-    }
-    const remainingText = word.displayText.slice(word.matched.length);
-    if (remainingText) {
-      ctx.fillStyle = textColor; // Use textColor directly for remaining text
-      ctx.fillText(remainingText, word.x + ctx.measureText(word.matched).width, word.y);
-    }
-
-    if (word.y >= canvas.height) {
-      console.log(`Word missed: ${word.typedInput}, Time Left: ${timeLeft}s`);
-      missedWords.push(word.typedInput);
-      coveredTerms.set(word.typedInput, 'Missed');
-      totalChars += word.typedInput.length;
-      word.isExiting = true;
-      word.fadeState = 'out';
-      if (words.length === 1 && mode === 'game') {
-        gameActive = false;
-        console.log(`Game Over due to missed word. Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
-        alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
-        return false;
+      for (let i = 0; i < lines.length; i++) {
+        ctx.font = '32px Arial';
+        ctx.fillStyle = `rgba(${hexToRgb(textColor)}, ${word.opacity})`;
+        ctx.fillText(lines[i], canvas.width / 2, startY + i * lineHeight);
       }
     }
-    return !word.isExiting;
-  });
 
-  if (words.length > 0 && words[0].isExiting && words[0].opacity <= 0) {
-    words = [];
-    if (mode !== 'game') {
+    const rectHeight = 20;
+    const rectY = canvas.height - rectHeight;
+    ctx.beginPath();
+    ctx.roundRect(0, rectY, canvas.width, rectHeight, 8);
+    ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+    ctx.fill();
+    ctx.strokeStyle = '#333333';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.font = '18px Arial';
+    ctx.textAlign = 'left';
+
+    words = words.filter(word => {
+      word.y += word.speed;
+      const typed = userInput.value;
+      const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
+      const input = caseSensitive ? typed : typed.toLowerCase();
+      word.matched = target.startsWith(input) ? typed : '';
+
+      ctx.clearRect(word.x - 5, word.y - 20, ctx.measureText(word.displayText).width + 10, 25);
+
+      if (word.matched) {
+        ctx.fillStyle = 'red';
+        ctx.fillText(word.matched, word.x, word.y);
+      }
+      const remainingText = word.displayText.slice(word.matched.length);
+      if (remainingText) {
+        ctx.fillStyle = textColor;
+        ctx.fillText(remainingText, word.x + ctx.measureText(word.matched).width, word.y);
+      }
+
+      if (word.y >= canvas.height) {
+        console.log(`Word missed: ${word.typedInput}, Time Left: ${timeLeft}s`);
+        missedWords.push(word.typedInput);
+        coveredTerms.set(word.typedInput, 'Missed');
+        totalChars += word.typedInput.length;
+        word.isExiting = true;
+        word.fadeState = 'out';
+        if (words.length === 1 && mode === 'game') {
+          gameActive = false;
+          sessionEndTime = performance.now();
+          console.log(`Game Over due to missed word. Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
+          alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
+          return false;
+        }
+      }
+      return !word.isExiting;
+    });
+
+    if (words.length > 0 && words[0].isExiting && words[0].opacity <= 0) {
+      words = [];
+      if (mode !== 'game') {
+        spawnWord();
+      }
+    } else if (words.length === 0) {
       spawnWord();
     }
-  } else if (words.length === 0) {
-    spawnWord();
-  }
 
-  requestAnimationFrame(updateGame);
-}
+    requestAnimationFrame(updateGame);
+  }
 
   function calculateCorrectChars(target, input) {
     let correct = 0;
@@ -690,8 +688,7 @@ function updateGame() {
     return totalAttempts > 0 ? Math.round((correctTermsCount / totalAttempts) * 100) : 100;
   }
 
-
-function handleInput(e) {
+  function handleInput(e) {
     const typed = e.target.value;
     if (sessionStartTime === null && typed.length > 0) {
       sessionStartTime = performance.now();
@@ -760,66 +757,6 @@ function handleInput(e) {
     termsToWaveDisplay.textContent = `To Wave: ${termsToWave}`;
     termsCoveredDisplay.textContent = `Terms: ${termsCovered}/${totalTerms}`;
   }
-
-  function handleInput(e) {
-    const typed = e.target.value;
-    if (sessionStartTime === null && typed.length > 0) {
-      sessionStartTime = performance.now();
-    }
-
-    words = words.filter(word => {
-      const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
-      const input = caseSensitive ? typed : typed.toLowerCase();
-      totalChars += typed.length; // Increment total characters typed
-      correctChars += calculateCorrectChars(target, input); // Calculate correct chars for partial input
-
-      if (target === input) {
-        totalChars += word.typedInput.length; // Ensure full term is counted
-        correctChars += word.typedInput.length; // Full term is correct
-        score += word.typedInput.length;
-        correctTermsCount++;
-        coveredTerms.set(word.typedInput, 'Correct');
-        console.log(`Term completed. CorrectTermsCount: ${correctTermsCount}, Wave: ${wave}`);
-        scoreDisplay.textContent = `Score: ${score}`;
-        e.target.value = '';
-        e.target.placeholder = 'Prompt will appear here...';
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        word.isExiting = true;
-        word.fadeState = 'out';
-
-        if (mode === 'game' && correctTermsCount >= 10) {
-          console.log(`Advancing to Wave ${wave + 1}`);
-          wave++;
-          correctTermsCount = 0;
-          waveDisplay.textContent = `Wave: ${wave}`;
-          words.forEach(word => {
-            word.speed = waveSpeeds[word.spawnWave] || waveSpeeds[waveSpeeds.length - 1];
-          });
-          const lightness = 50 + (wave - 1) * 3;
-          document.documentElement.style.setProperty('--bg-lightness', `${Math.min(lightness, 77)}%`);
-          userInput.classList.add('pulse');
-          setTimeout(() => userInput.classList.remove('pulse'), 1000);
-        }
-
-        updateStatsDisplay();
-        return false;
-      }
-      if (target.startsWith(input)) {
-        word.displayText = getUnderscoreText(word.typedInput, input.length > 0 ? 1 : 0);
-      } else {
-        word.displayText = getUnderscoreText(word.typedInput, 0);
-      }
-      return true;
-    });
-
-    if (typed === '' && words.length === 0) {
-      spawnWord();
-    }
-    updateTimeIndicator();
-    updateStatsDisplay();
-  }
-
-  
 
   function highlightKeys(e) {
     const keys = document.querySelectorAll('.key');
@@ -900,7 +837,6 @@ function handleInput(e) {
     const termsCoveredCount = coveredTerms.size;
     const allTermsCompleted = termsCoveredCount === totalTerms;
 
-    // Calculate actual duration
     const startDate = new Date(sessionStartTime).toLocaleString();
     const endDate = sessionEndTime ? new Date(sessionEndTime).toLocaleString() : new Date().toLocaleString();
     const durationMs = (sessionEndTime || performance.now()) - sessionStartTime;
@@ -910,7 +846,6 @@ function handleInput(e) {
     const seconds = durationSeconds % 60;
     const durationStr = `${hours}h ${minutes}m ${seconds}s`;
 
-    // Debug logs
     console.log('Session Start:', startDate);
     console.log('Session End:', endDate);
     console.log('Duration (ms):', durationMs);
@@ -1006,14 +941,6 @@ function handleInput(e) {
     alert('Performance report downloaded as an HTML file. Open it in a browser to view or print it (use Ctrl+P or Cmd+P to print).');
   }
 
- let sessionStartTime = null;
-  let sessionEndTime = null;
-  let missedWords = [];
-  let totalChars = 0;
-  let correctChars = 0;
-  let correctTermsCount = 0;
-  let lastFrameTime = performance.now();
-
   function startGame() {
     if (vocabData.length === 0) {
       vocabData = [...defaultVocabData];
@@ -1021,7 +948,6 @@ function handleInput(e) {
     }
     vocabSetTitle.textContent = vocabSetName + (amalgamateSetName ? ' + ' + amalgamateSetName : '');
     
-    // Reset indices and session timers
     usedVocabIndices = [];
     usedAmalgamateIndices = [];
     sessionStartTime = performance.now();
@@ -1046,6 +972,7 @@ function handleInput(e) {
     updateGame();
     updateTimer();
   }
+
   populateVocabDropdown();
   startButton.addEventListener('click', async () => {
     level = Math.max(1, Math.min(10, parseInt(levelInput.value)));
