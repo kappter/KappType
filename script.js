@@ -641,32 +641,32 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function calculateCorrectChars(target, input) {
-    let correct = 0;
-    for (let i = 0; i < Math.min(target.length, input.length); i++) {
-      if (target[i] === input[i]) correct++;
-    }
-    return correct;
+  let correct = 0;
+  for (let i = 0; i < Math.min(target.length, input.length); i++) {
+    if (target[i] === input[i]) correct++;
   }
+  return correct;
+}
 
   function updateTimer() {
-    if (!gameActive) return;
-    timeLeft = Math.max(0, timeLeft - 1);
-    totalTime++;
-    timerDisplay.textContent = `Time: ${timeLeft}s`;
-    updateWPMDisplay();
-    if (timeLeft > 0) {
-      setTimeout(updateTimer, 1000);
-    } else if (mode === 'game') {
-      if (words.length === 0) {
-        gameActive = false;
-        sessionEndTime = performance.now();
-        console.log(`Game Over due to timer (no words left). Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
-        alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
-      } else {
-        console.log(`Timer ran out, but words are still on screen. Game continues until words are missed or completed.`);
-      }
+  if (!gameActive) return;
+  timeLeft = Math.max(0, timeLeft - 1);
+  totalTime++;
+  timerDisplay.textContent = `Time: ${timeLeft}s`;
+  updateWPMDisplay();
+  if (timeLeft > 0) {
+    setTimeout(updateTimer, 1000);
+  } else if (mode === 'game') {
+    if (words.length === 0) {
+      gameActive = false;
+      sessionEndTime = performance.now();
+      console.log(`Game Over due to timer (no words left). Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
+      alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
+    } else {
+      console.log(`Timer ran out, but words are still on screen. Game continues until words are missed or completed.`);
     }
   }
+}
 
   function calculateWPM() {
   if (correctTermsCount === 0) return 0;
@@ -686,78 +686,78 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function calculateAccuracy() {
-    return totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 100;
-  }
+  return totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 100;
+}
 
-  function calculateTermAccuracy() {
-    const totalAttempts = correctTermsCount + missedWords.length;
-    return totalAttempts > 0 ? Math.round((correctTermsCount / totalAttempts) * 100) : 100;
-  }
+function calculateTermAccuracy() {
+  const totalAttempts = correctTermsCount + missedWords.length;
+  return totalAttempts > 0 ? Math.round((correctTermsCount / totalAttempts) * 100) : 100;
+}
 
   let currentTermStartTime = null; // Track start time for each term
 
   function handleInput(e) {
-    const typed = e.target.value;
-    if (sessionStartTime === null && typed.length > 0) {
-      sessionStartTime = performance.now();
-      currentTermStartTime = sessionStartTime; // Start timing for the first term
-    }
-
-    words = words.filter(word => {
-      const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
-      const input = caseSensitive ? typed : typed.toLowerCase();
-      totalChars += typed.length;
-      correctChars += calculateCorrectChars(target, input);
-
-      if (target === input) {
-        const completionTime = performance.now();
-        word.completionTime = completionTime - (currentTermStartTime || sessionStartTime); // Time taken for this term
-        totalChars += word.typedInput.length;
-        correctChars += word.typedInput.length;
-        score += word.typedInput.length;
-        correctTermsCount++;
-        coveredTerms.set(word.typedInput, 'Correct');
-        console.log(`Term completed. CorrectTermsCount: ${correctTermsCount}, Wave: ${wave}, Time Taken: ${word.completionTime / 1000}s`);
-        scoreDisplay.textContent = `Score: ${score}`;
-        e.target.value = '';
-        e.target.placeholder = 'Prompt will appear here...';
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        word.isExiting = true;
-        word.fadeState = 'out';
-        currentTermStartTime = performance.now(); // Reset for the next term
-
-        if (mode === 'game' && correctTermsCount >= 10) {
-          console.log(`Advancing to Wave ${wave + 1}`);
-          wave++;
-          correctTermsCount = 0;
-          waveDisplay.textContent = `Wave: ${wave}`;
-          words.forEach(word => {
-            word.speed = waveSpeeds[word.spawnWave] || waveSpeeds[waveSpeeds.length - 1];
-          });
-          const lightness = 50 + (wave - 1) * 3;
-          document.documentElement.style.setProperty('--bg-lightness', `${Math.min(lightness, 77)}%`);
-          userInput.classList.add('pulse');
-          setTimeout(() => userInput.classList.remove('pulse'), 1000);
-        }
-
-        updateStatsDisplay();
-        return false;
-      }
-      if (target.startsWith(input)) {
-        word.displayText = getUnderscoreText(word.typedInput, input.length > 0 ? 1 : 0);
-      } else {
-        word.displayText = getUnderscoreText(word.typedInput, 0);
-      }
-      return true;
-    });
-
-    if (typed === '' && words.length === 0) {
-      spawnWord();
-      currentTermStartTime = performance.now(); // Reset start time for the new term
-    }
-    updateTimeIndicator();
-    updateStatsDisplay();
+  const typed = e.target.value;
+  if (sessionStartTime === null && typed.length > 0) {
+    sessionStartTime = performance.now();
+    currentTermStartTime = sessionStartTime; // Assign without re-declaration
   }
+
+  words = words.filter(word => {
+    const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
+    const input = caseSensitive ? typed : typed.toLowerCase();
+    totalChars += typed.length;
+    correctChars += calculateCorrectChars(target, input);
+
+    if (target === input) {
+      const completionTime = performance.now();
+      word.completionTime = completionTime - currentTermStartTime; // Use existing variable
+      totalChars += word.typedInput.length;
+      correctChars += word.typedInput.length;
+      score += word.typedInput.length;
+      correctTermsCount++;
+      coveredTerms.set(word.typedInput, 'Correct');
+      console.log(`Term completed. CorrectTermsCount: ${correctTermsCount}, Wave: ${wave}, Time Taken: ${word.completionTime / 1000}s`);
+      scoreDisplay.textContent = `Score: ${score}`;
+      e.target.value = '';
+      e.target.placeholder = 'Prompt will appear here...';
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      word.isExiting = true;
+      word.fadeState = 'out';
+      currentTermStartTime = performance.now(); // Reset for the next term
+
+      if (mode === 'game' && correctTermsCount >= 10) {
+        console.log(`Advancing to Wave ${wave + 1}`);
+        wave++;
+        correctTermsCount = 0;
+        waveDisplay.textContent = `Wave: ${wave}`;
+        words.forEach(word => {
+          word.speed = waveSpeeds[word.spawnWave] || waveSpeeds[waveSpeeds.length - 1];
+        });
+        const lightness = 50 + (wave - 1) * 3;
+        document.documentElement.style.setProperty('--bg-lightness', `${Math.min(lightness, 77)}%`);
+        userInput.classList.add('pulse');
+        setTimeout(() => userInput.classList.remove('pulse'), 1000);
+      }
+
+      updateStatsDisplay();
+      return false;
+    }
+    if (target.startsWith(input)) {
+      word.displayText = getUnderscoreText(word.typedInput, input.length > 0 ? 1 : 0);
+    } else {
+      word.displayText = getUnderscoreText(word.typedInput, 0);
+    }
+    return true;
+  });
+
+  if (typed === '' && words.length === 0) {
+    spawnWord();
+    currentTermStartTime = performance.now(); // Reset for the next term
+  }
+  updateTimeIndicator();
+  updateStatsDisplay();
+}
 
   function updateStatsDisplay() {
     const termsCovered = correctTermsCount + missedWords.length;
