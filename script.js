@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.warn('customVocabInput2 element not found. Amalgamation vocabulary upload will be disabled.');
   }
 
-  canvas.width = 800;
+  canvas.width = 900;
   canvas.height = 300; //was 500
 
   let words = [];
