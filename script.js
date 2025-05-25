@@ -669,21 +669,22 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 
   function calculateWPM() {
-  // Count correct terms from coveredTerms instead of relying on correctTermsCount
   const correctTermsFromCovered = Array.from(coveredTerms.values()).filter(status => status === 'Correct').length;
   if (correctTermsFromCovered === 0) return 0;
 
+  // Calculate total typing time for debugging, but don't use it for WPM
   const totalTypingTimeMs = words
     .filter(word => word.completionTime)
     .reduce((sum, word) => sum + word.completionTime, 0);
-  const sessionTimeMs = (sessionEndTime || performance.now()) - sessionStartTime || 1; // Fallback to session time
-  const totalTypingTimeMin = Math.max(totalTypingTimeMs / 1000 / 60, sessionTimeMs / 1000 / 60, 0.1); // Minimum 0.1 minute to avoid extreme inflation
-  const wpm = Math.round((correctChars / 5) / totalTypingTimeMin);
-  console.log('WPM calc - totalTypingTimeMs:', totalTypingTimeMs, 'sessionTimeMs:', sessionTimeMs, 'usedTimeMin:', totalTypingTimeMin, 'wpm:', wpm);
+  const sessionTimeMs = (sessionEndTime || performance.now()) - sessionStartTime || 1;
+  // Use session time as the time base for WPM calculation
+  const sessionTimeMin = sessionTimeMs / 1000 / 60;
+  const wpm = Math.round((correctChars / 5) / sessionTimeMin);
+  console.log('WPM calc - totalTypingTimeMs:', totalTypingTimeMs, 'sessionTimeMs:', sessionTimeMs, 'sessionTimeMin:', sessionTimeMin, 'wpm:', wpm);
   return Math.min(wpm, 200);
 }
 
-  function updateWPMDisplay() {
+ function updateWPMDisplay() {
   currentWPM = calculateWPM();
   wpmDisplay.textContent = `WPM: ${currentWPM}`;
 }
