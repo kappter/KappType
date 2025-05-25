@@ -669,7 +669,10 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 
   function calculateWPM() {
-  if (correctTermsCount === 0) return 0;
+  // Count correct terms from coveredTerms instead of relying on correctTermsCount
+  const correctTermsFromCovered = Array.from(coveredTerms.values()).filter(status => status === 'Correct').length;
+  if (correctTermsFromCovered === 0) return 0;
+
   const totalTypingTimeMs = words
     .filter(word => word.completionTime)
     .reduce((sum, word) => sum + word.completionTime, 0);
@@ -681,17 +684,19 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 
   function updateWPMDisplay() {
-    currentWPM = calculateWPM();
-    wpmDisplay.textContent = `WPM: ${currentWPM}`;
-  }
+  currentWPM = calculateWPM();
+  wpmDisplay.textContent = `WPM: ${currentWPM}`;
+}
 
   function calculateAccuracy() {
   return totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 100;
 }
 
 function calculateTermAccuracy() {
-  const totalAttempts = correctTermsCount + missedWords.length;
-  return totalAttempts > 0 ? Math.round((correctTermsCount / totalAttempts) * 100) : 100;
+  // Use coveredTerms to calculate term accuracy
+  const correctTerms = Array.from(coveredTerms.values()).filter(status => status === 'Correct').length;
+  const totalAttempts = coveredTerms.size; // Total terms covered (correct + missed)
+  return totalAttempts > 0 ? Math.round((correctTerms / totalAttempts) * 100) : 100;
 }
 
   //let currentTermStartTime = null; // Track start time for each term
@@ -700,7 +705,7 @@ function calculateTermAccuracy() {
   const typed = e.target.value;
   if (sessionStartTime === null && typed.length > 0) {
     sessionStartTime = performance.now();
-    currentTermStartTime = sessionStartTime; // Assign without re-declaration
+    currentTermStartTime = sessionStartTime;
   }
 
   words = words.filter(word => {
@@ -711,7 +716,7 @@ function calculateTermAccuracy() {
 
     if (target === input) {
       const completionTime = performance.now();
-      word.completionTime = completionTime - currentTermStartTime; // Use existing variable
+      word.completionTime = completionTime - currentTermStartTime;
       totalChars += word.typedInput.length;
       correctChars += word.typedInput.length;
       score += word.typedInput.length;
@@ -724,7 +729,7 @@ function calculateTermAccuracy() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       word.isExiting = true;
       word.fadeState = 'out';
-      currentTermStartTime = performance.now(); // Reset for the next term
+      currentTermStartTime = performance.now();
 
       if (mode === 'game' && correctTermsCount >= 10) {
         console.log(`Advancing to Wave ${wave + 1}`);
@@ -753,7 +758,7 @@ function calculateTermAccuracy() {
 
   if (typed === '' && words.length === 0) {
     spawnWord();
-    currentTermStartTime = performance.now(); // Reset for the next term
+    currentTermStartTime = performance.now();
   }
   updateTimeIndicator();
   updateStatsDisplay();
@@ -968,7 +973,6 @@ function calculateTermAccuracy() {
 
   alert('Performance report downloaded as an HTML file. Open it in a browser to view or print it (use Ctrl+P or Cmd+P to print).');
 }
-
   function startGame() {
     if (vocabData.length === 0) {
       vocabData = [...defaultVocabData];
