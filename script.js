@@ -642,7 +642,7 @@ function updateGame() {
 
   function calculateWPM() {
     if (sessionStartTime === null || correctChars === 0) return 0;
-    const elapsedTime = Math.max(0, (performance.now() - sessionStartTime) / 1000 / 60);
+    const elapsedTime = Math.max(0, (sessionEndTime || performance.now() - sessionStartTime) / 1000 / 60);
     if (elapsedTime <= 0) return 0;
     const wpm = Math.round((correctChars / 5) / elapsedTime);
     return Math.min(wpm, 200);
@@ -662,51 +662,21 @@ function updateGame() {
     return totalAttempts > 0 ? Math.round((correctTermsCount / totalAttempts) * 100) : 100;
   }
 
-function updateTimer() {
-  if (!gameActive) return;
-  timeLeft = Math.max(0, timeLeft - 1);
-  totalTime++;
-  timerDisplay.textContent = `Time: ${timeLeft}s`;
-  updateWPMDisplay();
-  if (timeLeft > 0) {
-    setTimeout(updateTimer, 1000);
-  } else if (mode === 'game') {
-    // Only end the game if there are no words left
-    if (words.length === 0) {
-      gameActive = false;
-      console.log(`Game Over due to timer (no words left). Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
-      alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
-    } else {
-      console.log(`Timer ran out, but words are still on screen. Game continues until words are missed or completed.`);
-    }
-  }
-}
-
-  function updateStatsDisplay() {
-    const termsCovered = correctTermsCount + missedWords.length;
-    const totalTerms = vocabData.length + (amalgamateVocab.length > 0 ? amalgamateVocab.length : 0);
-    const termsToWave = 10 - correctTermsCount;
-    scoreDisplay.textContent = `Score: ${score}`;
-    waveDisplay.textContent = `Wave: ${wave}`;
-    timerDisplay.textContent = `Time: ${timeLeft >= 0 ? timeLeft : 0}s`;
-    wpmDisplay.textContent = `WPM: ${currentWPM}`;
-    termsToWaveDisplay.textContent = `To Wave: ${termsToWave}`;
-    termsCoveredDisplay.textContent = `Terms: ${termsCovered}/${totalTerms}`;
-  }
-
-  function handleInput(e) {
+function handleInput(e) {
     const typed = e.target.value;
     if (sessionStartTime === null && typed.length > 0) {
       sessionStartTime = performance.now();
-      correctChars = 0;
     }
 
     words = words.filter(word => {
       const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
       const input = caseSensitive ? typed : typed.toLowerCase();
+      totalChars += typed.length; // Increment total characters typed
+      correctChars += calculateCorrectChars(target, input); // Calculate correct chars for partial input
+
       if (target === input) {
-        correctChars += word.typedInput.length;
-        totalChars += word.typedInput.length;
+        totalChars += word.typedInput.length; // Ensure full term is counted
+        correctChars += word.typedInput.length; // Full term is correct
         score += word.typedInput.length;
         correctTermsCount++;
         coveredTerms.set(word.typedInput, 'Correct');
@@ -743,9 +713,84 @@ function updateTimer() {
       return true;
     });
 
+    if (typed === '' && words.length === 0) {
+      spawnWord();
+    }
     updateTimeIndicator();
     updateStatsDisplay();
   }
+
+  function updateStatsDisplay() {
+    const termsCovered = correctTermsCount + missedWords.length;
+    const totalTerms = vocabData.length + (amalgamateVocab.length > 0 ? amalgamateVocab.length : 0);
+    const termsToWave = 10 - correctTermsCount;
+    scoreDisplay.textContent = `Score: ${score}`;
+    waveDisplay.textContent = `Wave: ${wave}`;
+    timerDisplay.textContent = `Time: ${timeLeft >= 0 ? timeLeft : 0}s`;
+    wpmDisplay.textContent = `WPM: ${currentWPM}`;
+    termsToWaveDisplay.textContent = `To Wave: ${termsToWave}`;
+    termsCoveredDisplay.textContent = `Terms: ${termsCovered}/${totalTerms}`;
+  }
+
+  function handleInput(e) {
+    const typed = e.target.value;
+    if (sessionStartTime === null && typed.length > 0) {
+      sessionStartTime = performance.now();
+    }
+
+    words = words.filter(word => {
+      const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
+      const input = caseSensitive ? typed : typed.toLowerCase();
+      totalChars += typed.length; // Increment total characters typed
+      correctChars += calculateCorrectChars(target, input); // Calculate correct chars for partial input
+
+      if (target === input) {
+        totalChars += word.typedInput.length; // Ensure full term is counted
+        correctChars += word.typedInput.length; // Full term is correct
+        score += word.typedInput.length;
+        correctTermsCount++;
+        coveredTerms.set(word.typedInput, 'Correct');
+        console.log(`Term completed. CorrectTermsCount: ${correctTermsCount}, Wave: ${wave}`);
+        scoreDisplay.textContent = `Score: ${score}`;
+        e.target.value = '';
+        e.target.placeholder = 'Prompt will appear here...';
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        word.isExiting = true;
+        word.fadeState = 'out';
+
+        if (mode === 'game' && correctTermsCount >= 10) {
+          console.log(`Advancing to Wave ${wave + 1}`);
+          wave++;
+          correctTermsCount = 0;
+          waveDisplay.textContent = `Wave: ${wave}`;
+          words.forEach(word => {
+            word.speed = waveSpeeds[word.spawnWave] || waveSpeeds[waveSpeeds.length - 1];
+          });
+          const lightness = 50 + (wave - 1) * 3;
+          document.documentElement.style.setProperty('--bg-lightness', `${Math.min(lightness, 77)}%`);
+          userInput.classList.add('pulse');
+          setTimeout(() => userInput.classList.remove('pulse'), 1000);
+        }
+
+        updateStatsDisplay();
+        return false;
+      }
+      if (target.startsWith(input)) {
+        word.displayText = getUnderscoreText(word.typedInput, input.length > 0 ? 1 : 0);
+      } else {
+        word.displayText = getUnderscoreText(word.typedInput, 0);
+      }
+      return true;
+    });
+
+    if (typed === '' && words.length === 0) {
+      spawnWord();
+    }
+    updateTimeIndicator();
+    updateStatsDisplay();
+  }
+
+  
 
   function highlightKeys(e) {
     const keys = document.querySelectorAll('.key');
@@ -812,41 +857,54 @@ function updateTimer() {
   }
 
   function generateCertificate() {
-  const name = prompt('Enter your name for the report:');
-  if (!name || name.trim() === '') {
-    alert('Please enter a valid name to generate the report.');
-    return;
-  }
-  const safeName = escapeHtml(name);
-  const wpm = currentWPM || 0;
-  const charAccuracy = calculateAccuracy();
-  const termAccuracy = calculateTermAccuracy();
-  const promptTypeText = escapeHtml(promptSelect.options[promptSelect.selectedIndex]?.text || 'Unknown');
-  const totalTerms = vocabData.length + (amalgamateVocab.length > 0 ? amalgamateVocab.length : 0);
-  const termsCoveredCount = coveredTerms.size;
-  const allTermsCompleted = termsCoveredCount === totalTerms;
+    const name = prompt('Enter your name for the report:');
+    if (!name || name.trim() === '') {
+      alert('Please enter a valid name to generate the report.');
+      return;
+    }
+    const safeName = escapeHtml(name);
+    const wpm = calculateWPM();
+    const charAccuracy = calculateAccuracy();
+    const termAccuracy = calculateTermAccuracy();
+    const promptTypeText = escapeHtml(promptSelect.options[promptSelect.selectedIndex]?.text || 'Unknown');
+    const totalTerms = vocabData.length + (amalgamateVocab.length > 0 ? amalgamateVocab.length : 0);
+    const termsCoveredCount = coveredTerms.size;
+    const allTermsCompleted = termsCoveredCount === totalTerms;
 
-  // Debug log to verify term counts
-  console.log('Total Terms in vocabData:', vocabData.length);
-  console.log('Total Terms in amalgamateVocab:', amalgamateVocab.length);
-  console.log('Total Terms:', totalTerms);
-  console.log('Terms Covered:', termsCoveredCount);
+    // Calculate actual duration
+    const startDate = new Date(sessionStartTime).toLocaleString();
+    const endDate = sessionEndTime ? new Date(sessionEndTime).toLocaleString() : new Date().toLocaleString();
+    const durationMs = (sessionEndTime || performance.now()) - sessionStartTime;
+    const durationSeconds = Math.floor(durationMs / 1000);
+    const hours = Math.floor(durationSeconds / 3600);
+    const minutes = Math.floor((durationSeconds % 3600) / 60);
+    const seconds = durationSeconds % 60;
+    const durationStr = `${hours}h ${minutes}m ${seconds}s`;
 
-  // Build the terms table
-  let termsTableRows = '';
-  for (const [term, status] of coveredTerms.entries()) {
-    termsTableRows += `
-      <tr>
-        <td>${escapeHtml(term)}</td>
-        <td>${status}</td>
-      </tr>
-    `;
-  }
-  if (termsTableRows === '') {
-    termsTableRows = '<tr><td colspan="2">No terms covered.</td></tr>';
-  }
+    // Debug logs
+    console.log('Session Start:', startDate);
+    console.log('Session End:', endDate);
+    console.log('Duration (ms):', durationMs);
+    console.log('Duration (h:m:s):', durationStr);
+    console.log('Total Terms in vocabData:', vocabData.length);
+    console.log('Total Terms in amalgamateVocab:', amalgamateVocab.length);
+    console.log('Total Terms:', totalTerms);
+    console.log('Terms Covered:', termsCoveredCount);
 
-  const certificateContent = `
+    let termsTableRows = '';
+    for (const [term, status] of coveredTerms.entries()) {
+      termsTableRows += `
+        <tr>
+          <td>${escapeHtml(term)}</td>
+          <td>${status}</td>
+        </tr>
+      `;
+    }
+    if (termsTableRows === '') {
+      termsTableRows = '<tr><td colspan="2">No terms covered.</td></tr>';
+    }
+
+    const certificateContent = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -854,56 +912,16 @@ function updateTimer() {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KappType Performance Report</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 40px;
-      line-height: 1.6;
-      text-align: center;
-    }
-    h1 {
-      color: #333;
-    }
-    .certificate {
-      border: 2px solid #333;
-      padding: 20px;
-      max-width: 800px;
-      margin: 0 auto;
-      background-color: #f9f9f9;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 20px 0;
-    }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      text-align: left;
-    }
-    th {
-      background-color: #f2f2f2;
-    }
-    .stats {
-      margin: 20px 0;
-      text-align: left;
-      display: inline-block;
-    }
-    .stats p {
-      margin: 5px 0;
-    }
-    .completion-status {
-      font-weight: bold;
-      color: ${allTermsCompleted ? 'green' : 'red'};
-    }
-    @media print {
-      body {
-        margin: 0;
-      }
-      .certificate {
-        border: none;
-        background-color: white;
-      }
-    }
+    body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; text-align: center; }
+    h1 { color: #333; }
+    .certificate { border: 2px solid #333; padding: 20px; max-width: 800px; margin: 0 auto; background-color: #f9f9f9; }
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    .stats { margin: 20px 0; text-align: left; display: inline-block; }
+    .stats p { margin: 5px 0; }
+    .completion-status { font-weight: bold; color: ${allTermsCompleted ? 'green' : 'red'}; }
+    @media print { body { margin: 0; } .certificate { border: none; background-color: white; } }
   </style>
 </head>
 <body>
@@ -918,7 +936,7 @@ function updateTimer() {
       <p><strong>Character Accuracy:</strong> ${charAccuracy}%</p>
       <p><strong>Term Accuracy:</strong> ${termAccuracy}%</p>
       <p><strong>Wave Reached:</strong> ${wave}</p>
-      <p><strong>Total Time:</strong> ${totalTime} seconds</p>
+      <p><strong>Total Time:</strong> ${durationStr}</p>
       <p><strong>Score:</strong> ${score}</p>
     </div>
 
@@ -940,44 +958,65 @@ function updateTimer() {
       ${allTermsCompleted ? 'Congratulations! All terms in the set were covered.' : 'Not all terms were covered in this session.'}
     </p>
 
-    <p>Awarded on ${new Date().toLocaleDateString()}</p>
+    <p><strong>Session Start:</strong> ${startDate}</p>
+    <p><strong>Session End:</strong> ${endDate}</p>
+    <p><strong>Awarded on:</strong> ${new Date().toLocaleString()}</p>
   </div>
 </body>
 </html>
-  `;
+    `;
 
-  const blob = new Blob([certificateContent], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'kapp-type-report.html';
-  a.click();
-  URL.revokeObjectURL(url);
+    const blob = new Blob([certificateContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'kapp-type-report.html';
+    a.click();
+    URL.revokeObjectURL(url);
 
-  alert('Performance report downloaded as an HTML file. Open it in a browser to view or print it (use Ctrl+P or Cmd+P to print).');
-}
+    alert('Performance report downloaded as an HTML file. Open it in a browser to view or print it (use Ctrl+P or Cmd+P to print).');
+  }
+
+let sessionStartTime = null;
+  let sessionEndTime = null;
+  let missedWords = [];
+  let totalChars = 0;
+  let correctChars = 0;
+  let correctTermsCount = 0;
+  let lastFrameTime = performance.now();
 
   function startGame() {
-  if (vocabData.length === 0) {
-    vocabData = [...defaultVocabData];
-    vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
+    if (vocabData.length === 0) {
+      vocabData = [...defaultVocabData];
+      vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
+    }
+    vocabSetTitle.textContent = vocabSetName + (amalgamateSetName ? ' + ' + amalgamateSetName : '');
+    
+    // Reset indices and session timers
+    usedVocabIndices = [];
+    usedAmalgamateIndices = [];
+    sessionStartTime = performance.now();
+    sessionEndTime = null;
+    timeLeft = 30;
+    totalTime = 0;
+    score = 0;
+    wave = 0;
+    missedWords = [];
+    totalChars = 0;
+    correctChars = 0;
+    correctTermsCount = 0;
+    coveredTerms.clear();
+    
+    gameActive = true;
+    userInput.focus();
+    userInput.addEventListener('input', handleInput);
+    document.addEventListener('keydown', highlightKeys);
+    document.addEventListener('keyup', keyUpHandler);
+    certificateButton.addEventListener('click', generateCertificate);
+    spawnWord();
+    updateGame();
+    updateTimer();
   }
-  vocabSetTitle.textContent = vocabSetName + (amalgamateSetName ? ' + ' + amalgamateSetName : '');
-  
-  // Reset indices to ensure no duplicates until all terms are used
-  usedVocabIndices = [];
-  usedAmalgamateIndices = [];
-  
-  gameActive = true;
-  userInput.focus();
-  userInput.addEventListener('input', handleInput);
-  document.addEventListener('keydown', highlightKeys);
-  document.addEventListener('keyup', keyUpHandler);
-  certificateButton.addEventListener('click', generateCertificate);
-  spawnWord();
-  updateGame();
-  updateTimer();
-}
 
   populateVocabDropdown();
   startButton.addEventListener('click', async () => {
