@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
   console.log('DOM fully loaded and parsed');
-  
+
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas ? canvas.getContext('2d') : null;
   const userInput = document.getElementById('userInput');
@@ -29,9 +29,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const timeIndicator = document.getElementById('timeIndicator');
   const themeSelect = document.getElementById('themeSelect');
 
-  if (!canvas || !ctx || !userInput || !timeIndicator || !startButton || !resetButton || !randomizeTermsCheckbox || !themeSelect || !termsToWaveDisplay || !termsCoveredDisplay) {
-    console.error('Required elements not found:', { canvas, ctx, userInput, timeIndicator, startButton, resetButton, randomizeTermsCheckbox, themeSelect, termsToWaveDisplay, termsCoveredDisplay });
-    alert('Critical elements are missing from the page. Please check the HTML structure and try again.');
+  const requiredElements = { canvas, ctx, userInput, timeIndicator, startButton, resetButton, randomizeTermsCheckbox, themeSelect, termsToWaveDisplay, termsCoveredDisplay };
+  const missingElements = Object.entries(requiredElements).filter(([key, value]) => !value);
+  if (missingElements.length > 0) {
+    console.error('Required elements not found:', missingElements);
+    alert(`Critical elements are missing: ${missingElements.map(([key]) => key).join(', ')}. Please check the HTML structure and try again.`);
     return;
   }
 
@@ -45,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
   canvas.width = 900;
   canvas.height = 300;
 
-  const pageLoadTime = performance.now(); // Capture page load time for timestamp correction
+  const pageLoadTime = performance.now();
   let words = [];
   let vocabData = [];
   let amalgamateVocab = [];
@@ -74,11 +76,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let usedVocabIndices = [];
   let usedAmalgamateIndices = [];
   let coveredTerms = new Map();
-  let currentTermStartTime = null; // Track start time for each term
+  let currentTermStartTime = null;
 
-  const waveSpeeds = [
-    0.435, 0.87, 1.0875, 1.3594, 1.6992, 2.1240, 2.6550, 3.3188, 4.1485, 5.1856, 6.4820
-  ];
+  const waveSpeeds = [0.435, 0.87, 1.0875, 1.3594, 1.6992, 2.1240, 2.6550, 3.3188, 4.1485, 5.1856, 6.4820];
 
   const savedTheme = localStorage.getItem('theme') || 'natural-light';
   document.body.className = savedTheme;
@@ -93,56 +93,24 @@ document.addEventListener('DOMContentLoaded', () => {
   function populateVocabDropdown() {
     const baseUrl = 'https://raw.githubusercontent.com/kappter/vocab-sets/main/';
     const files = [
-      'Exploring_Computer_Science_Vocabulary',
-      'Periodic_Table_Elements',
-      'Study_Skills_High_School',
-      'Financial_Management_Tips',
-      'AP_Computer_Science_A_Concepts',
-      'AP_Java_Code_Snippets',
-      'AP_Astronomy_Concepts',
-      'Computer_Usage_Terms',
-      'OS_Navigation_Capabilities',
-      'Guitar_Techniques',
-      'Music_Composition_Techniques',
-      'Literary_Techniques',
-      'Rogets_Abstract_Relations_Terms',
-      'Rogets_Space_Terms',
-      'Rogets_Matter_Terms',
-      'Rogets_Intellectual_Faculties_Terms',
-      'Rogets_Volition_Terms',
-      'Rogets_Affections_Terms',
-      'Rogets_Consolidated_Terms',
-      'ARRL_Ham_Radio_Extra_License_Terms_Definitions',
-      'ARRL_Ham_Radio_General_License_Terms_Definitions',
-      'ARRL_Ham_Radio_Technician_License_Terms_Definitions',
-      'Computer_Programming_2_Terms_Definitions',
-      'Digital_Media_2_Terms_and_Definitions',
-      'ECS_Hardware_OS_DataStorage_Terms_Definitions',
-      'Game_Development_Fundamentals_2_Terms_Definitions',
-      'Game_Development_Fundamentals_1_Terms_Definitions',
-      'Game_Development_Terms_2020s',
-      'Music_Theory_Terms_Definitions',
-      'Short_Testing_Sample',
-      'Summer_Job_Preparation_Terms_Definitions',
-      'Utah_Computer_Programming_1_Terms_Definitions',
-      'Web_Development_Terms_Definitions',
-      'Yearbook_Design_Terms',
-      'advanced_computer_programming_vocab',
-      'Photography_Terms',
-      'OOP_Programming_Terms',
-      'psych_terms_1',
-      'psych_terms_2',
-      'psych_terms_3',
-      'psych_terms_4',
-      'utah_video_production_terms_Final',
-      'Social_Media_Photography_Terms',
-      'idioms',
-      'unusual_adjectives',
-      'unusual_verbs',
-      'Rare_English_Words',
-      'common_appetizers_usa',
-      'common_us_entrees',
-      'common_us_side_dishes'
+      'Exploring_Computer_Science_Vocabulary', 'Periodic_Table_Elements', 'Study_Skills_High_School',
+      'Financial_Management_Tips', 'AP_Computer_Science_A_Concepts', 'AP_Java_Code_Snippets',
+      'AP_Astronomy_Concepts', 'Computer_Usage_Terms', 'OS_Navigation_Capabilities',
+      'Guitar_Techniques', 'Music_Composition_Techniques', 'Literary_Techniques',
+      'Rogets_Abstract_Relations_Terms', 'Rogets_Space_Terms', 'Rogets_Matter_Terms',
+      'Rogets_Intellectual_Faculties_Terms', 'Rogets_Volition_Terms', 'Rogets_Affections_Terms',
+      'Rogets_Consolidated_Terms', 'ARRL_Ham_Radio_Extra_License_Terms_Definitions',
+      'ARRL_Ham_Radio_General_License_Terms_Definitions', 'ARRL_Ham_Radio_Technician_License_Terms_Definitions',
+      'Computer_Programming_2_Terms_Definitions', 'Digital_Media_2_Terms_and_Definitions',
+      'ECS_Hardware_OS_DataStorage_Terms_Definitions', 'Game_Development_Fundamentals_2_Terms_Definitions',
+      'Game_Development_Fundamentals_1_Terms_Definitions', 'Game_Development_Terms_2020s',
+      'Music_Theory_Terms_Definitions', 'Short_Testing_Sample', 'Summer_Job_Preparation_Terms_Definitions',
+      'Utah_Computer_Programming_1_Terms_Definitions', 'Web_Development_Terms_Definitions',
+      'Yearbook_Design_Terms', 'advanced_computer_programming_vocab', 'Photography_Terms',
+      'OOP_Programming_Terms', 'psych_terms_1', 'psych_terms_2', 'psych_terms_3', 'psych_terms_4',
+      'utah_video_production_terms_Final', 'Social_Media_Photography_Terms', 'idioms',
+      'unusual_adjectives', 'unusual_verbs', 'Rare_English_Words', 'common_appetizers_usa',
+      'common_us_entrees', 'common_us_side_dishes'
     ];
     const vocabSelectElement = document.getElementById('vocabSelect');
     const amalgamateSelectElement = document.getElementById('amalgamateSelect');
@@ -641,128 +609,119 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function calculateCorrectChars(target, input) {
-  let correct = 0;
-  for (let i = 0; i < Math.min(target.length, input.length); i++) {
-    if (target[i] === input[i]) correct++;
+    let correct = 0;
+    for (let i = 0; i < Math.min(target.length, input.length); i++) {
+      if (target[i] === input[i]) correct++;
+    }
+    return correct;
   }
-  return correct;
-}
 
   function updateTimer() {
-  if (!gameActive) return;
-  timeLeft = Math.max(0, timeLeft - 1);
-  totalTime++;
-  timerDisplay.textContent = `Time: ${timeLeft}s`;
-  updateWPMDisplay();
-  if (timeLeft > 0) {
-    setTimeout(updateTimer, 1000);
-  } else if (mode === 'game') {
-    if (words.length === 0) {
+    if (!gameActive) return;
+    timeLeft = Math.max(0, timeLeft - 1);
+    totalTime++;
+    timerDisplay.textContent = `Time: ${timeLeft}s`;
+    updateWPMDisplay();
+    if (timeLeft === 0 && mode === 'game') {
       gameActive = false;
-      sessionEndTime = performance.now();
-      console.log(`Game Over due to timer (no words left). Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
+      sessionEndTime = sessionEndTime || performance.now();
+      console.log(`Game Over due to timer. Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
       alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
-    } else {
-      console.log(`Timer ran out, but words are still on screen. Game continues until words are missed or completed.`);
+    } else if (timeLeft > 0) {
+      setTimeout(updateTimer, 1000);
     }
   }
-}
 
   function calculateWPM() {
-  const correctTermsFromCovered = Array.from(coveredTerms.values()).filter(status => status === 'Correct').length;
-  if (correctTermsFromCovered === 0) return 0;
+    const correctTermsFromCovered = Array.from(coveredTerms.values()).filter(status => status === 'Correct').length;
+    if (correctTermsFromCovered === 0) return 0;
 
-  const sessionTimeMs = (sessionEndTime || performance.now()) - sessionStartTime || 1;
-  const sessionTimeMin = sessionTimeMs / 1000 / 60;
-  // Use score (total length of correctly completed terms) instead of correctChars
-  const wpm = Math.round((score / 5) / sessionTimeMin);
-  console.log('WPM calc - sessionTimeMs:', sessionTimeMs, 'sessionTimeMin:', sessionTimeMin, 'score:', score, 'wpm:', wpm);
-  return Math.min(wpm, 200);
-}
+    const sessionTimeMs = (sessionEndTime || performance.now()) - sessionStartTime || 1;
+    const sessionTimeMin = sessionTimeMs / 1000 / 60;
+    const wpm = Math.round((score / 5) / sessionTimeMin);
+    console.log('WPM calc - sessionTimeMs:', sessionTimeMs, 'sessionTimeMin:', sessionTimeMin, 'score:', score, 'wpm:', wpm);
+    return Math.min(wpm, 200);
+  }
 
- function updateWPMDisplay() {
-  currentWPM = calculateWPM();
-  wpmDisplay.textContent = `WPM: ${currentWPM}`;
-}
+  function updateWPMDisplay() {
+    currentWPM = calculateWPM();
+    wpmDisplay.textContent = `WPM: ${currentWPM}`;
+  }
 
   function calculateAccuracy() {
-  return totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 100;
-}
+    return totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 100;
+  }
 
-function calculateTermAccuracy() {
-  // Use coveredTerms to calculate term accuracy
-  const correctTerms = Array.from(coveredTerms.values()).filter(status => status === 'Correct').length;
-  const totalAttempts = coveredTerms.size; // Total terms covered (correct + missed)
-  return totalAttempts > 0 ? Math.round((correctTerms / totalAttempts) * 100) : 100;
-}
-
-  //let currentTermStartTime = null; // Track start time for each term
+  function calculateTermAccuracy() {
+    const correctTerms = Array.from(coveredTerms.values()).filter(status => status === 'Correct').length;
+    const totalAttempts = coveredTerms.size;
+    return totalAttempts > 0 ? Math.round((correctTerms / totalAttempts) * 100) : 100;
+  }
 
   function handleInput(e) {
-  const typed = e.target.value;
-  if (sessionStartTime === null && typed.length > 0) {
-    sessionStartTime = performance.now();
-    currentTermStartTime = sessionStartTime;
-  }
+    const typed = e.target.value;
+    if (sessionStartTime === null && typed.length > 0) {
+      sessionStartTime = performance.now();
+      currentTermStartTime = sessionStartTime;
+    }
 
-  words = words.filter(word => {
-    const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
-    const input = caseSensitive ? typed : typed.toLowerCase();
-    totalChars += typed.length;
-    correctChars += calculateCorrectChars(target, input);
+    words = words.filter(word => {
+      const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
+      const input = caseSensitive ? typed : typed.toLowerCase();
+      totalChars += typed.length;
+      correctChars += calculateCorrectChars(target, input);
 
-    if (target === input) {
-      const completionTime = performance.now();
-      word.completionTime = completionTime - currentTermStartTime;
-      totalChars += word.typedInput.length;
-      correctChars += word.typedInput.length; // Only add full term length on completion
-      score += word.typedInput.length;
-      correctTermsCount++;
-      coveredTerms.set(word.typedInput, 'Correct');
-      console.log(`Term completed. CorrectTermsCount: ${correctTermsCount}, Wave: ${wave}, Time Taken: ${word.completionTime / 1000}s`);
-      scoreDisplay.textContent = `Score: ${score}`;
-      e.target.value = '';
-      e.target.placeholder = 'Prompt will appear here...';
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      word.isExiting = true;
-      word.fadeState = 'out';
-      currentTermStartTime = performance.now();
+      if (target === input) {
+        const completionTime = performance.now();
+        word.completionTime = completionTime - currentTermStartTime;
+        totalChars += word.typedInput.length;
+        correctChars += word.typedInput.length;
+        score += word.typedInput.length;
+        correctTermsCount++;
+        coveredTerms.set(word.typedInput, 'Correct');
+        console.log(`Term completed. CorrectTermsCount: ${correctTermsCount}, Wave: ${wave}, Time Taken: ${word.completionTime / 1000}s, Score Increment: ${word.typedInput.length}`);
+        scoreDisplay.textContent = `Score: ${score}`;
+        e.target.value = '';
+        e.target.placeholder = 'Prompt will appear here...';
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        word.isExiting = true;
+        word.fadeState = 'out';
+        currentTermStartTime = performance.now();
 
-      if (mode === 'game' && correctTermsCount >= 10) {
-        console.log(`Advancing to Wave ${wave + 1}`);
-        wave++;
-        correctTermsCount = 0;
-        waveDisplay.textContent = `Wave: ${wave}`;
-        words.forEach(word => {
-          word.speed = waveSpeeds[word.spawnWave] || waveSpeeds[waveSpeeds.length - 1];
-        });
-        const lightness = 50 + (wave - 1) * 3;
-        document.documentElement.style.setProperty('--bg-lightness', `${Math.min(lightness, 77)}%`);
-        userInput.classList.add('pulse');
-        setTimeout(() => userInput.classList.remove('pulse'), 1000);
+        if (mode === 'game' && correctTermsCount >= 10) {
+          console.log(`Advancing to Wave ${wave + 1}`);
+          wave++;
+          correctTermsCount = 0;
+          waveDisplay.textContent = `Wave: ${wave}`;
+          words.forEach(word => {
+            word.speed = waveSpeeds[word.spawnWave] || waveSpeeds[waveSpeeds.length - 1];
+          });
+          const lightness = 50 + (wave - 1) * 3;
+          document.documentElement.style.setProperty('--bg-lightness', `${Math.min(lightness, 77)}%`);
+          userInput.classList.add('pulse');
+          setTimeout(() => userInput.classList.remove('pulse'), 1000);
+        }
+
+        updateStatsDisplay();
+        return false;
       }
+      if (target.startsWith(input)) {
+        word.displayText = getUnderscoreText(word.typedInput, input.length > 0 ? 1 : 0);
+      } else {
+        word.displayText = getUnderscoreText(word.typedInput, 0);
+      }
+      return true;
+    });
 
-      updateStatsDisplay();
-      return false;
+    if (typed === '' && words.length === 0) {
+      spawnWord();
+      currentTermStartTime = performance.now();
     }
-    if (target.startsWith(input)) {
-      word.displayText = getUnderscoreText(word.typedInput, input.length > 0 ? 1 : 0);
-    } else {
-      word.displayText = getUnderscoreText(word.typedInput, 0);
-    }
-    return true;
-  });
-
-  if (typed === '' && words.length === 0) {
-    spawnWord();
-    currentTermStartTime = performance.now();
+    updateTimeIndicator();
+    updateStatsDisplay();
   }
-  updateTimeIndicator();
-  updateStatsDisplay();
-}
 
   function updateStatsDisplay() {
-    const termsCovered = correctTermsCount + missedWords.length;
     const totalTerms = vocabData.length + (amalgamateVocab.length > 0 ? amalgamateVocab.length : 0);
     const termsToWave = 10 - correctTermsCount;
     scoreDisplay.textContent = `Score: ${score}`;
@@ -770,7 +729,7 @@ function calculateTermAccuracy() {
     timerDisplay.textContent = `Time: ${timeLeft >= 0 ? timeLeft : 0}s`;
     wpmDisplay.textContent = `WPM: ${currentWPM}`;
     termsToWaveDisplay.textContent = `To Wave: ${termsToWave}`;
-    termsCoveredDisplay.textContent = `Terms: ${termsCovered}/${totalTerms}`;
+    termsCoveredDisplay.textContent = `Terms: ${coveredTerms.size}/${totalTerms}`;
   }
 
   function highlightKeys(e) {
@@ -838,67 +797,65 @@ function calculateTermAccuracy() {
   }
 
   function generateCertificate() {
-  const name = prompt('Enter your name for the report:');
-  if (!name || name.trim() === '') {
-    alert('Please enter a valid name to generate the report.');
-    return;
-  }
-  const safeName = escapeHtml(name);
-  const wpm = calculateWPM();
-  const charAccuracy = calculateAccuracy();
-  const termAccuracy = calculateTermAccuracy();
-  const promptTypeText = escapeHtml(promptSelect.options[promptSelect.selectedIndex]?.text || 'Unknown');
-  const totalTerms = vocabData.length + (amalgamateVocab.length > 0 ? amalgamateVocab.length : 0);
-  const termsCoveredCount = coveredTerms.size;
-  const allTermsCompleted = termsCoveredCount === totalTerms;
+    const name = prompt('Enter your name for the report:');
+    if (!name || name.trim() === '') {
+      alert('Please enter a valid name to generate the report.');
+      return;
+    }
+    const safeName = escapeHtml(name);
+    const wpm = calculateWPM();
+    const charAccuracy = calculateAccuracy();
+    const termAccuracy = calculateTermAccuracy();
+    const promptTypeText = escapeHtml(promptSelect.options[promptSelect.selectedIndex]?.text || 'Unknown');
+    const totalTerms = vocabData.length + (amalgamateVocab.length > 0 ? amalgamateVocab.length : 0);
+    const termsCoveredCount = coveredTerms.size;
+    const allTermsCompleted = termsCoveredCount === totalTerms;
 
-  // Debug log to trace timestamp values
-  console.log('Debug - pageLoadTime:', pageLoadTime, 'sessionStartTime:', sessionStartTime, 'sessionEndTime:', sessionEndTime);
+    console.log('Debug - pageLoadTime:', pageLoadTime, 'sessionStartTime:', sessionStartTime, 'sessionEndTime:', sessionEndTime);
 
-  // Calculate actual timestamps using the current time as a reference
-  const now = new Date();
-  const elapsedSincePageLoad = performance.now() - pageLoadTime;
-  const pageLoadDate = new Date(now.getTime() - elapsedSincePageLoad);
-  let startDate = 'N/A';
-  let endDate = 'N/A';
-  if (sessionStartTime !== null) {
-    startDate = new Date(pageLoadDate.getTime() + sessionStartTime).toLocaleString();
-  }
-  if (sessionEndTime !== null) {
-    endDate = new Date(pageLoadDate.getTime() + sessionEndTime).toLocaleString();
-  } else {
-    endDate = new Date().toLocaleString();
-  }
-  const durationMs = (sessionEndTime || performance.now()) - (sessionStartTime || performance.now());
-  const durationSeconds = Math.floor(durationMs / 1000);
-  const hours = Math.floor(durationSeconds / 3600);
-  const minutes = Math.floor((durationSeconds % 3600) / 60);
-  const seconds = durationSeconds % 60;
-  const durationStr = `${hours}h ${minutes}m ${seconds}s`;
+    const now = new Date();
+    const elapsedSincePageLoad = performance.now() - pageLoadTime;
+    const pageLoadDate = new Date(now.getTime() - elapsedSincePageLoad);
+    let startDate = 'N/A';
+    let endDate = 'N/A';
+    if (sessionStartTime !== null) {
+      startDate = new Date(pageLoadDate.getTime() + sessionStartTime).toLocaleString();
+    }
+    if (sessionEndTime !== null) {
+      endDate = new Date(pageLoadDate.getTime() + sessionEndTime).toLocaleString();
+    } else {
+      endDate = new Date().toLocaleString();
+    }
+    const durationMs = (sessionEndTime || performance.now()) - (sessionStartTime || performance.now());
+    const durationSeconds = Math.floor(durationMs / 1000);
+    const hours = Math.floor(durationSeconds / 3600);
+    const minutes = Math.floor((durationSeconds % 3600) / 60);
+    const seconds = durationSeconds % 60;
+    const durationStr = `${hours}h ${minutes}m ${seconds}s`;
 
-  console.log('Session Start:', startDate);
-  console.log('Session End:', endDate);
-  console.log('Duration (ms):', durationMs);
-  console.log('Duration (h:m:s):', durationStr);
-  console.log('Total Terms in vocabData:', vocabData.length);
-  console.log('Total Terms in amalgamateVocab:', amalgamateVocab.length);
-  console.log('Total Terms:', totalTerms);
-  console.log('Terms Covered:', termsCoveredCount);
+    console.log('Session Start:', startDate);
+    console.log('Session End:', endDate);
+    console.log('Duration (ms):', durationMs);
+    console.log('Duration (h:m:s):', durationStr);
+    console.log('Total Terms in vocabData:', vocabData.length);
+    console.log('Total Terms in amalgamateVocab:', amalgamateVocab.length);
+    console.log('Total Terms:', totalTerms);
+    console.log('Terms Covered:', termsCoveredCount);
 
-  let termsTableRows = '';
-  for (const [term, status] of coveredTerms.entries()) {
-    termsTableRows += `
-      <tr>
-        <td>${escapeHtml(term)}</td>
-        <td>${status}</td>
-      </tr>
-    `;
-  }
-  if (termsTableRows === '') {
-    termsTableRows = '<tr><td colspan="2">No terms covered.</td></tr>';
-  }
+    let termsTableRows = '';
+    for (const [term, status] of coveredTerms.entries()) {
+      termsTableRows += `
+        <tr>
+          <td>${escapeHtml(term)}</td>
+          <td>${status}</td>
+        </tr>
+      `;
+    }
+    if (termsTableRows === '') {
+      termsTableRows = '<tr><td colspan="2">No terms covered.</td></tr>';
+    }
 
-  const certificateContent = `
+    const certificateContent = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -960,16 +917,17 @@ function calculateTermAccuracy() {
 </html>
   `;
 
-  const blob = new Blob([certificateContent], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'kapp-type-report.html';
-  a.click();
-  URL.revokeObjectURL(url);
+    const blob = new Blob([certificateContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'kapp-type-report.html';
+    a.click();
+    URL.revokeObjectURL(url);
 
-  alert('Performance report downloaded as an HTML file. Open it in a browser to view or print it (use Ctrl+P or Cmd+P to print).');
-}
+    alert('Performance report downloaded as an HTML file. Open it in a browser to view or print it (use Ctrl+P or Cmd+P to print).');
+  }
+
   function startGame() {
     if (vocabData.length === 0) {
       vocabData = [...defaultVocabData];
