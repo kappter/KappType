@@ -674,8 +674,9 @@ document.addEventListener('DOMContentLoaded', () => {
     .filter(word => word.completionTime)
     .reduce((sum, word) => sum + word.completionTime, 0);
   const sessionTimeMs = (sessionEndTime || performance.now()) - sessionStartTime || 1; // Fallback to session time
-  const totalTypingTimeMin = Math.max(totalTypingTimeMs / 1000 / 60, sessionTimeMs / 1000 / 60) || 1; // Use larger of typing or session time
+  const totalTypingTimeMin = Math.max(totalTypingTimeMs / 1000 / 60, sessionTimeMs / 1000 / 60, 0.1); // Minimum 0.1 minute to avoid extreme inflation
   const wpm = Math.round((correctChars / 5) / totalTypingTimeMin);
+  console.log('WPM calc - totalTypingTimeMs:', totalTypingTimeMs, 'sessionTimeMs:', sessionTimeMs, 'usedTimeMin:', totalTypingTimeMin, 'wpm:', wpm);
   return Math.min(wpm, 200);
 }
 
@@ -849,13 +850,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const termsCoveredCount = coveredTerms.size;
   const allTermsCompleted = termsCoveredCount === totalTerms;
 
+  // Debug log to trace timestamp values
+  console.log('Debug - pageLoadTime:', pageLoadTime, 'sessionStartTime:', sessionStartTime, 'sessionEndTime:', sessionEndTime);
+
   // Calculate actual timestamps using the current time as a reference
   const now = new Date();
   const elapsedSincePageLoad = performance.now() - pageLoadTime;
   const pageLoadDate = new Date(now.getTime() - elapsedSincePageLoad);
-  const startDate = new Date(pageLoadDate.getTime() + (sessionStartTime || 0)).toLocaleString();
-  const endDate = sessionEndTime ? new Date(pageLoadDate.getTime() + sessionEndTime).toLocaleString() : new Date().toLocaleString();
-  const durationMs = (sessionEndTime || performance.now()) - sessionStartTime;
+  let startDate = 'N/A';
+  let endDate = 'N/A';
+  if (sessionStartTime !== null) {
+    startDate = new Date(pageLoadDate.getTime() + sessionStartTime).toLocaleString();
+  }
+  if (sessionEndTime !== null) {
+    endDate = new Date(pageLoadDate.getTime() + sessionEndTime).toLocaleString();
+  } else {
+    endDate = new Date().toLocaleString();
+  }
+  const durationMs = (sessionEndTime || performance.now()) - (sessionStartTime || performance.now());
   const durationSeconds = Math.floor(durationMs / 1000);
   const hours = Math.floor(durationSeconds / 3600);
   const minutes = Math.floor((durationSeconds % 3600) / 60);
