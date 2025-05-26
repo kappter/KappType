@@ -69,7 +69,7 @@ export function spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensi
   return word;
 }
 
-export function updateGame(ctx, words, userInput, gameActive, mode, caseSensitive, textColor, waveSpeeds, wave, score, correctTermsCount, coveredTerms, totalChars, correctChars, missedWords, lastFrameTime) {
+export function updateGame(ctx, words, userInput, gameActive, mode, caseSensitive, textColor, waveSpeeds, wave, score, correctTermsCount, coveredTerms, totalChars, correctChars, missedWords, lastFrameTime, vocabData, amalgamateVocab, promptType, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, level) {
   if (!gameActive) return;
 
   const now = performance.now();
@@ -169,8 +169,8 @@ export function updateGame(ctx, words, userInput, gameActive, mode, caseSensitiv
       if (words.length === 1 && mode === 'game') {
         gameActive = false;
         sessionEndTime = performance.now();
-        console.log(`Game Over due to missed word. Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
-        alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
+        console.log(`Game Over due to missed word. Score: ${score}, WPM: ${calculateWPM(wpmActive, sessionStartTime, sessionEndTime, score)}, Accuracy: ${calculateAccuracy(totalChars, correctChars)}%`);
+        alert(`Game Over! Score: ${score}, WPM: ${calculateWPM(wpmActive, sessionStartTime, sessionEndTime, score)}, Accuracy: ${calculateAccuracy(totalChars, correctChars)}%`);
         return false;
       }
     }
@@ -188,15 +188,7 @@ export function updateGame(ctx, words, userInput, gameActive, mode, caseSensitiv
   return newLastFrameTime; // Return the updated lastFrameTime for the next frame
 }
 
-export function calculateCorrectChars(target, input) {
-  let correct = 0;
-  for (let i = 0; i < Math.min(target.length, input.length); i++) {
-    if (target[i] === input[i]) correct++;
-  }
-  return correct;
-}
-
-export function calculateWPM(sessionStartTime, sessionEndTime, score) {
+export function calculateWPM(wpmActive, sessionStartTime, sessionEndTime, score) {
   if (!wpmActive) return 0;
   const correctTermsFromCovered = Array.from(coveredTerms.values()).filter(status => status === 'Correct').length;
   if (correctTermsFromCovered === 0) return 0;
