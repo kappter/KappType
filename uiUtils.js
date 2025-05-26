@@ -24,7 +24,7 @@ export function updateWPMDisplay(wpmDisplay, currentWPM) {
   wpmDisplay.textContent = `WPM: ${currentWPM}`;
 }
 
-export function updateStatsDisplay(scoreDisplay, waveDisplay, timerDisplay, wpmDisplay, termsToWaveDisplay, termsCoveredDisplay, score, wave, timeLeft, currentWPM, correctTermsCount, vocabData, amalgamateVocab) {
+export function updateStatsDisplay(scoreDisplay, waveDisplay, timerDisplay, wpmDisplay, termsToWaveDisplay, termsCoveredDisplay, score, wave, timeLeft, currentWPM, correctTermsCount, vocabData, amalgamateVocab, coveredTerms) {
   const totalTerms = vocabData.length + (amalgamateVocab.length > 0 ? amalgamateVocab.length : 0);
   const termsToWave = 10 - correctTermsCount;
   scoreDisplay.textContent = `Score: ${score}`;
@@ -32,7 +32,7 @@ export function updateStatsDisplay(scoreDisplay, waveDisplay, timerDisplay, wpmD
   timerDisplay.textContent = `Time: ${timeLeft >= 0 ? timeLeft : 0}s`;
   wpmDisplay.textContent = `WPM: ${currentWPM}`;
   termsToWaveDisplay.textContent = `To Wave: ${termsToWave}`;
-  termsCoveredDisplay.textContent = `Terms: ${coveredTerms.size}/${totalTerms}`;
+  termsCoveredDisplay.textContent = `Terms: ${coveredTerms.size}/${totalTerms}`; // Now coveredTerms is defined
 }
 
 export function highlightKeys(e, keys) {
