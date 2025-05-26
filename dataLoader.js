@@ -24,7 +24,7 @@ export function validateCsvUrl(url) {
   return url.includes('github.com') || url.endsWith('.csv') || url.startsWith('/');
 }
 
-export function loadVocab(csvUrl, isAmalgamate, vocabData, amalgamateVocab, vocabSelect, amalgamateSelect, loadingIndicator, startButton) {
+export function loadVocab(csvUrl, isAmalgamate, vocabData, amalgamateVocab, vocabSelect, amalgamateSelect, loadingIndicator, startButton, defaultVocabData) {
   return new Promise((resolve, reject) => {
     const targetArray = isAmalgamate ? amalgamateVocab : vocabData;
     const setName = isAmalgamate ? amalgamateSelect.options[amalgamateSelect.selectedIndex].textContent : vocabSelect.options[vocabSelect.selectedIndex].textContent;
@@ -32,48 +32,56 @@ export function loadVocab(csvUrl, isAmalgamate, vocabData, amalgamateVocab, voca
 
     if (!csvUrl) {
       if (!isAmalgamate) {
-        vocabData = [...defaultVocabData];
-        vocabSetName = setName || 'Embedded Vocabulary - 53 Computer Science Terms';
-      } else amalgamateSetName = '';
+        vocabData.length = 0;
+        vocabData.push(...defaultVocabData);
+        resolve({ vocabSetName: setName || 'Embedded Vocabulary - 53 Computer Science Terms', amalgamateSetName: '' });
+      } else {
+        resolve({ vocabSetName: null, amalgamateSetName: '' });
+      }
       loadingIndicator.classList.add('hidden');
       startButton.disabled = false;
-      resolve();
       return;
     }
 
     if (window.location.protocol === 'file:') {
       alert('Cannot load external CSV files when running via file://. Using embedded vocabulary.');
       if (!isAmalgamate) {
-        vocabData = [...defaultVocabData];
-        vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
-      } else amalgamateSetName = '';
+        vocabData.length = 0;
+        vocabData.push(...defaultVocabData);
+        resolve({ vocabSetName: 'Embedded Vocabulary - 53 Computer Science Terms', amalgamateSetName: '' });
+      } else {
+        resolve({ vocabSetName: null, amalgamateSetName: '' });
+      }
       loadingIndicator.classList.add('hidden');
       startButton.disabled = false;
-      resolve();
       return;
     }
 
     if (!validateCsvUrl(csvUrl)) {
       alert('Invalid CSV URL. Using embedded vocabulary.');
       if (!isAmalgamate) {
-        vocabData = [...defaultVocabData];
-        vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
-      } else amalgamateSetName = '';
+        vocabData.length = 0;
+        vocabData.push(...defaultVocabData);
+        resolve({ vocabSetName: 'Embedded Vocabulary - 53 Computer Science Terms', amalgamateSetName: '' });
+      } else {
+        resolve({ vocabSetName: null, amalgamateSetName: '' });
+      }
       loadingIndicator.classList.add('hidden');
       startButton.disabled = false;
-      resolve();
       return;
     }
 
     if (typeof Papa === 'undefined') {
       alert('Papa Parse library not loaded. Using embedded vocabulary.');
       if (!isAmalgamate) {
-        vocabData = [...defaultVocabData];
-        vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
-      } else amalgamateSetName = '';
+        vocabData.length = 0;
+        vocabData.push(...defaultVocabData);
+        resolve({ vocabSetName: 'Embedded Vocabulary - 53 Computer Science Terms', amalgamateSetName: '' });
+      } else {
+        resolve({ vocabSetName: null, amalgamateSetName: '' });
+      }
       loadingIndicator.classList.add('hidden');
       startButton.disabled = false;
-      resolve();
       return;
     }
 
@@ -98,29 +106,36 @@ export function loadVocab(csvUrl, isAmalgamate, vocabData, amalgamateVocab, voca
             if (filteredData.length === 0) {
               alert(`No valid terms found in the CSV at ${csvUrl}. Using embedded vocabulary.`);
               if (!isAmalgamate) {
-                vocabData = [...defaultVocabData];
-                vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
-              } else amalgamateSetName = '';
+                vocabData.length = 0;
+                vocabData.push(...defaultVocabData);
+                resolve({ vocabSetName: 'Embedded Vocabulary - 53 Computer Science Terms', amalgamateSetName: '' });
+              } else {
+                resolve({ vocabSetName: null, amalgamateSetName: '' });
+              }
             } else {
               targetArray.push(...filteredData);
-              if (isAmalgamate) amalgamateSetName = setName;
-              else vocabSetName = setName;
+              if (isAmalgamate) {
+                resolve({ vocabSetName: null, amalgamateSetName: setName });
+              } else {
+                resolve({ vocabSetName: setName, amalgamateSetName: null });
+              }
             }
             loadingIndicator.classList.add('hidden');
             startButton.disabled = false;
-            resolve();
           },
           error: (error) => {
             clearTimeout(timeoutId);
             console.error(`Papa Parse error for ${csvUrl}:`, error);
             alert(`Failed to parse CSV at ${csvUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary.`);
             if (!isAmalgamate) {
-              vocabData = [...defaultVocabData];
-              vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
-            } else amalgamateSetName = '';
+              vocabData.length = 0;
+              vocabData.push(...defaultVocabData);
+              resolve({ vocabSetName: 'Embedded Vocabulary - 53 Computer Science Terms', amalgamateSetName: '' });
+            } else {
+              resolve({ vocabSetName: null, amalgamateSetName: '' });
+            }
             loadingIndicator.classList.add('hidden');
             startButton.disabled = false;
-            resolve();
           }
         });
       })
@@ -129,17 +144,19 @@ export function loadVocab(csvUrl, isAmalgamate, vocabData, amalgamateVocab, voca
         console.error(`Fetch error for ${csvUrl}:`, error);
         alert(`Failed to load CSV at ${csvUrl}. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary.`);
         if (!isAmalgamate) {
-          vocabData = [...defaultVocabData];
-          vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
-        } else amalgamateSetName = '';
+          vocabData.length = 0;
+          vocabData.push(...defaultVocabData);
+          resolve({ vocabSetName: 'Embedded Vocabulary - 53 Computer Science Terms', amalgamateSetName: '' });
+        } else {
+          resolve({ vocabSetName: null, amalgamateSetName: '' });
+        }
         loadingIndicator.classList.add('hidden');
         startButton.disabled = false;
-        resolve();
       });
   });
 }
 
-export function loadCustomVocab(file, isAmalgamate, vocabData, amalgamateVocab, loadingIndicator, startButton) {
+export function loadCustomVocab(file, isAmalgamate, vocabData, amalgamateVocab, loadingIndicator, startButton, defaultVocabData) {
   return new Promise((resolve, reject) => {
     const targetArray = isAmalgamate ? amalgamateVocab : vocabData;
     const setName = file.name.replace(/\.csv$/, '');
@@ -148,12 +165,14 @@ export function loadCustomVocab(file, isAmalgamate, vocabData, amalgamateVocab, 
     if (typeof Papa === 'undefined') {
       alert('Papa Parse library not loaded. Using embedded vocabulary.');
       if (!isAmalgamate) {
-        vocabData = [...defaultVocabData];
-        vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
-      } else amalgamateSetName = '';
+        vocabData.length = 0;
+        vocabData.push(...defaultVocabData);
+        resolve({ vocabSetName: 'Embedded Vocabulary - 53 Computer Science Terms', amalgamateSetName: '' });
+      } else {
+        resolve({ vocabSetName: null, amalgamateSetName: '' });
+      }
       loadingIndicator.classList.add('hidden');
       startButton.disabled = false;
-      resolve();
       return;
     }
 
@@ -168,28 +187,35 @@ export function loadCustomVocab(file, isAmalgamate, vocabData, amalgamateVocab, 
         if (filteredData.length === 0) {
           alert(`No valid terms found in the uploaded CSV. Using embedded vocabulary.`);
           if (!isAmalgamate) {
-            vocabData = [...defaultVocabData];
-            vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
-          } else amalgamateSetName = '';
+            vocabData.length = 0;
+            vocabData.push(...defaultVocabData);
+            resolve({ vocabSetName: 'Embedded Vocabulary - 53 Computer Science Terms', amalgamateSetName: '' });
+          } else {
+            resolve({ vocabSetName: null, amalgamateSetName: '' });
+          }
         } else {
           targetArray.push(...filteredData);
-          if (isAmalgamate) amalgamateSetName = setName;
-          else vocabSetName = setName;
+          if (isAmalgamate) {
+            resolve({ vocabSetName: null, amalgamateSetName: setName });
+          } else {
+            resolve({ vocabSetName: setName, amalgamateSetName: null });
+          }
         }
         loadingIndicator.classList.add('hidden');
         startButton.disabled = false;
-        resolve();
       },
       error: (error) => {
         console.error('Papa Parse error for uploaded file:', error);
         alert(`Failed to parse the uploaded CSV. Error: ${error.message || 'Unknown error'}. Using embedded vocabulary.`);
         if (!isAmalgamate) {
-          vocabData = [...defaultVocabData];
-          vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
-        } else amalgamateSetName = '';
+          vocabData.length = 0;
+          vocabData.push(...defaultVocabData);
+          resolve({ vocabSetName: 'Embedded Vocabulary - 53 Computer Science Terms', amalgamateSetName: '' });
+        } else {
+          resolve({ vocabSetName: null, amalgamateSetName: '' });
+        }
         loadingIndicator.classList.add('hidden');
         startButton.disabled = false;
-        resolve();
       }
     });
   });
