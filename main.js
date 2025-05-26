@@ -151,46 +151,47 @@ document.addEventListener('DOMContentLoaded', () => {
     startGame();
   });
 
-  function startGame() {
-    console.log('Starting game with level:', level, 'mode:', mode);
-    if (vocabData.length === 0) {
-      vocabData.length = 0;
-      vocabData.push(...defaultVocabData);
-      vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
-    }
-    vocabSetTitle.textContent = vocabSetName + (amalgamateSetName ? ' + ' + amalgamateSetName : '');
-    
-    usedVocabIndices = [];
-    usedAmalgamateIndices = [];
-    sessionStartTime = null;
-    sessionEndTime = null;
-    timeLeft = 30;
-    totalTime = 0;
-    score = 0;
-    wave = 0;
-    missedWords = [];
-    totalChars = 0;
-    correctChars = 0;
-    correctTermsCount = 0;
-    coveredTerms.clear();
-    elapsedTime = 0;
-    wpmActive = false;
-    
-    gameActive = true;
-    userInput.focus();
-
-    const initialSpeed = getWordSpeed(level, mode, wave, waveSpeeds);
-    console.log(`Starting ${mode} mode at Level ${level} with speed: ${initialSpeed}`);
-
-    userInput.addEventListener('input', handleInput);
-    document.addEventListener('keydown', (e) => highlightKeys(e, document.querySelectorAll('.key')));
-    document.addEventListener('keyup', (e) => keyUpHandler(e, document.querySelectorAll('.key')));
-    certificateButton.addEventListener('click', () => generateCertificate(pageLoadTime, sessionStartTime, sessionEndTime, score, wave, promptSelect, vocabData, amalgamateVocab, coveredTerms, calculateWPM, calculateAccuracy, calculateTermAccuracy));
-    const newWord = spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave);
-    if (newWord) words.push(newWord);
-    updateGame(ctx, words, userInput, gameActive, mode, caseSensitive, '#ffffff', waveSpeeds, wave, score, correctTermsCount, coveredTerms, totalChars, correctChars, missedWords);
-    updateTimer(timerDisplay, timeLeft, totalTime, mode, sessionStartTime, elapsedTime, gameActive, wpmDisplay, sessionEndTime, score, correctTermsCount, calculateWPM);
+  // main.js (partial update to startGame)
+function startGame() {
+  console.log('Starting game with level:', level, 'mode:', mode);
+  if (vocabData.length === 0) {
+    vocabData.length = 0;
+    vocabData.push(...defaultVocabData);
+    vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
   }
+  vocabSetTitle.textContent = vocabSetName + (amalgamateSetName ? ' + ' + amalgamateSetName : '');
+  
+  usedVocabIndices = [];
+  usedAmalgamateIndices = [];
+  sessionStartTime = null;
+  sessionEndTime = null;
+  timeLeft = 30;
+  totalTime = 0;
+  score = 0;
+  wave = 0;
+  missedWords = [];
+  totalChars = 0;
+  correctChars = 0;
+  correctTermsCount = 0;
+  coveredTerms.clear();
+  elapsedTime = 0;
+  wpmActive = false;
+  
+  gameActive = true;
+  userInput.focus();
+
+  const initialSpeed = getWordSpeed(level, mode, wave, waveSpeeds);
+  console.log(`Starting ${mode} mode at Level ${level} with speed: ${initialSpeed}`);
+
+  userInput.addEventListener('input', handleInput);
+  document.addEventListener('keydown', (e) => highlightKeys(e, document.querySelectorAll('.key')));
+  document.addEventListener('keyup', (e) => keyUpHandler(e, document.querySelectorAll('.key')));
+  certificateButton.addEventListener('click', () => generateCertificate(pageLoadTime, sessionStartTime, sessionEndTime, score, wave, promptSelect, vocabData, amalgamateVocab, coveredTerms, calculateWPM, calculateAccuracy, calculateTermAccuracy));
+  const newWord = spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds);
+  if (newWord) words.push(newWord);
+  updateGame(ctx, words, userInput, gameActive, mode, caseSensitive, '#ffffff', waveSpeeds, wave, score, correctTermsCount, coveredTerms, totalChars, correctChars, missedWords);
+  updateTimer(timerDisplay, timeLeft, totalTime, mode, sessionStartTime, elapsedTime, gameActive, wpmDisplay, sessionEndTime, score, correctTermsCount, calculateWPM);
+}
 
   function handleInput(e) {
     const typed = e.target.value;
