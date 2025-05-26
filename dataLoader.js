@@ -17,6 +17,9 @@ export function populateVocabDropdown(vocabSelect, amalgamateSelect) {
     option2.textContent = file;
     amalgamateSelect.appendChild(option2);
   });
+  if (typeof Papa === 'undefined') {
+    console.warn('Papa Parse not loaded. Dropdowns populated, but CSV parsing will use embedded vocabulary.');
+  }
 }
 
 export function validateCsvUrl(url) {
