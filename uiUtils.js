@@ -1,5 +1,5 @@
 // uiUtils.js
-export function updateTimer(timerDisplay, timeLeft, totalTime, mode, sessionStartTime, elapsedTime) {
+export function updateTimer(timerDisplay, timeLeft, totalTime, mode, sessionStartTime, elapsedTime, gameActive, wpmDisplay, sessionEndTime, score, correctTermsCount, calculateWPM) {
   if (!gameActive) return;
   if (mode === 'game') {
     timeLeft = Math.max(0, timeLeft - 1);
@@ -14,9 +14,9 @@ export function updateTimer(timerDisplay, timeLeft, totalTime, mode, sessionStar
   if (timeLeft === 0 && mode === 'game') {
     timeLeft = 30;
     console.log(`Timer reset: Added 30 seconds. Continue playing! CorrectTermsCount: ${correctTermsCount}`);
-    setTimeout(() => updateTimer(timerDisplay, timeLeft, totalTime, mode, sessionStartTime, elapsedTime), 1000);
+    setTimeout(() => updateTimer(timerDisplay, timeLeft, totalTime, mode, sessionStartTime, elapsedTime, gameActive, wpmDisplay, sessionEndTime, score, correctTermsCount, calculateWPM), 1000);
   } else if (timeLeft > 0 || mode === 'practice') {
-    setTimeout(() => updateTimer(timerDisplay, timeLeft, totalTime, mode, sessionStartTime, elapsedTime), 1000);
+    setTimeout(() => updateTimer(timerDisplay, timeLeft, totalTime, mode, sessionStartTime, elapsedTime, gameActive, wpmDisplay, sessionEndTime, score, correctTermsCount, calculateWPM), 1000);
   }
 }
 
