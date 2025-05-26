@@ -76,29 +76,42 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   async function startGame() {
-    const vocabUrl = vocabSelect.value || 'https://raw.githubusercontent.com/kappter/vocab-sets/main/Study_Skills_High_School.csv';
+    console.log('startGame initiated');
+    const vocabUrl = vocabSelect.value || '';
     const amalgamateUrl = amalgamateSelect.value;
 
-    console.log('Loading vocab from URL:', vocabUrl);
+    console.log('Loading vocab from URL:', vocabUrl || 'default vocabulary');
     if (amalgamateUrl) console.log('Loading amalgamate vocab from URL:', amalgamateUrl);
 
     try {
       // Load primary vocabulary
-      const response = await fetch(vocabUrl);
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const text = await response.text();
-      vocabData = parseCSV(text);
-      console.log(`Vocab data length: ${vocabData.length}`);
+      if (vocabUrl) {
+        const response = await fetch(vocabUrl);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const text = await response.text();
+        vocabData = await parseCSV(text);
+        console.log(`Vocab data loaded: ${vocabData.length} terms`);
+      } else {
+        console.log('No vocab URL selected, using default vocabulary');
+        vocabData = [...defaultVocabData];
+      }
 
       // Load amalgamate vocabulary if selected
       if (amalgamateUrl) {
         const amalgamateResponse = await fetch(amalgamateUrl);
         if (!amalgamateResponse.ok) throw new Error(`HTTP error! status: ${amalgamateResponse.status}`);
         const amalgamateText = await amalgamateResponse.text();
-        amalgamateVocab = parseCSV(amalgamateText);
-        console.log(`Amalgamate vocab length: ${amalgamateVocab.length}`);
+        amalgamateVocab = await parseCSV(amalgamateText);
+        console.log(`Amalgamate vocab loaded: ${amalgamateVocab.length} terms`);
       } else {
         amalgamateVocab = [];
+        console.log('No amalgamate vocab selected');
+      }
+
+      // Validate vocabulary
+      if (vocabData.length === 0 && amalgamateVocab.length === 0) {
+        console.warn('No valid vocabulary loaded, using default');
+        vocabData = [...defaultVocabData];
       }
 
       level = parseInt(document.getElementById('levelSelect')?.value) || 1;
@@ -125,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
       amalgamateIndex = 0;
       lastSpawnedWord = null;
       wpmActive = false;
-      sessionStartTime = 0;
+      sessionStartTime = performance.now();
       sessionEndTime = 0;
       lastInputTime = 0;
 
@@ -138,19 +151,86 @@ document.addEventListener('DOMContentLoaded', () => {
       const newWord = spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds, lastSpawnedWord);
       if (newWord) {
         words.push(newWord);
+        console.log('Initial word spawned:', newWord.typedInput);
+      } else {
+        console.error('Failed to spawn initial word');
       }
 
       gameLoop();
+      console.log('Game loop started');
     } catch (error) {
-      console.error('Error loading vocab:', error);
-      alert(`Failed to load vocabulary: ${error.message}. Falling back to embedded vocabulary.`);
+      console.error('Error loading vocab:', error.message);
+      alert(`Failed to load vocabulary: ${error.message}. Using default vocabulary.`);
       vocabData = [...defaultVocabData];
       amalgamateVocab = [];
-      startGame();
+      
+      // Initialize game with default vocabulary
+      level = 1;
+      mode = 'game';
+      promptType = 'definition';
+      caseSensitive = false;
+      randomizeTerms = true;
+
+      words = [];
+      gameActive = true;
+      wave = 1;
+      score = 0;
+      correctTermsCount = 0;
+      coveredTerms.clear();
+      totalChars = 0;
+      correctChars = 0;
+      missedWords = [];
+      lastFrameTime = performance.now();
+      usedVocabIndices = [];
+      usedAmalgamateIndices = [];
+      vocabIndex = 0;
+      amalgamateIndex = 0;
+      lastSpawnedWord = null;
+      wpmActive = false;
+      sessionStartTime = performance.now();
+      sessionEndTime = 0;
+      lastInputTime = 0;
+
+      userInput.disabled = false;
+      userInput.focus();
+      userInput.value = '';
+
+      const newWord = spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds, lastSpawnedWord);
+      if (newWord) {
+        words.push(newWord);
+        console.log('Initial word spawned with default vocab:', newWord.typedInput);
+      }
+
+      gameLoop();
+      console.log('Game loop started with default vocabulary');
     }
   }
 
-  function parseCSV(text) {
+  async function parseCSV(text) {
+    console.log('Parsing CSV data');
+    if (typeof Papa !== 'undefined') {
+      return new Promise((resolve) => {
+        Papa.parse(text, {
+          header: true,
+          complete: (results) => {
+            const filteredData = results.data.filter(row => row.Term && row.Definition);
+            console.log('Parsed with Papa Parse:', filteredData.length, 'terms');
+            resolve(filteredData);
+          },
+          error: (error) => {
+            console.error('Papa Parse error:', error);
+            resolve(fallbackParseCSV(text));
+          }
+        });
+      });
+    } else {
+      console.warn('Papa Parse not available, using fallback parser');
+      return fallbackParseCSV(text);
+    }
+  }
+
+  function fallbackParseCSV(text) {
+    console.log('Using fallback CSV parser');
     const rows = text.split('\n').filter(row => row.trim() !== '');
     const headers = rows[0].split(',').map(header => header.trim());
     return rows.slice(1).map(row => {
@@ -159,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
         obj[header] = values[index] || '';
         return obj;
       }, {});
-    });
+    }).filter(item => item.Term && item.Definition);
   }
 
   function handleInput(event) {
