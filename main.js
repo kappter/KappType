@@ -1,5 +1,5 @@
 import { spawnWord, updateGame, calculateCorrectChars, calculateWPM, calculateAccuracy } from './gameLogic.js';
-import { populateVocabDropdown } from './dataLoader.js';
+import { populateVocabDropdown, loadVocab } from './dataLoader.js';
 
 const defaultVocabData = [
   { Term: 'Algorithm', Definition: 'A set of rules to solve a problem' },
@@ -17,14 +17,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const canvas = document.getElementById('gameCanvas');
   const vocabSelect = document.getElementById('vocabSelect');
   const amalgamateSelect = document.getElementById('amalgamateSelect');
+  const loadingIndicator = document.getElementById('loadingIndicator');
 
-  // Debug: Check if dropdown elements exist
-  if (!vocabSelect || !amalgamateSelect) {
-    console.error('Dropdown elements not found:', {
+  // Debug: Check if elements exist
+  if (!vocabSelect || !amalgamateSelect || !startButton || !userInput || !canvas || !loadingIndicator) {
+    console.error('DOM elements missing:', {
       vocabSelect: !!vocabSelect,
-      amalgamateSelect: !!amalgamateSelect
+      amalgamateSelect: !!amalgamateSelect,
+      startButton: !!startButton,
+      userInput: !!userInput,
+      canvas: !!canvas,
+      loadingIndicator: !!loadingIndicator
     });
-    alert('Error: Vocabulary dropdowns not found in the DOM. Please check index.html.');
+    alert('Error: Required DOM elements not found. Please check index.html.');
     return;
   }
 
@@ -64,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let textColor = '#000000';
   const waveSpeeds = [0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6];
 
-  // Variables for WPM calculation
+  // WPM variables
   let wpmActive = false;
   let sessionStartTime = 0;
   let sessionEndTime = 0;
@@ -77,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function startGame() {
     console.log('startGame initiated');
-    const vocabUrl = vocabSelect.value || '';
+    const vocabUrl = vocabSelect.value;
     const amalgamateUrl = amalgamateSelect.value;
 
     console.log('Loading vocab from URL:', vocabUrl || 'default vocabulary');
@@ -85,24 +90,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       // Load primary vocabulary
-      if (vocabUrl) {
-        const response = await fetch(vocabUrl);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const text = await response.text();
-        vocabData = await parseCSV(text);
-        console.log(`Vocab data loaded: ${vocabData.length} terms`);
-      } else {
-        console.log('No vocab URL selected, using default vocabulary');
-        vocabData = [...defaultVocabData];
-      }
+      const vocabResult = await loadVocab(
+        vocabUrl,
+        false,
+        vocabData,
+        amalgamateVocab,
+        vocabSelect,
+        amalgamateSelect,
+        loadingIndicator,
+        startButton,
+        defaultVocabData
+      );
+      vocabData = vocabResult.vocab || defaultVocabData;
+      console.log(`Vocab loaded: ${vocabData.length} terms, setName: ${vocabResult.vocabSetName}`);
 
-      // Load amalgamate vocabulary if selected
+      // Load amalgamate vocabulary
       if (amalgamateUrl) {
-        const amalgamateResponse = await fetch(amalgamateUrl);
-        if (!amalgamateResponse.ok) throw new Error(`HTTP error! status: ${amalgamateResponse.status}`);
-        const amalgamateText = await amalgamateResponse.text();
-        amalgamateVocab = await parseCSV(amalgamateText);
-        console.log(`Amalgamate vocab loaded: ${amalgamateVocab.length} terms`);
+        const amalgamateResult = await loadVocab(
+          amalgamateUrl,
+          true,
+          vocabData,
+          amalgamateVocab,
+          vocabSelect,
+          amalgamateSelect,
+          loadingIndicator,
+          startButton,
+          defaultVocabData
+        );
+        amalgamateVocab = amalgamateResult.vocab || [];
+        console.log(`Amalgamate vocab loaded: ${amalgamateVocab.length} terms, setName: ${amalgamateResult.amalgamateSetName}`);
       } else {
         amalgamateVocab = [];
         console.log('No amalgamate vocab selected');
@@ -159,11 +175,11 @@ document.addEventListener('DOMContentLoaded', () => {
       gameLoop();
       console.log('Game loop started');
     } catch (error) {
-      console.error('Error loading vocab:', error.message);
-      alert(`Failed to load vocabulary: ${error.message}. Using default vocabulary.`);
+      console.error('Error in startGame:', error.message);
+      alert(`Failed to start game: ${error.message}. Using default vocabulary.`);
       vocabData = [...defaultVocabData];
       amalgamateVocab = [];
-      
+
       // Initialize game with default vocabulary
       level = 1;
       mode = 'game';
@@ -206,42 +222,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  async function parseCSV(text) {
-    console.log('Parsing CSV data');
-    if (typeof Papa !== 'undefined') {
-      return new Promise((resolve) => {
-        Papa.parse(text, {
-          header: true,
-          complete: (results) => {
-            const filteredData = results.data.filter(row => row.Term && row.Definition);
-            console.log('Parsed with Papa Parse:', filteredData.length, 'terms');
-            resolve(filteredData);
-          },
-          error: (error) => {
-            console.error('Papa Parse error:', error);
-            resolve(fallbackParseCSV(text));
-          }
-        });
-      });
-    } else {
-      console.warn('Papa Parse not available, using fallback parser');
-      return fallbackParseCSV(text);
-    }
-  }
-
-  function fallbackParseCSV(text) {
-    console.log('Using fallback CSV parser');
-    const rows = text.split('\n').filter(row => row.trim() !== '');
-    const headers = rows[0].split(',').map(header => header.trim());
-    return rows.slice(1).map(row => {
-      const values = row.split(',').map(value => value.trim());
-      return headers.reduce((obj, header, index) => {
-        obj[header] = values[index] || '';
-        return obj;
-      }, {});
-    }).filter(item => item.Term && item.Definition);
-  }
-
   function handleInput(event) {
     if (!gameActive) return;
 
@@ -259,9 +239,8 @@ document.addEventListener('DOMContentLoaded', () => {
         totalChars += word.typedInput.length;
         correctChars += calculateCorrectChars(word.typedInput, userInputText);
         words.shift();
-        console.log(`Term completed. CorrectTermsCount: ${correctTermsCount}, Wave: ${wave}, Time Taken: ${(performance.now() - lastInputTime) / 1000}s, Score Increment: ${Math.max(5, word.typedInput.length * 2)}`);
+        console.log(`Term completed. CorrectTermsCount: ${correctTermsCount}, Wave: ${wave}, Score: ${score}`);
         wpmActive = false;
-        console.log('WPM calculation deactivated - Term completed');
       } else {
         correctChars += calculateCorrectChars(target, userInputText);
       }
@@ -271,7 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!wpmActive && input.length > 0) {
       wpmActive = true;
       sessionStartTime = performance.now();
-      console.log('WPM calculation activated - First keypress detected');
+      console.log('WPM calculation activated');
     }
   }
 
