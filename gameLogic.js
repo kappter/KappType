@@ -188,6 +188,14 @@ export function updateGame(ctx, words, userInput, gameActive, mode, caseSensitiv
   return newLastFrameTime; // Return the updated lastFrameTime for the next frame
 }
 
+export function calculateCorrectChars(target, input) {
+  let correct = 0;
+  for (let i = 0; i < Math.min(target.length, input.length); i++) {
+    if (target[i] === input[i]) correct++;
+  }
+  return correct;
+}
+
 export function calculateWPM(wpmActive, sessionStartTime, sessionEndTime, score) {
   if (!wpmActive) return 0;
   const correctTermsFromCovered = Array.from(coveredTerms.values()).filter(status => status === 'Correct').length;
