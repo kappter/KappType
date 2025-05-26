@@ -212,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
           setTimeout(() => userInput.classList.remove('pulse'), 1000);
         }
 
-        updateStatsDisplay(scoreDisplay, waveDisplay, timerDisplay, wpmDisplay, termsToWaveDisplay, termsCoveredDisplay, score, wave, timeLeft, currentWPM, correctTermsCount, vocabData, amalgamateVocab);
+        updateStatsDisplay(scoreDisplay, waveDisplay, timerDisplay, wpmDisplay, termsToWaveDisplay, termsCoveredDisplay, score, wave, timeLeft, currentWPM, correctTermsCount, vocabData, amalgamateVocab, coveredTerms);
         return false;
       }
       if (target.startsWith(input)) word.displayText = getUnderscoreText(word.typedInput, input.length > 0 ? 1 : 0);
@@ -228,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log('WPM calculation reactivated - New term started');
     }
     updateTimeIndicator(timeIndicator, sessionStartTime);
-    updateStatsDisplay(scoreDisplay, waveDisplay, timerDisplay, wpmDisplay, termsToWaveDisplay, termsCoveredDisplay, score, wave, timeLeft, currentWPM, correctTermsCount, vocabData, amalgamateVocab);
+    updateStatsDisplay(scoreDisplay, waveDisplay, timerDisplay, wpmDisplay, termsToWaveDisplay, termsCoveredDisplay, score, wave, timeLeft, currentWPM, correctTermsCount, vocabData, amalgamateVocab, coveredTerms);
   }
 
   resetButton.addEventListener('click', () => {
@@ -264,9 +264,9 @@ document.addEventListener('DOMContentLoaded', () => {
     startScreen.classList.remove('hidden');
     gameContainer.classList.add('hidden');
 
-    updateStatsDisplay(scoreDisplay, waveDisplay, timerDisplay, wpmDisplay, termsToWaveDisplay, termsCoveredDisplay, score, wave, timeLeft, currentWPM, correctTermsCount, vocabData, amalgamateVocab);
+    updateStatsDisplay(scoreDisplay, waveDisplay, timerDisplay, wpmDisplay, termsToWaveDisplay, termsCoveredDisplay, score, wave, timeLeft, currentWPM, correctTermsCount, vocabData, amalgamateVocab, coveredTerms);
     console.log('Game reset. Returned to start screen.');
   });
 
-  updateStatsDisplay(scoreDisplay, waveDisplay, timerDisplay, wpmDisplay, termsToWaveDisplay, termsCoveredDisplay, score, wave, timeLeft, currentWPM, correctTermsCount, vocabData, amalgamateVocab);
+  updateStatsDisplay(scoreDisplay, waveDisplay, timerDisplay, wpmDisplay, termsToWaveDisplay, termsCoveredDisplay, score, wave, timeLeft, currentWPM, correctTermsCount, vocabData, amalgamateVocab, coveredTerms);
 });
