@@ -124,7 +124,7 @@ export function updateGame(ctx, words, userInput, gameActive, mode, caseSensitiv
     if (lines.length > 4) {
       lines = lines.slice(0, 3);
       let truncated = lines[2];
-      while (ctx measureText(truncated + '...').width > maxWidth && truncated.length) truncated = truncated.slice(0, -1);
+      while (ctx.measureText(truncated + '...').width > maxWidth && truncated.length) truncated = truncated.slice(0, -1);
       lines[2] = truncated + '...';
     }
 
