@@ -1,4 +1,3 @@
-// certificate.js
 export function generateCertificate(pageLoadTime, sessionStartTime, sessionEndTime, score, wave, promptSelect, vocabData, amalgamateVocab, coveredTerms, calculateWPM, calculateAccuracy, calculateTermAccuracy) {
   const name = prompt('Enter your name for the report:');
   if (!name || name.trim() === '') {
@@ -31,24 +30,70 @@ export function generateCertificate(pageLoadTime, sessionStartTime, sessionEndTi
   let termsTableRows = '';
   for (const [term, status] of coveredTerms.entries()) {
     termsTableRows += `
-      <tr><td>${escapeHtml(term)}</td><td>${escapeHtml(status)}</td></tr>`;
+      ${escapeTex(term)} & ${escapeTex(status)} \\\\
+      \\hline
+    `;
   }
-  if (!termsTableRows) termsTableRows = '<tr><td colspan="2">No terms covered.</td></tr>';
+  if (!termsTableRows) termsTableRows = 'No terms covered. \\\\ \\hline';
 
   const certificateContent = `
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>KappType Performance Report</title><style>body{font-family:Arial,sans-serif;margin:40px;line-height:1.6;text-align:center;}h1{color:#333;}.certificate{border:2px solid #333;padding:20px;max-width:800px;margin:0 auto;background-color:#f9f9f9;}table{width:100%;border-collapse:collapse;margin:20px 0;}th,td{border:1px solid #ddd;padding:8px;text-align:left;}th{background-color:#f2f2f2;}.stats{margin:20px 0;text-align:left;display:inline-block;}.stats p{margin:5px 0;}.completion-status{font-weight:bold;color:${allTermsCompleted?'green':'red'};}@media print{body{margin:0;}.certificate{border:none;background-color:white;}}</style></head><body><div class="certificate"><h1>KappType Performance Report</h1><h2>Certificate of Achievement</h2><p>This certifies that <strong>${safeName}</strong> has completed a session in KappType with the following results:</p><div class="stats"><p><strong>Prompt Type:</strong> ${promptTypeText}</p><p><strong>Typing Speed:</strong> ${wpm} WPM</p><p><strong>Character Accuracy:</strong> ${charAccuracy}%</p><p><strong>Term Accuracy:</strong> ${termAccuracy}%</p><p><strong>Wave Reached:</strong> ${wave}</p><p><strong>Total Time:</strong> ${durationStr}</p><p><strong>Score:</strong> ${score}</p></div><h3>Terms Covered</h3><table><thead><tr><th>Term</th><th>Status</th></tr></thead><tbody>${termsTableRows}</tbody></table><p><strong>Total Terms Covered:</strong> ${termsCoveredCount} out of ${totalTerms}</p><p class="completion-status">${allTermsCompleted?'Congratulations! All terms in the set were covered.':'Not all terms were covered in this session.'}</p><p><strong>Session Start:</strong> ${startDate}</p><p><strong>Session End:</strong> ${endDate}</p><p><strong>Awarded on:</strong> ${new Date().toLocaleString()}</p></div></body></html>`;
+\\documentclass{article}
+\\usepackage{geometry}
+\\usepackage{booktabs}
+\\geometry{a4paper, margin=1in}
+\\begin{document}
+\\begin{center}
+\\textbf{\\Large KappType Performance Report}\\\\
+\\vspace{0.5cm}
+\\textbf{\\large Certificate of Achievement}\\\\
+\\vspace{0.5cm}
+This certifies that \\textbf{${escapeTex(safeName)}} has completed a session in KappType with the following results:
+\\end{center}
+\\vspace{0.3cm}
+\\begin{itemize}
+  \\item Prompt Type: ${escapeTex(promptTypeText)}
+  \\item Typing Speed: ${wpm} WPM
+  \\item Character Accuracy: ${charAccuracy}\\%
+  \\item Term Accuracy: ${termAccuracy}\\%
+  \\item Wave Reached: ${wave}
+  \\item Total Time: ${escapeTex(durationStr)}
+  \\item Score: ${score}
+\\end{itemize}
+\\vspace{0.3cm}
+\\textbf{Terms Covered}\\\\
+\\begin{tabular}{|l|l|}
+  \\hline
+  \\textbf{Term} & \\textbf{Status} \\\\
+  \\hline
+  ${termsTableRows}
+\\end{tabular}\\\\
+\\vspace{0.3cm}
+Total Terms Covered: ${termsCoveredCount} out of ${totalTerms}\\\\
+${allTermsCompleted ? 'Congratulations! All terms in the set were covered.' : 'Not all terms were covered in this session.'}\\\\
+Session Start: ${escapeTex(startDate)}\\\\
+Session End: ${escapeTex(endDate)}\\\\
+Awarded on: ${escapeTex(new Date().toLocaleString())}
+\\end{document}
+  `;
 
-  const blob = new Blob([certificateContent], { type: 'text/html' });
+  const blob = new Blob([certificateContent], { type: 'text/x-tex' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'kapp-type-report.html';
+  a.download = 'kapp-type-report.tex';
   a.click();
   URL.revokeObjectURL(url);
-  alert('Performance report downloaded as an HTML file. Open it in a browser to view or print it (use Ctrl+P or Cmd+P to print).');
+  alert('Performance report downloaded as a .tex file. Compile it in Overleaf (https://www.overleaf.com/) to generate a PDF.');
 }
 
 export function escapeHtml(str) {
   if (!str) return 'None';
   return str.replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>').replace(/"/g, '"').replace(/'/g, '\'');
+}
+
+export function escapeTex(str) {
+  if (!str) return 'None';
+  return str.replace(/&/g, '\\&').replace(/%/g, '\\%').replace(/\$/g, '\\$').replace(/#/g, '\\#').replace(/_/g, '\\_')
+    .replace(/{/g, '\\{').replace(/}/g, '\\}').replace(/~/g, '\\textasciitilde{}').replace(/\^/g, '\\textasciicircum{}')
+    .replace(/\\/g, '\\textbackslash{}');
 }

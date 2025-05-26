@@ -1,4 +1,3 @@
-// main.js
 import { spawnWord, updateGame, calculateCorrectChars, calculateWPM, calculateAccuracy } from './gameLogic.js';
 document.addEventListener('DOMContentLoaded', () => {
   console.log('DOM fully loaded and parsed');
@@ -43,19 +42,39 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   async function startGame() {
-    const vocabUrl = 'https://raw.githubusercontent.com/kappter/vocab-sets/main/Study_Skills_High_School.csv';
+    const vocabSelect = document.getElementById('vocabSelect');
+    const amalgamateSelect = document.getElementById('amalgamateSelect');
+    const vocabUrl = vocabSelect.value || 'https://raw.githubusercontent.com/kappter/vocab-sets/main/Study_Skills_High_School.csv';
+    const amalgamateUrl = amalgamateSelect.value;
+
     console.log('Loading vocab from URL:', vocabUrl);
+    if (amalgamateUrl) console.log('Loading amalgamate vocab from URL:', amalgamateUrl);
 
     try {
+      // Load primary vocabulary
       const response = await fetch(vocabUrl);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const text = await response.text();
       vocabData = parseCSV(text);
-      console.log(`Vocab data length: ${vocabData.length} Amalgamate length: ${amalgamateVocab.length}`);
+      console.log(`Vocab data length: ${vocabData.length}`);
 
-      level = 1; // Example: Set level based on user input
-      mode = 'game'; // Example: Set mode based on user selection
-      console.log(`Starting game with level: ${level} mode: ${mode}`);
+      // Load amalgamate vocabulary if selected
+      if (amalgamateUrl) {
+        const amalgamateResponse = await fetch(amalgamateUrl);
+        if (!amalgamateResponse.ok) throw new Error(`HTTP error! status: ${amalgamateResponse.status}`);
+        const amalgamateText = await amalgamateResponse.text();
+        amalgamateVocab = parseCSV(amalgamateText);
+        console.log(`Amalgamate vocab length: ${amalgamateVocab.length}`);
+      } else {
+        amalgamateVocab = [];
+      }
+
+      level = parseInt(document.getElementById('levelSelect').value) || 1; // Get level from user input
+      mode = document.getElementById('modeSelect').value || 'game'; // Get mode from user selection
+      promptType = document.getElementById('promptSelect').value || 'definition';
+      caseSensitive = document.getElementById('caseSensitive').checked;
+      randomizeTerms = document.getElementById('randomizeTerms').checked;
+      console.log(`Starting game with level: ${level}, mode: ${mode}, promptType: ${promptType}, caseSensitive: ${caseSensitive}, randomizeTerms: ${randomizeTerms}`);
 
       // Reset game state
       words = [];
@@ -92,6 +111,10 @@ document.addEventListener('DOMContentLoaded', () => {
       gameLoop();
     } catch (error) {
       console.error('Error loading vocab:', error);
+      alert(`Failed to load vocabulary: ${error.message}. Falling back to embedded vocabulary.`);
+      vocabData = [...defaultVocabData]; // Ensure defaultVocabData is defined
+      amalgamateVocab = [];
+      startGame(); // Retry with default vocab
     }
   }
 

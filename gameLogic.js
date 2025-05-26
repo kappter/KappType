@@ -1,4 +1,3 @@
-// gameLogic.js
 export function getWordSpeed(level, mode, wave, waveSpeeds) {
   const baseSpeed = level === 0 ? 0.15 : (level === 1 ? 0.25 : 0.5);
   const speedIncreasePerLevel = 0.1;
@@ -59,7 +58,7 @@ export function spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensi
   const textWidth = ctx.measureText(displayText).width;
 
   const padding = 20;
-  const maxX = 900 - textWidth - padding; // Assuming canvas.width = 900
+  const maxX = 800 - textWidth - padding; // Updated to match canvas width=800
   const minX = padding;
   const x = minX + Math.random() * (maxX - minX);
 
@@ -88,7 +87,7 @@ export function updateGame(ctx, words, userInput, gameActive, mode, caseSensitiv
   const deltaTime = (now - lastFrameTime) / 1000;
   const newLastFrameTime = now;
 
-  ctx.clearRect(0, 0, 900, 300); // Assuming canvas dimensions
+  ctx.clearRect(0, 0, 800, 350); // Updated to match canvas width=800, height=350
 
   const hexToRgb = (hex) => {
     hex = hex.replace(/^#/, '');
@@ -109,7 +108,7 @@ export function updateGame(ctx, words, userInput, gameActive, mode, caseSensitiv
     if (word.fadeState === 'in') word.opacity = Math.min(word.opacity + fadeSpeed * deltaTime, 0.3);
     else if (word.fadeState === 'out') word.opacity = Math.max(word.opacity - fadeSpeed * deltaTime, 0);
 
-    const maxWidth = 900 - 40;
+    const maxWidth = 800 - 40; // Updated to match canvas width=800
     const wordsArray = definition.split(' ');
     let lines = [], line = '';
     ctx.font = '32px Arial';
@@ -125,24 +124,24 @@ export function updateGame(ctx, words, userInput, gameActive, mode, caseSensitiv
     if (lines.length > 4) {
       lines = lines.slice(0, 3);
       let truncated = lines[2];
-      while (ctx.measureText(truncated + '...').width > maxWidth && truncated.length) truncated = truncated.slice(0, -1);
+      while (ctx measureText(truncated + '...').width > maxWidth && truncated.length) truncated = truncated.slice(0, -1);
       lines[2] = truncated + '...';
     }
 
     const lineHeight = 40;
     const totalHeight = lines.length * lineHeight;
-    const startY = (300 - totalHeight) / 2 - 20;
+    const startY = (350 - totalHeight) / 2 - 20; // Updated to match canvas height=350
     ctx.textAlign = 'center';
 
     for (let i = 0; i < lines.length; i++) {
       ctx.fillStyle = `rgba(${hexToRgb(textColor)}, ${word.opacity})`;
-      ctx.fillText(lines[i], 450, startY + i * lineHeight); // Assuming canvas.width / 2 = 450
+      ctx.fillText(lines[i], 400, startY + i * lineHeight); // Updated to center on canvas width=800
     }
   }
 
-  const rectHeight = 20, rectY = 300 - rectHeight;
+  const rectHeight = 20, rectY = 350 - rectHeight; // Updated to match canvas height=350
   ctx.beginPath();
-  ctx.roundRect(0, rectY, 900, rectHeight, 8);
+  ctx.roundRect(0, rectY, 800, rectHeight, 8); // Updated to match canvas width=800
   ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
   ctx.fill();
   ctx.strokeStyle = '#333333';
@@ -182,7 +181,7 @@ export function updateGame(ctx, words, userInput, gameActive, mode, caseSensitiv
       ctx.fillText(word.displayText, word.x, word.y);
     }
 
-    if (word.y >= 300) {
+    if (word.y >= 350) { // Updated to match canvas height=350
       console.log(`Word missed: ${word.typedInput}, Time Left: ${timeLeft}s, CorrectTermsCount: ${correctTermsCount}`);
       missedWords.push(word.typedInput);
       coveredTerms.set(word.typedInput, 'Missed');

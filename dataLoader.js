@@ -1,4 +1,3 @@
-// dataLoader.js
 export function populateVocabDropdown(vocabSelect, amalgamateSelect) {
   const baseUrl = 'https://raw.githubusercontent.com/kappter/vocab-sets/main/';
   const files = [
@@ -44,7 +43,7 @@ export function loadVocab(csvUrl, isAmalgamate, vocabData, amalgamateVocab, voca
     }
 
     if (window.location.protocol === 'file:') {
-      alert('Cannot load external CSV files when running via file://. Using embedded vocabulary.');
+      alert('Cannot load external CSV files when running via file://. Please host the app on a local server (e.g., run `python -m http.server` and access http://localhost:8000) or use embedded vocabulary.');
       if (!isAmalgamate) {
         vocabData.length = 0;
         vocabData.push(...defaultVocabData);
@@ -72,7 +71,8 @@ export function loadVocab(csvUrl, isAmalgamate, vocabData, amalgamateVocab, voca
     }
 
     if (typeof Papa === 'undefined') {
-      alert('Papa Parse library not loaded. Using embedded vocabulary.');
+      console.warn('Papa Parse library not loaded. Falling back to embedded vocabulary.');
+      alert('Unable to load CSV parsing library. Using default vocabulary set.');
       if (!isAmalgamate) {
         vocabData.length = 0;
         vocabData.push(...defaultVocabData);
@@ -163,7 +163,8 @@ export function loadCustomVocab(file, isAmalgamate, vocabData, amalgamateVocab, 
     targetArray.length = 0;
 
     if (typeof Papa === 'undefined') {
-      alert('Papa Parse library not loaded. Using embedded vocabulary.');
+      console.warn('Papa Parse library not loaded. Falling back to embedded vocabulary.');
+      alert('Unable to load CSV parsing library. Using default vocabulary set.');
       if (!isAmalgamate) {
         vocabData.length = 0;
         vocabData.push(...defaultVocabData);
