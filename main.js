@@ -3,7 +3,14 @@ import { getWordSpeed, spawnWord, updateGame, calculateCorrectChars, calculateWP
 import { updateTimer, updateWPMDisplay, updateStatsDisplay, highlightKeys, keyUpHandler, updateTimeIndicator } from './uiUtils.js';
 import { populateVocabDropdown, validateCsvUrl, loadVocab, loadCustomVocab } from './dataLoader.js';
 import { generateCertificate, escapeHtml } from './certificate.js';
-
+const defaultVocabData = [
+  // Example subset (replace with full 53 terms)
+  { Term: "Algorithm", Definition: "A set of steps to solve a problem" },
+  { Term: "Variable", Definition: "A storage location with a symbolic name" },
+  { Term: "Loop", Definition: "A control structure that repeats code" },
+  { Term: "Function", Definition: "A block of reusable code" },
+  // ... (add remaining 49 terms or load from a file if preferred)
+];
 document.addEventListener('DOMContentLoaded', () => {
   console.log('DOM fully loaded and parsed');
 
@@ -96,75 +103,83 @@ document.addEventListener('DOMContentLoaded', () => {
   populateVocabDropdown(vocabSelect, amalgamateSelect);
 
   startButton.addEventListener('click', async () => {
-    level = Math.max(0, Math.min(10, parseInt(levelInput.value) || 0));
-    mode = modeSelect.value;
-    promptType = promptSelect.value;
-    caseSensitive = caseSelect.value === 'sensitive';
-    randomizeTerms = randomizeTermsCheckbox.checked;
-    const csvUrl = vocabSelect.value || '';
-    const amalgamateUrl = amalgamateSelect.value || '';
+  console.log('Start button clicked');
+  level = Math.max(0, Math.min(10, parseInt(levelInput.value) || 0));
+  mode = modeSelect.value;
+  promptType = promptSelect.value;
+  caseSensitive = caseSelect.value === 'sensitive';
+  randomizeTerms = randomizeTermsCheckbox.checked;
+  const csvUrl = vocabSelect.value || '';
+  const amalgamateUrl = amalgamateSelect.value || '';
 
-    if (customVocabInput && customVocabInput.files && customVocabInput.files.length > 0) {
-      await loadCustomVocab(customVocabInput.files[0], false, vocabData, amalgamateVocab, loadingIndicator, startButton);
-    }
-    if (customVocabInput2 && customVocabInput2.files && customVocabInput2.files.length > 0) {
-      await loadCustomVocab(customVocabInput2.files[0], true, vocabData, amalgamateVocab, loadingIndicator, startButton);
-    }
+  if (customVocabInput && customVocabInput.files && customVocabInput.files.length > 0) {
+    console.log('Loading custom vocab');
+    await loadCustomVocab(customVocabInput.files[0], false, vocabData, amalgamateVocab, loadingIndicator, startButton);
+  }
+  if (customVocabInput2 && customVocabInput2.files && customVocabInput2.files.length > 0) {
+    console.log('Loading custom amalgamate vocab');
+    await loadCustomVocab(customVocabInput2.files[0], true, vocabData, amalgamateVocab, loadingIndicator, startButton);
+  }
 
-    if (csvUrl && (!customVocabInput || !customVocabInput.files || customVocabInput.files.length === 0)) {
-      await loadVocab(csvUrl, false, vocabData, amalgamateVocab, vocabSelect, amalgamateSelect, loadingIndicator, startButton);
-    } else if (!customVocabInput || !customVocabInput.files || customVocabInput.files.length === 0) {
-      vocabData = [...defaultVocabData];
-      vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
-    }
+  if (csvUrl && (!customVocabInput || !customVocabInput.files || customVocabInput.files.length === 0)) {
+    console.log('Loading vocab from URL:', csvUrl);
+    await loadVocab(csvUrl, false, vocabData, amalgamateVocab, vocabSelect, amalgamateSelect, loadingIndicator, startButton);
+  } else if (!customVocabInput || !customVocabInput.files || customVocabInput.files.length === 0) {
+    console.log('Using default vocab:', defaultVocabData.length, 'terms');
+    vocabData = [...defaultVocabData];
+    vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
+  }
 
-    if (amalgamateUrl && (!customVocabInput2 || !customVocabInput2.files || customVocabInput2.files.length === 0)) {
-      await loadVocab(amalgamateUrl, true, vocabData, amalgamateVocab, vocabSelect, amalgamateSelect, loadingIndicator, startButton);
-    }
+  if (amalgamateUrl && (!customVocabInput2 || !customVocabInput2.files || customVocabInput2.files.length === 0)) {
+    console.log('Loading amalgamate vocab from URL:', amalgamateUrl);
+    await loadVocab(amalgamateUrl, true, vocabData, amalgamateVocab, vocabSelect, amalgamateSelect, loadingIndicator, startButton);
+  }
 
-    startScreen.classList.add('hidden');
-    gameContainer.classList.remove('hidden');
-    startGame();
-  });
+  console.log('Vocab data length:', vocabData.length, 'Amalgamate length:', amalgamateVocab.length);
+  startScreen.classList.add('hidden');
+  gameContainer.classList.remove('hidden');
+  startGame();
+});
 
   function startGame() {
-    if (vocabData.length === 0) {
-      vocabData = [...defaultVocabData];
-      vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
-    }
-    vocabSetTitle.textContent = vocabSetName + (amalgamateSetName ? ' + ' + amalgamateSetName : '');
-    
-    usedVocabIndices = [];
-    usedAmalgamateIndices = [];
-    sessionStartTime = null;
-    sessionEndTime = null;
-    timeLeft = 30;
-    totalTime = 0;
-    score = 0;
-    wave = 0;
-    missedWords = [];
-    totalChars = 0;
-    correctChars = 0;
-    correctTermsCount = 0;
-    coveredTerms.clear();
-    elapsedTime = 0;
-    wpmActive = false;
-    
-    gameActive = true;
-    userInput.focus();
-
-    const initialSpeed = getWordSpeed(level, mode, wave, waveSpeeds);
-    console.log(`Starting ${mode} mode at Level ${level} with speed: ${initialSpeed}`);
-
-    userInput.addEventListener('input', handleInput);
-    document.addEventListener('keydown', (e) => highlightKeys(e, document.querySelectorAll('.key')));
-    document.addEventListener('keyup', (e) => keyUpHandler(e, document.querySelectorAll('.key')));
-    certificateButton.addEventListener('click', () => generateCertificate(pageLoadTime, sessionStartTime, sessionEndTime, score, wave, promptSelect, vocabData, amalgamateVocab, coveredTerms, calculateWPM, calculateAccuracy, calculateTermAccuracy));
-    const newWord = spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave);
-    if (newWord) words.push(newWord);
-    updateGame(ctx, words, userInput, gameActive, mode, caseSensitive, '#ffffff', waveSpeeds, wave, score, correctTermsCount, coveredTerms, totalChars, correctChars, missedWords);
-    updateTimer(timerDisplay, timeLeft, totalTime, mode, sessionStartTime, elapsedTime, gameActive, wpmDisplay, sessionEndTime, score, correctTermsCount, calculateWPM);
+  console.log('Starting game with level:', level, 'mode:', mode);
+  if (vocabData.length === 0) {
+    vocabData = [...defaultVocabData];
+    vocabSetName = 'Embedded Vocabulary - 53 Computer Science Terms';
   }
+  vocabSetTitle.textContent = vocabSetName + (amalgamateSetName ? ' + ' + amalgamateSetName : '');
+  
+  usedVocabIndices = [];
+  usedAmalgamateIndices = [];
+  sessionStartTime = null;
+  sessionEndTime = null;
+  timeLeft = 30;
+  totalTime = 0;
+  score = 0;
+  wave = 0;
+  missedWords = [];
+  totalChars = 0;
+  correctChars = 0;
+  correctTermsCount = 0;
+  coveredTerms.clear();
+  elapsedTime = 0;
+  wpmActive = false;
+  
+  gameActive = true;
+  userInput.focus();
+
+  const initialSpeed = getWordSpeed(level, mode, wave, waveSpeeds);
+  console.log(`Starting ${mode} mode at Level ${level} with speed: ${initialSpeed}`);
+
+  userInput.addEventListener('input', handleInput);
+  document.addEventListener('keydown', (e) => highlightKeys(e, document.querySelectorAll('.key')));
+  document.addEventListener('keyup', (e) => keyUpHandler(e, document.querySelectorAll('.key')));
+  certificateButton.addEventListener('click', () => generateCertificate(pageLoadTime, sessionStartTime, sessionEndTime, score, wave, promptSelect, vocabData, amalgamateVocab, coveredTerms, calculateWPM, calculateAccuracy, calculateTermAccuracy));
+  const newWord = spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave);
+  if (newWord) words.push(newWord);
+  updateGame(ctx, words, userInput, gameActive, mode, caseSensitive, '#ffffff', waveSpeeds, wave, score, correctTermsCount, coveredTerms, totalChars, correctChars, missedWords);
+  updateTimer(timerDisplay, timeLeft, totalTime, mode, sessionStartTime, elapsedTime, gameActive, wpmDisplay, sessionEndTime, score, correctTermsCount, calculateWPM);
+}
 
   function handleInput(e) {
     const typed = e.target.value;
