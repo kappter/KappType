@@ -10,12 +10,17 @@ export function getWordSpeed(level, mode, wave, waveSpeeds) {
 }
 
 export function spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds) {
+  console.log('Attempting to spawn new word');
   if (vocabData.length === 0) {
+    console.warn('vocabData is empty, using defaultVocabData');
     vocabData = [...defaultVocabData]; // Ensure defaultVocabData is imported or defined
   }
 
   const allVocab = [...vocabData, ...amalgamateVocab].filter(v => v && v.Term && v.Definition);
-  if (allVocab.length === 0) return null;
+  if (allVocab.length === 0) {
+    console.error('No valid vocab available');
+    return null;
+  }
 
   let index;
   const usedIndices = [...usedVocabIndices, ...usedAmalgamateIndices];
@@ -24,6 +29,7 @@ export function spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensi
   if (availableIndices.length > 0) {
     index = availableIndices[Math.floor(Math.random() * availableIndices.length)];
   } else {
+    console.log('Resetting used indices, all vocab cycled');
     usedVocabIndices = [];
     usedAmalgamateIndices = [];
     index = Math.floor(Math.random() * allVocab.length);
@@ -66,6 +72,7 @@ export function spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensi
     if (!usedAmalgamateIndices.includes(amalgamateIndex)) usedAmalgamateIndices.push(amalgamateIndex);
   }
 
+  console.log('Spawned word:', typedInput);
   return word;
 }
 
@@ -179,10 +186,17 @@ export function updateGame(ctx, words, userInput, gameActive, mode, caseSensitiv
 
   if (words.length > 0 && words[0].isExiting && words[0].opacity <= 0) {
     words = [];
+    console.log('Word faded out, resetting words array');
     if (mode !== 'game') spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds);
   } else if (words.length === 0) {
+    console.log('No words left, attempting to spawn new word');
     const newWord = spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds);
-    if (newWord) words.push(newWord);
+    if (newWord) {
+      words.push(newWord);
+      console.log('New word spawned:', newWord.typedInput);
+    } else {
+      console.error('Failed to spawn new word');
+    }
   }
 
   return newLastFrameTime; // Return the updated lastFrameTime for the next frame
