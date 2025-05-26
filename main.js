@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const newWord = spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave);
     if (newWord) words.push(newWord);
     updateGame(ctx, words, userInput, gameActive, mode, caseSensitive, '#ffffff', waveSpeeds, wave, score, correctTermsCount, coveredTerms, totalChars, correctChars, missedWords);
-    updateTimer(timerDisplay, timeLeft, totalTime, mode, sessionStartTime, elapsedTime);
+    updateTimer(timerDisplay, timeLeft, totalTime, mode, sessionStartTime, elapsedTime, gameActive, wpmDisplay, sessionEndTime, score, correctTermsCount, calculateWPM);
   }
 
   function handleInput(e) {
