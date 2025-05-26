@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let coveredTerms = new Map();
   let currentTermStartTime = null;
 
-  const waveSpeeds = [0.435, 0.87, 1.0875, 1.3594, 1.6992, 2.1240, 2.6550, 3.3188, 4.1485, 5.1856, 6.4820];
+  const waveSpeeds = [0.1, 0.435, 0.87, 1.0875, 1.3594, 1.6992, 2.1240, 2.6550, 3.3188, 4.1485, 5.1856];
 
   const savedTheme = localStorage.getItem('theme') || 'natural-light';
   document.body.className = savedTheme;
@@ -392,6 +392,16 @@ document.addEventListener('DOMContentLoaded', () => {
     return displayText;
   }
 
+  function getWordSpeed() {
+    const baseSpeed = level === 0 ? 0.1 : 0.5;
+    const speedIncreasePerLevel = 0.1;
+    if (mode === 'game') {
+      return waveSpeeds[wave] || waveSpeeds[waveSpeeds.length - 1];
+    } else {
+      return baseSpeed + (level * speedIncreasePerLevel);
+    }
+  }
+
   function spawnWord() {
     if (vocabData.length === 0) {
       vocabData = [...defaultVocabData];
@@ -437,7 +447,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const x = mode === 'game' ? (minX + Math.random() * (maxX - minX)) : minX;
 
     const y = 0;
-    const speed = mode === 'game' ? (waveSpeeds[wave] || waveSpeeds[waveSpeeds.length - 1]) : 0.5 + level * 0.1;
+    const speed = getWordSpeed();
     const word = { 
       prompt: prompt, 
       typedInput: typedInput, 
@@ -579,20 +589,20 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (word.y >= canvas.height) {
-  console.log(`Word missed: ${word.typedInput}, Time Left: ${timeLeft}s, CorrectTermsCount: ${correctTermsCount}`);
-  missedWords.push(word.typedInput);
-  coveredTerms.set(word.typedInput, 'Missed');
-  totalChars += word.typedInput.length;
-  word.isExiting = true;
-  word.fadeState = 'out';
-  if (words.length === 1 && mode === 'game') {
-    gameActive = false;
-    sessionEndTime = performance.now();
-    console.log(`Game Over due to missed word. Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
-    alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
-    return false;
-  }
-}
+        console.log(`Word missed: ${word.typedInput}, Time Left: ${timeLeft}s, CorrectTermsCount: ${correctTermsCount}`);
+        missedWords.push(word.typedInput);
+        coveredTerms.set(word.typedInput, 'Missed');
+        totalChars += word.typedInput.length;
+        word.isExiting = true;
+        word.fadeState = 'out';
+        if (words.length === 1 && mode === 'game') {
+          gameActive = false;
+          sessionEndTime = performance.now();
+          console.log(`Game Over due to missed word. Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
+          alert(`Game Over! Score: ${score}, WPM: ${calculateWPM()}, Accuracy: ${calculateAccuracy()}%`);
+          return false;
+        }
+      }
       return !word.isExiting;
     });
 
@@ -617,19 +627,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateTimer() {
-  if (!gameActive) return;
-  timeLeft = Math.max(0, timeLeft - 1);
-  totalTime++;
-  timerDisplay.textContent = `Time: ${timeLeft}s`;
-  updateWPMDisplay();
-  if (timeLeft === 0 && mode === 'game') {
-    timeLeft = 30; // Reset timer to allow more playtime
-    console.log(`Timer reset: Added 30 seconds. Continue playing! CorrectTermsCount: ${correctTermsCount}`);
-    setTimeout(updateTimer, 1000);
-  } else if (timeLeft > 0) {
-    setTimeout(updateTimer, 1000);
+    if (!gameActive) return;
+    timeLeft = Math.max(0, timeLeft - 1);
+    totalTime++;
+    timerDisplay.textContent = `Time: ${timeLeft}s`;
+    updateWPMDisplay();
+    if (timeLeft === 0 && mode === 'game') {
+      timeLeft = 30;
+      console.log(`Timer reset: Added 30 seconds. Continue playing! CorrectTermsCount: ${correctTermsCount}`);
+      setTimeout(updateTimer, 1000);
+    } else if (timeLeft > 0) {
+      setTimeout(updateTimer, 1000);
+    }
   }
-}
 
   function calculateWPM() {
     const correctTermsFromCovered = Array.from(coveredTerms.values()).filter(status => status === 'Correct').length;
@@ -914,7 +924,7 @@ document.addEventListener('DOMContentLoaded', () => {
   </div>
 </body>
 </html>
-  `;
+    `;
 
     const blob = new Blob([certificateContent], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
@@ -950,13 +960,19 @@ document.addEventListener('DOMContentLoaded', () => {
     
     gameActive = true;
     userInput.focus();
+
+    const initialSpeed = getWordSpeed();
+    console.log(`Starting ${mode} mode at Level ${level} with speed: ${initialSpeed}`);
+
     userInput.addEventListener('input', handleInput);
     document.addEventListener('keydown', highlightKeys);
     document.addEventListener('keyup', keyUpHandler);
     certificateButton.addEventListener('click', generateCertificate);
     spawnWord();
     updateGame();
-    updateTimer();
+    if (mode === 'game') {
+      updateTimer();
+    }
   }
 
   populateVocabDropdown();
@@ -993,7 +1009,36 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   resetButton.addEventListener('click', () => {
-    location.reload();
+    gameActive = false;
+    score = 0;
+    wave = 0;
+    timeLeft = 30;
+    totalTime = 0;
+    correctTermsCount = 0;
+    totalChars = 0;
+    correctChars = 0;
+    missedWords = [];
+    coveredTerms.clear();
+    words = [];
+    sessionStartTime = null;
+    sessionEndTime = null;
+    vocabIndex = 0;
+    amalgamateIndex = 0;
+    currentWPM = 0;
+    usedVocabIndices = [];
+    usedAmalgamateIndices = [];
+    currentTermStartTime = null;
+
+    userInput.removeEventListener('input', handleInput);
+    document.removeEventListener('keydown', highlightKeys);
+    document.removeEventListener('keyup', keyUpHandler);
+    certificateButton.removeEventListener('click', generateCertificate);
+
+    startScreen.classList.remove('hidden');
+    gameContainer.classList.add('hidden');
+
+    updateStatsDisplay();
+    console.log('Game reset. Returned to start screen.');
   });
 
   updateStatsDisplay();
