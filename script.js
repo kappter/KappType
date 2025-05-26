@@ -77,8 +77,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let usedAmalgamateIndices = [];
   let coveredTerms = new Map();
   let currentTermStartTime = null;
+  let elapsedTime = 0; // New variable for elapsed time in practice mode
 
-  const waveSpeeds = [0.1, 0.435, 0.87, 1.0875, 1.3594, 1.6992, 2.1240, 2.6550, 3.3188, 4.1485, 5.1856];
+  const waveSpeeds = [0.05, 0.435, 0.87, 1.0875, 1.3594, 1.6992, 2.1240, 2.6550, 3.3188, 4.1485, 5.1856]; // Adjusted Wave 0 to 0.05
 
   const savedTheme = localStorage.getItem('theme') || 'natural-light';
   document.body.className = savedTheme;
@@ -393,8 +394,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function getWordSpeed() {
-    const baseSpeed = level === 0 ? 0.1 : 0.5;
-    const speedIncreasePerLevel = 0.1;
+    const baseSpeed = level === 0 ? 0.05 : 0.5; // Reduced base speed for Level 0 to 0.05
+    const speedIncreasePerLevel = 0.05; // Reduced increase for finer control
     if (mode === 'game') {
       return waveSpeeds[wave] || waveSpeeds[waveSpeeds.length - 1];
     } else {
@@ -444,7 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const padding = 20;
     const maxX = canvas.width - textWidth - padding;
     const minX = padding;
-    const x = mode === 'game' ? (minX + Math.random() * (maxX - minX)) : minX;
+    const x = minX + Math.random() * (maxX - minX); // Random x for both modes
 
     const y = 0;
     const speed = getWordSpeed();
@@ -491,7 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const computedStyle = window.getComputedStyle(document.body);
     const textColor = computedStyle.getPropertyValue('--canvas-text')?.trim() || '#ffffff';
-    console.log('textColor initialized:', textColor);
+    console.log('textColor initialized:', textColor); // Optimize this to log once per session if needed
 
     function hexToRgb(hex) {
       if (!hex || typeof hex !== 'string') return '255, 255, 255';
@@ -628,15 +629,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateTimer() {
     if (!gameActive) return;
-    timeLeft = Math.max(0, timeLeft - 1);
-    totalTime++;
-    timerDisplay.textContent = `Time: ${timeLeft}s`;
+    if (mode === 'game') {
+      timeLeft = Math.max(0, timeLeft - 1);
+      totalTime++;
+      timerDisplay.textContent = `Time: ${timeLeft}s`;
+    } else {
+      const now = performance.now();
+      elapsedTime = Math.floor((now - sessionStartTime) / 1000); // Elapsed time in seconds
+      timerDisplay.textContent = `Elapsed: ${elapsedTime}s`;
+    }
     updateWPMDisplay();
     if (timeLeft === 0 && mode === 'game') {
       timeLeft = 30;
       console.log(`Timer reset: Added 30 seconds. Continue playing! CorrectTermsCount: ${correctTermsCount}`);
       setTimeout(updateTimer, 1000);
-    } else if (timeLeft > 0) {
+    } else if (timeLeft > 0 || mode === 'practice') {
       setTimeout(updateTimer, 1000);
     }
   }
@@ -735,7 +742,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const termsToWave = 10 - correctTermsCount;
     scoreDisplay.textContent = `Score: ${score}`;
     waveDisplay.textContent = `Wave: ${wave}`;
-    timerDisplay.textContent = `Time: ${timeLeft >= 0 ? timeLeft : 0}s`;
+    timerDisplay.textContent = `Time: ${timeLeft >= 0 ? timeLeft : 0}s`; // Updated by updateTimer
     wpmDisplay.textContent = `WPM: ${currentWPM}`;
     termsToWaveDisplay.textContent = `To Wave: ${termsToWave}`;
     termsCoveredDisplay.textContent = `Terms: ${coveredTerms.size}/${totalTerms}`;
@@ -957,6 +964,7 @@ document.addEventListener('DOMContentLoaded', () => {
     correctChars = 0;
     correctTermsCount = 0;
     coveredTerms.clear();
+    elapsedTime = 0; // Reset elapsed time
     
     gameActive = true;
     userInput.focus();
@@ -970,14 +978,12 @@ document.addEventListener('DOMContentLoaded', () => {
     certificateButton.addEventListener('click', generateCertificate);
     spawnWord();
     updateGame();
-    if (mode === 'game') {
-      updateTimer();
-    }
+    updateTimer(); // Start timer for both modes, handling elapsed time in practice
   }
 
   populateVocabDropdown();
   startButton.addEventListener('click', async () => {
-    level = Math.max(1, Math.min(10, parseInt(levelInput.value)));
+    level = Math.max(0, Math.min(10, parseInt(levelInput.value) || 0)); // Allow Level 0
     mode = modeSelect.value;
     promptType = promptSelect.value;
     caseSensitive = caseSelect.value === 'sensitive';
@@ -1009,6 +1015,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   resetButton.addEventListener('click', () => {
+    console.log('Reset button clicked'); // Debug log to confirm execution
+    if (!gameActive) return; // Prevent reset if game isn’t active
     gameActive = false;
     score = 0;
     wave = 0;
@@ -1028,6 +1036,7 @@ document.addEventListener('DOMContentLoaded', () => {
     usedVocabIndices = [];
     usedAmalgamateIndices = [];
     currentTermStartTime = null;
+    elapsedTime = 0;
 
     userInput.removeEventListener('input', handleInput);
     document.removeEventListener('keydown', highlightKeys);
