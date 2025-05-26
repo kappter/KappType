@@ -69,12 +69,12 @@ export function spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensi
   return word;
 }
 
-export function updateGame(ctx, words, userInput, gameActive, mode, caseSensitive, textColor, waveSpeeds, wave, score, correctTermsCount, coveredTerms, totalChars, correctChars, missedWords) {
+export function updateGame(ctx, words, userInput, gameActive, mode, caseSensitive, textColor, waveSpeeds, wave, score, correctTermsCount, coveredTerms, totalChars, correctChars, missedWords, lastFrameTime) {
   if (!gameActive) return;
 
   const now = performance.now();
   const deltaTime = (now - lastFrameTime) / 1000;
-  lastFrameTime = now;
+  const newLastFrameTime = now;
 
   ctx.clearRect(0, 0, 900, 300); // Assuming canvas dimensions
 
@@ -185,7 +185,7 @@ export function updateGame(ctx, words, userInput, gameActive, mode, caseSensitiv
     if (newWord) words.push(newWord);
   }
 
-  requestAnimationFrame(() => updateGame(ctx, words, userInput, gameActive, mode, caseSensitive, textColor, waveSpeeds, wave, score, correctTermsCount, coveredTerms, totalChars, correctChars, missedWords));
+  return newLastFrameTime; // Return the updated lastFrameTime for the next frame
 }
 
 export function calculateCorrectChars(target, input) {
