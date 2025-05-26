@@ -2,16 +2,16 @@
 
 :root {
   /* Default (Natural Light) Theme */
-  --bg-lightness: 50%; /* Controls lightness for wave-based tint changes */
+  --bg-lightness: 50%;
   --primary-gradient: linear-gradient(135deg, hsl(210, 20%, var(--bg-lightness)) 0%, hsl(210, 20%, calc(var(--bg-lightness) - 10%)) 100%);
   --neon-cyan: #00c4b4;
   --neon-purple: #7b68ee;
   --glass-bg: rgba(255, 255, 255, 0.3);
   --glass-blur: blur(10px);
-  --text-shadow: 0 0 5px rgba(0, 196, 180, 0.5), 0 0 10px #1a1a1a; /* Enhanced shadow */
+  --text-shadow: 0 0 5px rgba(0, 196, 180, 0.5), 0 0 10px #1a1a1a;
   --box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  --text: #1a1a1a; /* Darker text for better contrast */
-  --canvas-text: #ffffff; /* Black for descending text in Natural Light */
+  --text: #1a1a1a;
+  --canvas-text: #ffffff;
   --background-pattern: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" fill="none" stroke="rgba(0,0,0,0.05)" stroke-width="1"><path d="M10 10 Q 50 90 90 10" /><path d="M10 90 Q 50 10 90 90" /></svg>');
 }
 
@@ -33,9 +33,9 @@ body.architecture {
   --neon-cyan: #4682b4;
   --neon-purple: #e6d3f7;
   --glass-bg: rgba(255, 255, 255, 0.2);
-  --text-shadow: 0 0 5px rgba(70, 130, 180, 0.5), 0 0 10px #1a1a1a; /* Enhanced shadow */
-  --text: #1a1a1a; /* Darker text for better contrast */
-  --canvas-text: #ffffff; /* Black for descending text in Architecture */
+  --text-shadow: 0 0 5px rgba(70, 130, 180, 0.5), 0 0 10px #1a1a1a;
+  --text: #1a1a1a;
+  --canvas-text: #ffffff;
   --background-pattern: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 50 50" fill="none" stroke="rgba(0,0,0,0.05)" stroke-width="1"><rect x="5" y="5" width="40" height="40" /><line x1="5" y1="5" x2="45" y2="45" /><line x1="5" y1="45" x2="45" y2="5" /></svg>');
 }
 
@@ -63,20 +63,20 @@ body.medieval {
   --background-pattern: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" fill="none" stroke="rgba(255,215,0,0.1)" stroke-width="1"><path d="M20 20 H 80 M20 40 H 80 M20 60 H 80 M20 80 H 80 M20 20 V 80 M40 20 V 80 M60 20 V 80 M80 20 V 80" /></svg>');
 }
 
-/* Adjustments for specific themes */
+/* Theme-specific overrides */
 body.natural-light .stats span {
-  color: #000000; /* Black for better contrast in Natural Light */
-  text-shadow: 0 0 5px rgba(0, 0, 0, 0.5); /* Adjusted shadow for visibility */
+  color: #000000;
+  text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
 }
 
 body.architecture .stats span {
-  color: #000000; /* Black for better contrast in Architecture */
-  text-shadow: 0 0 5px rgba(0, 0, 0, 0.5); /* Adjusted shadow for visibility */
+  color: #000000;
+  text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
 }
 
 body.medieval #vocabSetTitle {
-  color: #ffffff; /* White for better contrast against the dark Medieval background */
-  text-shadow: 0 0 5px rgba(0, 0, 0, 0.7); /* Darker shadow to enhance readability */
+  color: #ffffff;
+  text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
 }
 
 * {
@@ -90,7 +90,7 @@ body {
   background: var(--primary-gradient);
   color: var(--text);
   min-height: 100vh;
-  overflow: hidden;
+  overflow: auto;
   position: relative;
 }
 
@@ -113,33 +113,11 @@ body.medieval .stats span {
   font-family: 'Cinzel', serif;
 }
 
-#startScreen {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  animation: fadeIn 1s ease-in-out;
+.hidden {
+  display: none;
 }
 
-.time-indicator-wrapper {
-  display: flex;
-  align-items: center;
-  margin-left: 10px; /* Space from stats */
-}
-
-.time-indicator {
-       width: 12px;
-       height: 12px;
-       border-radius: 50%;
-       background-color: grey;
-       margin: 5px auto;
-     }
-
-     .time-indicator.active {
-       background-color: green;
-     }
-
-.start-card {
+#settings {
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -147,34 +125,26 @@ body.medieval .stats span {
   padding: 1rem;
   max-width: 600px;
   width: 90%;
+  margin: 1rem auto;
   box-shadow: var(--box-shadow);
   text-align: center;
 }
 
-.start-card h1 {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 2rem;
-  color: var(--neon-cyan);
-  text-shadow: var(--text-shadow);
-  margin-bottom: 0.75rem;
-  animation: scaleIn 0.8s ease-in-out;
-}
-
-.start-card label {
+#settings label {
   display: block;
   margin: 0.25rem 0 0.1rem;
   font-size: 0.9rem;
   color: var(--text);
 }
 
-.start-card .checkbox-label {
+#settings .checkbox-label {
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0.5rem 0;
 }
 
-.start-card input[type="checkbox"] {
+#settings input[type="checkbox"] {
   margin-right: 0.3rem;
   accent-color: var(--neon-cyan);
   width: 1.1rem;
@@ -182,9 +152,9 @@ body.medieval .stats span {
   cursor: pointer;
 }
 
-.start-card select,
-.start-card input[type="number"],
-.start-card input[type="file"] {
+#settings select,
+#settings input[type="number"],
+#settings input[type="file"] {
   width: 100%;
   padding: 0.4rem;
   margin-bottom: 0.5rem;
@@ -197,14 +167,14 @@ body.medieval .stats span {
   transition: border-color 0.3s, box-shadow 0.3s;
 }
 
-.start-card select:focus,
-.start-card input:focus {
+#settings select:focus,
+#settings input:focus {
   outline: none;
   border-color: var(--neon-cyan);
   box-shadow: 0 0 6px rgba(0, 247, 255, 0.5);
 }
 
-.start-card button {
+#startButton {
   background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
   border: none;
   padding: 0.6rem 1.5rem;
@@ -217,20 +187,9 @@ body.medieval .stats span {
   margin-top: 0.5rem;
 }
 
-.start-card button:hover {
+#startButton:hover {
   transform: scale(1.05);
   box-shadow: 0 0 12px rgba(0, 247, 255, 0.7);
-}
-
-#userInput {
-  width: 100%;
-  max-width: 600px;
-  padding: 10px;
-  font-size: 16px;
-  margin: 10px 0;
-  border: 2px solid var(--input-border, #333);
-  background: var(--input-bg, #fff);
-  color: var(--input-text, #000);
 }
 
 #loadingIndicator {
@@ -239,12 +198,10 @@ body.medieval .stats span {
   font-size: 0.9rem;
 }
 
-#gameContainer {
+#game {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  justify-content: center;
   padding: 1rem;
-  height: 100vh;
 }
 
 #gameCanvas {
@@ -257,47 +214,42 @@ body.medieval .stats span {
   height: 350px;
 }
 
-#vocabSetTitle {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 1.2rem;
-  color: var(--neon-purple);
-  text-shadow: var(--text-shadow);
-  margin: 0.5rem 0;
-}
-
-.stats-container {
+#stats {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   justify-content: space-between;
   width: 100%;
   max-width: 800px;
-  margin: 0.25rem 0;
-}
-
-.stats {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
   padding: 0.5rem;
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.2);
+  margin: 0.5rem auto;
 }
 
-.stats span {
+#stats p {
+  margin: 0 0.5rem;
+}
+
+#stats span {
   font-family: 'Orbitron', sans-serif;
   font-size: 0.9rem;
   color: var(--neon-cyan);
   text-shadow: var(--text-shadow);
-  margin: 0 0.2rem;
+}
+
+#input {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 800px;
+  margin: 0.5rem auto;
 }
 
 #userInput {
   width: 100%;
-  max-width: 800px;
   padding: 0.6rem;
-  margin: 0.5rem 0;
   border: 1px solid var(--neon-purple);
   border-radius: 6px;
   background: rgba(0, 0, 0, 0.5);
@@ -317,31 +269,16 @@ body.medieval .stats span {
   animation: pulse 0.5s ease-in-out;
 }
 
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.05);
-    opacity: 0.7;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.button-group {
+#controls {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
   width: 100%;
   max-width: 800px;
-  margin: 0.5rem 0;
+  margin: 0.5rem auto;
 }
 
-#certificateButton, #resetButton {
+#generateCertificate, #resetGame {
   background: linear-gradient(90deg, var(--neon-purple), var(--neon-cyan));
   border: none;
   padding: 0.4rem 1.2rem;
@@ -351,23 +288,21 @@ body.medieval .stats span {
   font-size: 0.9rem;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.3s;
-  width: 100%;
 }
 
-#certificateButton:hover, #resetButton:hover {
+#generateCertificate:hover, #resetGame:hover {
   transform: scale(1.05);
-  box-shadow: 0 0 12px rgba(212, 0, 255, 0.7);
+  box-shadow: 0 0 10px rgba(212, 0, 255, 0.7);
 }
 
-/* Keyboard Styles */
-.keyboard {
+#keyboard {
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   border-radius: 8px;
   padding: 0.5rem;
   max-width: 800px;
   width: 100%;
-  margin: 0.5rem 0;
+  margin: 0.5rem auto;
 }
 
 .row {
@@ -381,35 +316,44 @@ body.medieval .stats span {
   border: 1px solid var(--neon-cyan);
   border-radius: 4px;
   color: var(--text);
-  padding: 3px 8px;
-  margin: 0 1px;
-  font-size: 0.8rem;
+  padding: 6px 12px;
+  margin: 0 2px;
+  font-size: 0.9rem;
   text-align: center;
-  min-width: 25px;
-  transition: background 0.2s, box-shadow 0.2s;
+  min-width: 30px;
+  cursor: pointer;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+
+.key:hover {
+  background: var(--neon-purple);
+  box-shadow: 0 0 6px rgba(200, 0, 255, 0.5);
 }
 
 .key.pressed {
   background: var(--neon-purple);
-  box-shadow: 0 0 8px rgba(212, 0, 255, 0.5);
+  box-shadow: 0 0 8px rgba(0, 247, 255, 0.5);
 }
 
-.key.space {
-  min-width: 120px;
+.key.wide {
+  width: 80px;
 }
 
-.key.tab,
-.key.backspace,
-.key.caps-lock,
-.key.enter,
-.key.shift,
-.key.ctrl,
-.key.win,
-.key.alt {
-  min-width: 50px;
+.key.wider {
+  width: 100px;
+}
+
+.key.widest {
+  width: 200px;
 }
 
 /* Animations */
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.7; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -420,44 +364,35 @@ body.medieval .stats span {
   to { transform: scale(1); opacity: 1; }
 }
 
-.word-enter {
-  animation: wordFadeIn 0.5s ease-in;
-}
-
-.word-exit {
-  animation: wordFadeOut 0.3s ease-out;
-}
-
-@keyframes wordFadeIn {
+@keyframes wordFade-in {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes wordFadeOut {
+@keyframes wordFade-out {
   from { opacity: 1; }
   to { opacity: 0; }
 }
 
-/* Responsive Design for iPad */
+/* Responsive Design */
 @media (min-width: 768px) and (max-width: 1024px) {
+  #settings {
+    padding: 15px;
+    max-width: 500px;
+  }
+
   #gameCanvas {
     height: 320px;
   }
 
-  #vocabSetTitle {
-    font-size: 1.1rem;
-    margin: 0.3rem 0;
-  }
-
-  .stats {
+  #stats {
     flex-wrap: wrap;
     justify-content: center;
-    gap: 0.2rem;
+    gap: 8px;
   }
 
-  .stats span {
+  #stats span {
     font-size: 0.8rem;
-    margin: 0 0.1rem;
   }
 
   #userInput {
@@ -465,50 +400,48 @@ body.medieval .stats span {
     padding: 0.5rem;
   }
 
-  .button-group {
+  #controls {
     flex-direction: row;
-    gap: 0.2rem;
+    gap: 4px;
   }
 
-  #certificateButton, #resetButton {
+  #generateCertificate, #resetGame {
     font-size: 0.8rem;
     padding: 0.3rem 1rem;
   }
 
-  .keyboard {
+  #keyboard {
     padding: 0.3rem;
   }
 
   .key {
-    padding: 2px 6px;
-    font-size: 0.7rem;
-    min-width: 20px;
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    min-width: 25px;
   }
 
-  .key.space {
-    min-width: 100px;
+  .key.wide {
+    width: 60px;
   }
 
-  .key.tab,
-  .key.backspace,
-  .key.caps-lock,
-  .key.enter,
-  .key.shift,
-  .key.ctrl,
-  .key.win,
-  .key.alt {
-    min-width: 40px;
+  .key.wider {
+    width: 80px;
+  }
+
+  .key.widest {
+    width: 160px;
   }
 }
 
 @media (max-width: 600px) {
-  .start-card h1 {
-    font-size: 1.8rem;
+  #settings {
+    padding: 8px;
+    width: 95%;
   }
 
-  .stats {
+  #stats {
     flex-direction: column;
-    gap: 0.3rem;
+    gap: 5px;
   }
 
   #gameCanvas {
@@ -520,28 +453,21 @@ body.medieval .stats span {
     font-size: 0.9rem;
   }
 
-  .keyboard {
-    padding: 0.3rem;
-  }
-
   .key {
-    padding: 2px 6px;
+    padding: 3px 6px;
     font-size: 0.7rem;
     min-width: 20px;
   }
 
-  .key.space {
-    min-width: 100px;
+  .key.wide {
+    width: 50px;
   }
 
-  .key.tab,
-  .key.backspace,
-  .key.caps-lock,
-  .key.enter,
-  .key.shift,
-  .key.ctrl,
-  .key.win,
-  .key.alt {
-    min-width: 40px;
+  .key.wider {
+    width: 70px;
+  }
+
+  .key.widest {
+    width: 120px;
   }
 }
