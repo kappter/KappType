@@ -77,9 +77,10 @@ document.addEventListener('DOMContentLoaded', () => {
   let usedAmalgamateIndices = [];
   let coveredTerms = new Map();
   let currentTermStartTime = null;
-  let elapsedTime = 0; // New variable for elapsed time in practice mode
+  let elapsedTime = 0;
+  let wpmActive = false; // Flag to control WPM calculation
 
-  const waveSpeeds = [0.05, 0.435, 0.87, 1.0875, 1.3594, 1.6992, 2.1240, 2.6550, 3.3188, 4.1485, 5.1856]; // Adjusted Wave 0 to 0.05
+  const waveSpeeds = [0.15, 0.435, 0.87, 1.0875, 1.3594, 1.6992, 2.1240, 2.6550, 3.3188, 4.1485, 5.1856]; // Increased Wave 0 to 0.15
 
   const savedTheme = localStorage.getItem('theme') || 'natural-light';
   document.body.className = savedTheme;
@@ -394,12 +395,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function getWordSpeed() {
-    const baseSpeed = level === 0 ? 0.05 : 0.5; // Reduced base speed for Level 0 to 0.05
-    const speedIncreasePerLevel = 0.05; // Reduced increase for finer control
+    const baseSpeed = level === 0 ? 0.15 : (level === 1 ? 0.25 : 0.5); // Adjusted to 0.15 for Level 0, 0.25 for Level 1
+    const speedIncreasePerLevel = 0.1;
     if (mode === 'game') {
       return waveSpeeds[wave] || waveSpeeds[waveSpeeds.length - 1];
     } else {
-      return baseSpeed + (level * speedIncreasePerLevel);
+      return baseSpeed + (level > 1 ? (level - 1) * speedIncreasePerLevel : 0); // No increase for Levels 0-1
     }
   }
 
@@ -445,7 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const padding = 20;
     const maxX = canvas.width - textWidth - padding;
     const minX = padding;
-    const x = minX + Math.random() * (maxX - minX); // Random x for both modes
+    const x = minX + Math.random() * (maxX - minX);
 
     const y = 0;
     const speed = getWordSpeed();
@@ -492,7 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const computedStyle = window.getComputedStyle(document.body);
     const textColor = computedStyle.getPropertyValue('--canvas-text')?.trim() || '#ffffff';
-    console.log('textColor initialized:', textColor); // Optimize this to log once per session if needed
+    console.log('textColor initialized:', textColor);
 
     function hexToRgb(hex) {
       if (!hex || typeof hex !== 'string') return '255, 255, 255';
@@ -509,7 +510,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const word = words[0];
       const definition = word.definition;
 
-      const fadeDuration = 4;
+      const fadeDuration = 2; // Reduced fade duration to show text faster
       const fadeSpeed = 0.3 / fadeDuration;
       if (word.fadeState === 'in') {
         word.opacity = Math.min(word.opacity + fadeSpeed * deltaTime, 0.3);
@@ -635,7 +636,7 @@ document.addEventListener('DOMContentLoaded', () => {
       timerDisplay.textContent = `Time: ${timeLeft}s`;
     } else {
       const now = performance.now();
-      elapsedTime = Math.floor((now - sessionStartTime) / 1000); // Elapsed time in seconds
+      elapsedTime = Math.floor((now - sessionStartTime) / 1000);
       timerDisplay.textContent = `Elapsed: ${elapsedTime}s`;
     }
     updateWPMDisplay();
@@ -649,6 +650,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function calculateWPM() {
+    if (!wpmActive) return 0; // Only calculate WPM when active
     const correctTermsFromCovered = Array.from(coveredTerms.values()).filter(status => status === 'Correct').length;
     if (correctTermsFromCovered === 0) return 0;
 
@@ -679,6 +681,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (sessionStartTime === null && typed.length > 0) {
       sessionStartTime = performance.now();
       currentTermStartTime = sessionStartTime;
+      wpmActive = true; // Activate WPM on first keypress
+      console.log('WPM calculation activated - First keypress detected');
     }
 
     words = words.filter(word => {
@@ -703,6 +707,8 @@ document.addEventListener('DOMContentLoaded', () => {
         word.isExiting = true;
         word.fadeState = 'out';
         currentTermStartTime = performance.now();
+        wpmActive = false; // Deactivate WPM until next term
+        console.log('WPM calculation deactivated - Term completed');
 
         if (mode === 'game' && correctTermsCount >= 10) {
           console.log(`Advancing to Wave ${wave + 1}`);
@@ -732,6 +738,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typed === '' && words.length === 0) {
       spawnWord();
       currentTermStartTime = performance.now();
+      wpmActive = true; // Reactivate WPM for new term
+      console.log('WPM calculation reactivated - New term started');
     }
     updateTimeIndicator();
     updateStatsDisplay();
@@ -742,7 +750,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const termsToWave = 10 - correctTermsCount;
     scoreDisplay.textContent = `Score: ${score}`;
     waveDisplay.textContent = `Wave: ${wave}`;
-    timerDisplay.textContent = `Time: ${timeLeft >= 0 ? timeLeft : 0}s`; // Updated by updateTimer
+    timerDisplay.textContent = `Time: ${timeLeft >= 0 ? timeLeft : 0}s`;
     wpmDisplay.textContent = `WPM: ${currentWPM}`;
     termsToWaveDisplay.textContent = `To Wave: ${termsToWave}`;
     termsCoveredDisplay.textContent = `Terms: ${coveredTerms.size}/${totalTerms}`;
@@ -805,11 +813,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function escapeHtml(str) {
     if (!str) return 'None';
     return str
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
+      .replace(/&/g, '&')
+      .replace(/</g, '<')
+      .replace(/>/g, '>')
+      .replace(/"/g, '"')
+      .replace(/'/g, ''');
   }
 
   function generateCertificate() {
@@ -953,7 +961,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     usedVocabIndices = [];
     usedAmalgamateIndices = [];
-    sessionStartTime = performance.now();
+    sessionStartTime = null; // Set on first keypress
     sessionEndTime = null;
     timeLeft = 30;
     totalTime = 0;
@@ -964,7 +972,8 @@ document.addEventListener('DOMContentLoaded', () => {
     correctChars = 0;
     correctTermsCount = 0;
     coveredTerms.clear();
-    elapsedTime = 0; // Reset elapsed time
+    elapsedTime = 0;
+    wpmActive = false;
     
     gameActive = true;
     userInput.focus();
@@ -978,12 +987,12 @@ document.addEventListener('DOMContentLoaded', () => {
     certificateButton.addEventListener('click', generateCertificate);
     spawnWord();
     updateGame();
-    updateTimer(); // Start timer for both modes, handling elapsed time in practice
+    updateTimer();
   }
 
   populateVocabDropdown();
   startButton.addEventListener('click', async () => {
-    level = Math.max(0, Math.min(10, parseInt(levelInput.value) || 0)); // Allow Level 0
+    level = Math.max(0, Math.min(10, parseInt(levelInput.value) || 0));
     mode = modeSelect.value;
     promptType = promptSelect.value;
     caseSensitive = caseSelect.value === 'sensitive';
@@ -1015,8 +1024,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   resetButton.addEventListener('click', () => {
-    console.log('Reset button clicked'); // Debug log to confirm execution
-    if (!gameActive) return; // Prevent reset if game isn’t active
+    console.log('Reset button clicked');
+    if (!gameActive) return;
     gameActive = false;
     score = 0;
     wave = 0;
@@ -1037,6 +1046,7 @@ document.addEventListener('DOMContentLoaded', () => {
     usedAmalgamateIndices = [];
     currentTermStartTime = null;
     elapsedTime = 0;
+    wpmActive = false;
 
     userInput.removeEventListener('input', handleInput);
     document.removeEventListener('keydown', highlightKeys);
