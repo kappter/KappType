@@ -1,4 +1,5 @@
 // main.js
+import { spawnWord, updateGame, calculateCorrectChars, calculateWPM, calculateAccuracy } from './gameLogic.js';
 document.addEventListener('DOMContentLoaded', () => {
   console.log('DOM fully loaded and parsed');
   const startButton = document.getElementById('startButton');
