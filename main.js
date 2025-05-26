@@ -152,6 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // main.js (partial update to startGame)
+// main.js (partial update to startGame)
 function startGame() {
   console.log('Starting game with level:', level, 'mode:', mode);
   if (vocabData.length === 0) {
@@ -189,7 +190,12 @@ function startGame() {
   certificateButton.addEventListener('click', () => generateCertificate(pageLoadTime, sessionStartTime, sessionEndTime, score, wave, promptSelect, vocabData, amalgamateVocab, coveredTerms, calculateWPM, calculateAccuracy, calculateTermAccuracy));
   const newWord = spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds);
   if (newWord) words.push(newWord);
-  updateGame(ctx, words, userInput, gameActive, mode, caseSensitive, '#ffffff', waveSpeeds, wave, score, correctTermsCount, coveredTerms, totalChars, correctChars, missedWords);
+  let currentLastFrameTime = performance.now(); // Initialize lastFrameTime
+  function gameLoop() {
+    currentLastFrameTime = updateGame(ctx, words, userInput, gameActive, mode, caseSensitive, '#ffffff', waveSpeeds, wave, score, correctTermsCount, coveredTerms, totalChars, correctChars, missedWords, currentLastFrameTime);
+    if (gameActive) requestAnimationFrame(gameLoop);
+  }
+  gameLoop();
   updateTimer(timerDisplay, timeLeft, totalTime, mode, sessionStartTime, elapsedTime, gameActive, wpmDisplay, sessionEndTime, score, correctTermsCount, calculateWPM);
 }
 
