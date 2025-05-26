@@ -32,7 +32,6 @@ export function spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensi
     console.log('Resetting used indices, all vocab cycled');
     usedVocabIndices = [];
     usedAmalgamateIndices = [];
-    // Avoid immediate repetition of the last word
     let attempts = 0;
     const maxAttempts = 10;
     do {
@@ -82,27 +81,7 @@ export function spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensi
   return word;
 }
 
-// Update updateGame to pass the last spawned word
 export function updateGame(ctx, words, userInput, gameActive, mode, caseSensitive, textColor, waveSpeeds, wave, score, correctTermsCount, coveredTerms, totalChars, correctChars, missedWords, lastFrameTime, vocabData, amalgamateVocab, promptType, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, level, lastSpawnedWord) {
-  // ... (existing code remains the same until the spawning logic)
-  if (words.length > 0 && words[0].isExiting && words[0].opacity <= 0) {
-    words = [];
-    console.log('Word faded out, resetting words array');
-    if (mode !== 'game') spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds, lastSpawnedWord);
-  } else if (words.length === 0) {
-    console.log('No words left, attempting to spawn new word');
-    const newWord = spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds, lastSpawnedWord ? words.length > 0 ? words[0].typedInput : lastSpawnedWord : null);
-    if (newWord) {
-      words.push(newWord);
-      console.log('New word spawned:', newWord.typedInput);
-    } else {
-      console.error('Failed to spawn new word');
-    }
-  }
-  return newLastFrameTime;
-}
-
-export function updateGame(ctx, words, userInput, gameActive, mode, caseSensitive, textColor, waveSpeeds, wave, score, correctTermsCount, coveredTerms, totalChars, correctChars, missedWords, lastFrameTime, vocabData, amalgamateVocab, promptType, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, level) {
   if (!gameActive) return;
 
   const now = performance.now();
@@ -178,18 +157,29 @@ export function updateGame(ctx, words, userInput, gameActive, mode, caseSensitiv
     const typed = userInput.value;
     const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
     const input = caseSensitive ? typed : typed.toLowerCase();
-    word.matched = target.startsWith(input) ? typed : '';
+    word.matched = target.startsWith(input) ? input : '';
+
+    // Update displayText dynamically based on matched input
+    if (word.matched) {
+      const remainingLength = target.length - word.matched.length;
+      word.displayText = word.matched + '_'.repeat(remainingLength > 0 ? remainingLength : 0);
+    } else {
+      word.displayText = getUnderscoreText(target, 0);
+    }
 
     ctx.clearRect(word.x - 5, word.y - 20, ctx.measureText(word.displayText).width + 10, 25);
 
     if (word.matched) {
       ctx.fillStyle = 'red';
       ctx.fillText(word.matched, word.x, word.y);
-    }
-    const remainingText = word.displayText.slice(word.matched.length);
-    if (remainingText) {
+      const remainingText = word.displayText.slice(word.matched.length);
+      if (remainingText) {
+        ctx.fillStyle = textColor;
+        ctx.fillText(remainingText, word.x + ctx.measureText(word.matched).width, word.y);
+      }
+    } else {
       ctx.fillStyle = textColor;
-      ctx.fillText(remainingText, word.x + ctx.measureText(word.matched).width, word.y);
+      ctx.fillText(word.displayText, word.x, word.y);
     }
 
     if (word.y >= 300) {
@@ -213,10 +203,10 @@ export function updateGame(ctx, words, userInput, gameActive, mode, caseSensitiv
   if (words.length > 0 && words[0].isExiting && words[0].opacity <= 0) {
     words = [];
     console.log('Word faded out, resetting words array');
-    if (mode !== 'game') spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds);
+    if (mode !== 'game') spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds, lastSpawnedWord);
   } else if (words.length === 0) {
     console.log('No words left, attempting to spawn new word');
-    const newWord = spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds);
+    const newWord = spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds, lastSpawnedWord ? words.length > 0 ? words[0].typedInput : lastSpawnedWord : null);
     if (newWord) {
       words.push(newWord);
       console.log('New word spawned:', newWord.typedInput);
@@ -225,7 +215,7 @@ export function updateGame(ctx, words, userInput, gameActive, mode, caseSensitiv
     }
   }
 
-  return newLastFrameTime; // Return the updated lastFrameTime for the next frame
+  return newLastFrameTime;
 }
 
 export function calculateCorrectChars(target, input) {
