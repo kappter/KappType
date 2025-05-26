@@ -1,5 +1,5 @@
 // uiUtils.js
-export function updateTimer(timerDisplay, timeLeft, totalTime, mode, sessionStartTime, elapsedTime, gameActive, wpmDisplay, sessionEndTime, score, correctTermsCount, calculateWPM) {
+export function updateTimer(timerDisplay, timeLeft, totalTime, mode, sessionStartTime, elapsedTime, gameActive, wpmDisplay, sessionEndTime, score, correctTermsCount, calculateWPM, wpmActive) {
   if (!gameActive) return;
   if (mode === 'game') {
     timeLeft = Math.max(0, timeLeft - 1);
@@ -10,13 +10,13 @@ export function updateTimer(timerDisplay, timeLeft, totalTime, mode, sessionStar
     elapsedTime = Math.floor((now - sessionStartTime) / 1000);
     timerDisplay.textContent = `Elapsed: ${elapsedTime}s`;
   }
-  updateWPMDisplay(wpmDisplay, calculateWPM(sessionStartTime, sessionEndTime, score));
+  updateWPMDisplay(wpmDisplay, calculateWPM(wpmActive, sessionStartTime, sessionEndTime, score));
   if (timeLeft === 0 && mode === 'game') {
     timeLeft = 30;
     console.log(`Timer reset: Added 30 seconds. Continue playing! CorrectTermsCount: ${correctTermsCount}`);
-    setTimeout(() => updateTimer(timerDisplay, timeLeft, totalTime, mode, sessionStartTime, elapsedTime, gameActive, wpmDisplay, sessionEndTime, score, correctTermsCount, calculateWPM), 1000);
+    setTimeout(() => updateTimer(timerDisplay, timeLeft, totalTime, mode, sessionStartTime, elapsedTime, gameActive, wpmDisplay, sessionEndTime, score, correctTermsCount, calculateWPM, wpmActive), 1000);
   } else if (timeLeft > 0 || mode === 'practice') {
-    setTimeout(() => updateTimer(timerDisplay, timeLeft, totalTime, mode, sessionStartTime, elapsedTime, gameActive, wpmDisplay, sessionEndTime, score, correctTermsCount, calculateWPM), 1000);
+    setTimeout(() => updateTimer(timerDisplay, timeLeft, totalTime, mode, sessionStartTime, elapsedTime, gameActive, wpmDisplay, sessionEndTime, score, correctTermsCount, calculateWPM, wpmActive), 1000);
   }
 }
 
@@ -32,7 +32,7 @@ export function updateStatsDisplay(scoreDisplay, waveDisplay, timerDisplay, wpmD
   timerDisplay.textContent = `Time: ${timeLeft >= 0 ? timeLeft : 0}s`;
   wpmDisplay.textContent = `WPM: ${currentWPM}`;
   termsToWaveDisplay.textContent = `To Wave: ${termsToWave}`;
-  termsCoveredDisplay.textContent = `Terms: ${coveredTerms.size}/${totalTerms}`; // Now coveredTerms is defined
+  termsCoveredDisplay.textContent = `Terms: ${coveredTerms.size}/${totalTerms}`;
 }
 
 export function highlightKeys(e, keys) {
