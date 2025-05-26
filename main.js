@@ -1,9 +1,43 @@
 import { spawnWord, updateGame, calculateCorrectChars, calculateWPM, calculateAccuracy } from './gameLogic.js';
+import { populateVocabDropdown } from './dataLoader.js';
+
+const defaultVocabData = [
+  { Term: 'Algorithm', Definition: 'A set of rules to solve a problem' },
+  { Term: 'Loop', Definition: 'A structure that repeats code' },
+  { Term: 'Variable', Definition: 'A storage location in memory' },
+  { Term: 'Function', Definition: 'A reusable code block' }
+];
+
 document.addEventListener('DOMContentLoaded', () => {
   console.log('DOM fully loaded and parsed');
+
+  // Get DOM elements
   const startButton = document.getElementById('startButton');
   const userInput = document.getElementById('userInput');
   const canvas = document.getElementById('gameCanvas');
+  const vocabSelect = document.getElementById('vocabSelect');
+  const amalgamateSelect = document.getElementById('amalgamateSelect');
+
+  // Debug: Check if dropdown elements exist
+  if (!vocabSelect || !amalgamateSelect) {
+    console.error('Dropdown elements not found:', {
+      vocabSelect: !!vocabSelect,
+      amalgamateSelect: !!amalgamateSelect
+    });
+    alert('Error: Vocabulary dropdowns not found in the DOM. Please check index.html.');
+    return;
+  }
+
+  // Populate dropdowns
+  console.log('Calling populateVocabDropdown');
+  try {
+    populateVocabDropdown(vocabSelect, amalgamateSelect);
+    console.log('Dropdowns populated successfully');
+  } catch (error) {
+    console.error('Error populating dropdowns:', error);
+    alert('Failed to populate vocabulary dropdowns. Using default vocabulary.');
+  }
+
   const ctx = canvas.getContext('2d');
   let words = [];
   let gameActive = false;
@@ -42,8 +76,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   async function startGame() {
-    const vocabSelect = document.getElementById('vocabSelect');
-    const amalgamateSelect = document.getElementById('amalgamateSelect');
     const vocabUrl = vocabSelect.value || 'https://raw.githubusercontent.com/kappter/vocab-sets/main/Study_Skills_High_School.csv';
     const amalgamateUrl = amalgamateSelect.value;
 
@@ -69,11 +101,11 @@ document.addEventListener('DOMContentLoaded', () => {
         amalgamateVocab = [];
       }
 
-      level = parseInt(document.getElementById('levelSelect').value) || 1; // Get level from user input
-      mode = document.getElementById('modeSelect').value || 'game'; // Get mode from user selection
-      promptType = document.getElementById('promptSelect').value || 'definition';
-      caseSensitive = document.getElementById('caseSensitive').checked;
-      randomizeTerms = document.getElementById('randomizeTerms').checked;
+      level = parseInt(document.getElementById('levelSelect')?.value) || 1;
+      mode = document.getElementById('modeSelect')?.value || 'game';
+      promptType = document.getElementById('promptSelect')?.value || 'definition';
+      caseSensitive = document.getElementById('caseSensitive')?.checked || false;
+      randomizeTerms = document.getElementById('randomizeTerms')?.checked || true;
       console.log(`Starting game with level: ${level}, mode: ${mode}, promptType: ${promptType}, caseSensitive: ${caseSensitive}, randomizeTerms: ${randomizeTerms}`);
 
       // Reset game state
@@ -112,9 +144,9 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
       console.error('Error loading vocab:', error);
       alert(`Failed to load vocabulary: ${error.message}. Falling back to embedded vocabulary.`);
-      vocabData = [...defaultVocabData]; // Ensure defaultVocabData is defined
+      vocabData = [...defaultVocabData];
       amalgamateVocab = [];
-      startGame(); // Retry with default vocab
+      startGame();
     }
   }
 

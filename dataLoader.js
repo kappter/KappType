@@ -1,22 +1,54 @@
 export function populateVocabDropdown(vocabSelect, amalgamateSelect) {
+  console.log('populateVocabDropdown started');
+  if (!vocabSelect || !amalgamateSelect) {
+    console.error('Dropdown elements missing:', { vocabSelect: !!vocabSelect, amalgamateSelect: !!amalgamateSelect });
+    return;
+  }
+
   const baseUrl = 'https://raw.githubusercontent.com/kappter/vocab-sets/main/';
   const files = [
     'Exploring_Computer_Science_Vocabulary', 'Periodic_Table_Elements', 'Study_Skills_High_School',
-    // ... (full list of 50+ files)
-    'common_us_side_dishes'
+    'AP_Computer_Science_A', 'AP_Computer_Science_Principles', 'IB_Computer_Science',
+    'Cybersecurity_Basics', 'Data_Science_Terms', 'Machine_Learning_Basics',
+    'Web_Development_Terms', 'Mobile_App_Development', 'Game_Development_Terms',
+    'Artificial_Intelligence_Concepts', 'Blockchain_Basics', 'Cloud_Computing_Terms',
+    'Database_Management', 'Networking_Fundamentals', 'Operating_Systems',
+    'Software_Engineering_Principles', 'Programming_Paradigms', 'Algorithms_and_Data_Structures',
+    'Computer_Architecture', 'Digital_Logic', 'Computer_Graphics',
+    'Human_Computer_Interaction', 'Robotics_Terminology', 'Quantum_Computing_Basics',
+    'Bioinformatics_Terms', 'Geographic_Information_Systems', 'Augmented_Reality_Terms',
+    'Virtual_Reality_Terms', 'Internet_of_Things', 'Big_Data_Concepts',
+    'DevOps_Terminology', 'Agile_Methodologies', 'Scrum_Framework',
+    'Kanban_Basics', 'UX_Design_Principles', 'UI_Design_Terms',
+    'Information_Security', 'Ethical_Hacking', 'Cryptography_Basics',
+    'Linux_Commands', 'Windows_PowerShell', 'Python_Programming',
+    'Java_Programming', 'C_Programming', 'JavaScript_Programming',
+    'HTML_and_CSS', 'SQL_Queries', 'NoSQL_Databases',
+    'common_us_side_dishes', 'Math_Vocabulary_Algebra', 'Physics_Terminology'
   ];
+
+  console.log('Clearing dropdowns');
   vocabSelect.innerHTML = '<option value="">[Embedded Vocabulary - 53 Computer Science Terms]</option>';
   amalgamateSelect.innerHTML = '<option value="">[None]</option>';
-  files.forEach(file => {
+
+  console.log('Populating dropdowns with', files.length, 'files');
+  files.forEach((file, index) => {
     const option1 = document.createElement('option');
     option1.value = baseUrl + file + '.csv';
     option1.textContent = file;
     vocabSelect.appendChild(option1);
+
     const option2 = document.createElement('option');
     option2.value = baseUrl + file + '.csv';
     option2.textContent = file;
     amalgamateSelect.appendChild(option2);
+
+    if (index % 10 === 0) {
+      console.log(`Added ${index + 1} files to dropdowns`);
+    }
   });
+
+  console.log('populateVocabDropdown completed');
   if (typeof Papa === 'undefined') {
     console.warn('Papa Parse not loaded. Dropdowns populated, but CSV parsing will use embedded vocabulary.');
   }
@@ -29,7 +61,7 @@ export function validateCsvUrl(url) {
 export function loadVocab(csvUrl, isAmalgamate, vocabData, amalgamateVocab, vocabSelect, amalgamateSelect, loadingIndicator, startButton, defaultVocabData) {
   return new Promise((resolve, reject) => {
     const targetArray = isAmalgamate ? amalgamateVocab : vocabData;
-    const setName = isAmalgamate ? amalgamateSelect.options[amalgamateSelect.selectedIndex].textContent : vocabSelect.options[vocabSelect.selectedIndex].textContent;
+    const setName = isAmalgamate ? amalgamateSelect.options[amalgamateSelect.selectedIndex]?.textContent : vocabSelect.options[vocabSelect.selectedIndex]?.textContent;
     targetArray.length = 0;
 
     if (!csvUrl) {
