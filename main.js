@@ -132,8 +132,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       level = parseInt(document.getElementById('levelSelect')?.value) || 1;
       mode = document.getElementById('modeSelect')?.value || 'game';
-      promptType = document.getElementById('promptSelect')?.value || 'definition';
-      caseSensitive = document.getElementById('caseSensitive')?.checked || false;
+      promptType = document.getElementById('promptType')?.value || 'definition';
+      caseSensitive = document.getElementById('caseSensitivity')?.value === 'sensitive';
       randomizeTerms = document.getElementById('randomizeTerms')?.checked || true;
       console.log(`Starting game with level: ${level}, mode: ${mode}, promptType: ${promptType}, caseSensitive: ${caseSensitive}, randomizeTerms: ${randomizeTerms}`);
 
@@ -230,6 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (word) {
       const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
       const userInputText = caseSensitive ? input : input.toLowerCase();
+      console.log('Input:', userInputText, 'Target:', target);
 
       if (userInputText === target) {
         event.target.value = '';
