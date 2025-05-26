@@ -45,125 +45,101 @@
   <title>KappType</title>
   <link rel="icon" type="image/x-icon" href="/KappType/favicon.ico" />
   <link rel="stylesheet" href="styles.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" integrity="sha512-dfX5uYVXzyU8+KHqj8bjo7UkOdg18PaOgELg7nfAVQ5KRQ6V+4A8OzEAv+YPxgf3P1k3g85WbD3c2dTj6FzXhPA==" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" onerror="this.onerror=null;this.src='/KappType/papaparse.min.js';"></script>
 </head>
-<body class="natural-light">
-  <div id="startScreen">
-    <div class="start-card">
-      <h1>KappType</h1>
-      <label for="themeSelect">Theme:</label>
-      <select id="themeSelect">
-        <option value="natural-light">Natural Light</option>
-        <option value="natural-dark">Natural Dark</option>
-        <option value="architecture">Architecture</option>
-        <option value="space">Space</option>
-        <option value="medieval">Medieval</option>
-      </select>
+<body>
+  <form id="settings">
+    <label for="themeSelect">Theme:</label>
+    <select id="themeSelect">
+      <option value="natural-light">Natural Light</option>
+      <option value="natural-dark">Natural Dark</option>
+      <option value="architecture">Architecture</option>
+      <option value="space">Space</option>
+      <option value="medieval">Medieval</option>
+    </select>
 
-      <label for="levelInput">Level (1-10):</label>
-      <input type="number" id="levelInput" min="1" max="10" value="1">
-      
-      <label for="modeSelect">Mode:</label>
-      <select id="modeSelect">
-        <option value="game">Game</option>
-        <option value="practice">Practice</option>
-      </select>
+    <label for="levelSelect">Level (1-10):</label>
+    <input type="number" id="levelSelect" min="1" max="10" value="1">
 
-      <label for="promptSelect">Prompt Type:</label>
-      <select id="promptSelect">
-        <option value="definition">Definition</option>
-        <option value="term">Term</option>
-        <option value="random">Random</option>
-      </select>
+    <label for="modeSelect">Mode:</label>
+    <select id="modeSelect">
+      <option value="game">Game</option>
+      <option value="practice">Practice</option>
+    </select>
 
-      <label for="caseSelect">Case Sensitivity:</label>
-      <select id="caseSelect">
-        <option value="insensitive">Insensitive</option>
-        <option value="sensitive">Sensitive</option>
-      </select>
+    <label for="promptType">Prompt Type:</label>
+    <select id="promptType">
+      <option value="definition">Definition</option>
+      <option value="term">Term</option>
+      <option value="random">Random</option>
+    </select>
 
-      <label for="vocabSelect">Vocabulary Set:</label>
-      <select id="vocabSelect"></select>
+    <label for="caseSensitivity">Case Sensitivity:</label>
+    <select id="caseSensitivity">
+      <option value="insensitive">Insensitive</option>
+      <option value="sensitive">Sensitive</option>
+    </select>
 
-      <label for="amalgamateSelect">Amalgamate Set:</label>
-      <select id="amalgamateSelect"></select>
+    <label for="vocabSelect">Vocabulary Set:</label>
+    <select id="vocabSelect"></select>
 
-      <label for="customVocabInput">Custom Vocabulary (CSV):</label>
-      <input type="file" id="customVocabInput" accept=".csv">
+    <label for="amalgamateSelect">Amalgamate Set:</label>
+    <select id="amalgamateSelect"></select>
 
-      <label for="customVocabInput2">Amalgamation Vocabulary (CSV):</label>
-      <input type="file" id="customVocabInput2" accept=".csv">
+    <label for="customVocab">Custom Vocabulary (CSV):</label>
+    <input type="file" id="customVocab" accept=".csv">
 
-      <label class="checkbox-label">
-        <input type="checkbox" id="randomizeTerms" checked>
-        Randomize Terms
-      </label>
+    <label for="amalgamationVocab">Amalgamation Vocabulary (CSV):</label>
+    <input type="file" id="amalgamationVocab" accept=".csv">
 
-      <button id="startButton">Start Game</button>
-      <div id="loadingIndicator" class="hidden">Loading...</div>
+    <label>
+      <input type="checkbox" id="randomizeTerms" checked> Randomize Terms
+    </label>
+
+    <button type="button" id="startButton">Start Game</button>
+    <div id="loadingIndicator" class="hidden">Loading...</div>
+  </form>
+
+  <section id="game">
+    <canvas id="gameCanvas" width="800" height="350"></canvas>
+  </section>
+
+  <section id="stats">
+    <p>Score: <span id="score">0</span></p>
+    <p>Wave: <span id="wave">1</span></p>
+    <p>Time: <span id="time">30s</span></p>
+    <p>WPM: <span id="wpm">0</span></p>
+    <p>To Wave: <span id="toWave">10</span></p>
+    <p>Terms: <span id="terms">0/0</span></p>
+  </section>
+
+  <section id="input">
+    <input type="text" id="userInput" />
+  </section>
+
+  <section id="controls">
+    <button id="generateCertificate">Generate Certificate</button>
+    <button id="resetGame">Reset Game</button>
+  </section>
+
+  <section id="keyboard">
+    <div class="row">
+      <button class="key">~</button><button class="key">1</button><button class="key">2</button><button class="key">3</button><button class="key">4</button><button class="key">5</button><button class="key">6</button><button class="key">7</button><button class="key">8</button><button class="key">9</button><button class="key">0</button><button class="key">-</button><button class="key">=</button><button class="key wide">Backspace</button>
     </div>
-  </div>
-
-  <div id="gameContainer" class="hidden">
-    <h2 id="vocabSetTitle"></h2>
-    <canvas id="gameCanvas"></canvas>
-    
-    <div class="stats-container">
-  <div class="stats">
-    <span id="score">Score: 0</span>
-    <span id="wave">Wave: 1</span>
-    <span id="timer">Time: 30s</span>
-    <span id="wpm">WPM: 0</span>
-    <span id="termsToWave">To Wave: 10</span>
-    <span id="termsCovered">Terms: 0/0</span>
-  </div>
-  <div class="time-indicator-wrapper">
-    <div id="timeIndicator" class="time-indicator"></div>
-  </div>
-</div>
-    
-    <input type="text" id="userInput" placeholder="Prompt will appear here..." autocomplete="off">
-    
-    <div class="button-group">
-      <button id="certificateButton">Generate Certificate</button>
-      <button id="resetButton">Reset Game</button>
+    <div class="row">
+      <button class="key wide">Tab</button><button class="key">q</button><button class="key">w</button><button class="key">e</button><button class="key">r</button><button class="key">t</button><button class="key">y</button><button class="key">u</button><button class="key">i</button><button class="key">o</button><button class="key">p</button><button class="key">[</button><button class="key">]</button><button class="key">\</button>
     </div>
-    
-    <div class="keyboard">
-      <div class="row">
-        <span class="key" data-key="~">~</span><span class="key" data-key="1">1</span><span class="key" data-key="2">2</span><span class="key" data-key="3">3</span><span class="key" data-key="4">4</span><span class="key" data-key="5">5</span><span class="key" data-key="6">6</span><span class="key" data-key="7">7</span><span class="key" data-key="8">8</span><span class="key" data-key="9">9</span><span class="key" data-key="0">0</span><span class="key" data-key="-">-</span><span class="key" data-key="=">=</span><span class="key backspace" data-key="Backspace">Backspace</span>
-      </div>
-      <div class="row">
-        <span class="key tab" data-key="Tab">Tab</span><span class="key" data-key="q">q</span><span class="key" data-key="w">w</span><span class="key" data-key="e">e</span><span class="key" data-key="r">r</span><span class="key" data-key="t">t</span><span class="key" data-key="y">y</span><span class="key" data-key="u">u</span><span class="key" data-key="i">i</span><span class="key" data-key="o">o</span><span class="key" data-key="p">p</span><span class="key" data-key="[">[</span><span class="key" data-key="]">]</span><span class="key" data-key="\">\\</span>
-      </div>
-      <div class="row">
-        <span class="key caps-lock" data-key="CapsLock">Caps Lock</span><span class="key" data-key="a">a</span><span class="key" data-key="s">s</span><span class="key" data-key="d">d</span><span class="key" data-key="f">f</span><span class="key" data-key="g">g</span><span class="key" data-key="h">h</span><span class="key" data-key="j">j</span><span class="key" data-key="k">k</span><span class="key" data-key="l">l</span><span class="key" data-key=";">;</span><span class="key" data-key="'">'</span><span class="key enter" data-key="Enter">Enter</span>
-      </div>
-      <div class="row">
-        <span class="key shift" data-key="Shift">Shift</span><span class="key" data-key="z">z</span><span class="key" data-key="x">x</span><span class="key" data-key="c">c</span><span class="key" data-key="v">v</span><span class="key" data-key="b">b</span><span class="key" data-key="n">n</span><span class="key" data-key="m">m</span><span class="key" data-key=",">,</span><span class="key" data-key=".">.</span><span class="key" data-key="/">/</span><span class="key shift" data-key="Shift">Shift</span>
-      </div>
-      <div class="row">
-        <span class="key ctrl" data-key="Control">Ctrl</span><span class="key win" data-key="Meta">Win</span><span class="key alt" data-key="Alt">Alt</span><span class="key space" data-key=" ">Space</span><span class="key alt" data-key="Alt">Alt</span><span class="key win" data-key="Meta">Win</span><span class="key ctrl" data-key="Control">Ctrl</span>
-      </div>
+    <div class="row">
+      <button class="key wider">Caps Lock</button><button class="key">a</button><button class="key">s</button><button class="key">d</button><button class="key">f</button><button class="key">g</button><button class="key">h</button><button class="key">j</button><button class="key">k</button><button class="key">l</button><button class="key">;</button><button class="key">'</button><button class="key wide">Enter</button>
     </div>
-  </div>
+    <div class="row">
+      <button class="key wider">Shift</button><button class="key">z</button><button class="key">x</button><button class="key">c</button><button class="key">v</button><button class="key">b</button><button class="key">n</button><button class="key">m</button><button class="key">,</button><button class="key">.</button><button class="key">/</button><button class="key wider">Shift</button>
+    </div>
+    <div class="row">
+      <button class="key">Ctrl</button><button class="key">Win</button><button class="key">Alt</button><button class="key widest">Space</button><button class="key">Alt</button><button class="key">Win</button><button class="key">Ctrl</button>
+    </div>
+  </section>
 
-  <!-- Include Papa Parse -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-
-  <!-- Define defaultVocabData -->
-  <script>
-    const defaultVocabData = [
-      { Term: "Algorithm", Definition: "A set of steps to solve a problem or complete a task." },
-      { Term: "Variable", Definition: "A storage location with a symbolic name that holds a value." },
-      { Term: "Loop", Definition: "A sequence of instructions that repeats until a condition is met." },
-      // Placeholder for 53 terms (only 3 shown here for brevity)
-    ];
-  </script>
-
-  <!-- Load the game script -->
   <script type="module" src="main.js"></script>
-  <script src="path/to/papaparse.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
 </body>
 </html>
