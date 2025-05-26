@@ -9,9 +9,9 @@ export function getWordSpeed(level, mode, wave, waveSpeeds) {
   }
 }
 
-export function spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave) {
+export function spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds) {
   if (vocabData.length === 0) {
-    vocabData = [...defaultVocabData];
+    vocabData = [...defaultVocabData]; // Ensure defaultVocabData is imported or defined
   }
 
   const allVocab = [...vocabData, ...amalgamateVocab].filter(v => v && v.Term && v.Definition);
@@ -179,9 +179,9 @@ export function updateGame(ctx, words, userInput, gameActive, mode, caseSensitiv
 
   if (words.length > 0 && words[0].isExiting && words[0].opacity <= 0) {
     words = [];
-    if (mode !== 'game') spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave);
+    if (mode !== 'game') spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds);
   } else if (words.length === 0) {
-    const newWord = spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave);
+    const newWord = spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds);
     if (newWord) words.push(newWord);
   }
 
