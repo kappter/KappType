@@ -200,70 +200,40 @@ function startGame() {
   updateTimer(timerDisplay, timeLeft, totalTime, mode, sessionStartTime, elapsedTime, gameActive, wpmDisplay, sessionEndTime, score, correctTermsCount, calculateWPM, wpmActive);
 }
 
-  function handleInput(e) {
-    const typed = e.target.value;
-    if (sessionStartTime === null && typed.length > 0) {
-      sessionStartTime = performance.now();
-      currentTermStartTime = sessionStartTime;
-      wpmActive = true;
-      console.log('WPM calculation activated - First keypress detected');
+  // Inside startGame function
+function handleInput(event) {
+  if (!gameActive) return;
+
+  const input = event.target.value.trim();
+  const word = words[0];
+  if (word) {
+    const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
+    const userInputText = caseSensitive ? input : input.toLowerCase();
+
+    if (userInputText === target) {
+      event.target.value = ''; // Clear input
+      coveredTerms.set(word.typedInput, 'Correct');
+      correctTermsCount++;
+      score += Math.max(5, word.typedInput.length * 2); // Score based on length
+      totalChars += word.typedInput.length;
+      correctChars += calculateCorrectChars(word.typedInput, userInputText);
+      words.shift(); // Remove completed word
+      console.log(`Term completed. CorrectTermsCount: ${correctTermsCount}, Wave: ${wave}, Time Taken: ${(performance.now() - lastInputTime) / 1000}s, Score Increment: ${Math.max(5, word.typedInput.length * 2)}`);
+      wpmActive = false; // Deactivate WPM until next input
+      console.log('WPM calculation deactivated - Term completed');
+    } else {
+      correctChars += calculateCorrectChars(target, userInputText);
     }
-
-    words = words.filter(word => {
-      const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
-      const input = caseSensitive ? typed : typed.toLowerCase();
-      totalChars += typed.length;
-      correctChars += calculateCorrectChars(target, input);
-
-      if (target === input) {
-        const completionTime = performance.now();
-        word.completionTime = completionTime - currentTermStartTime;
-        totalChars += word.typedInput.length;
-        correctChars += word.typedInput.length;
-        score += word.typedInput.length;
-        correctTermsCount++;
-        coveredTerms.set(word.typedInput, 'Correct');
-        console.log(`Term completed. CorrectTermsCount: ${correctTermsCount}, Wave: ${wave}, Time Taken: ${word.completionTime / 1000}s, Score Increment: ${word.typedInput.length}`);
-        scoreDisplay.textContent = `Score: ${score}`;
-        e.target.value = '';
-        e.target.placeholder = 'Prompt will appear here...';
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        word.isExiting = true;
-        word.fadeState = 'out';
-        currentTermStartTime = performance.now();
-        wpmActive = false;
-        console.log('WPM calculation deactivated - Term completed');
-
-        if (mode === 'game' && correctTermsCount >= 10) {
-          console.log(`Advancing to Wave ${wave + 1}`);
-          wave++;
-          correctTermsCount = 0;
-          waveDisplay.textContent = `Wave: ${wave}`;
-          words.forEach(word => word.speed = waveSpeeds[word.spawnWave] || waveSpeeds[waveSpeeds.length - 1]);
-          const lightness = 50 + (wave - 1) * 3;
-          document.documentElement.style.setProperty('--bg-lightness', `${Math.min(lightness, 77)}%`);
-          userInput.classList.add('pulse');
-          setTimeout(() => userInput.classList.remove('pulse'), 1000);
-        }
-
-        updateStatsDisplay(scoreDisplay, waveDisplay, timerDisplay, wpmDisplay, termsToWaveDisplay, termsCoveredDisplay, score, wave, timeLeft, currentWPM, correctTermsCount, vocabData, amalgamateVocab, coveredTerms);
-        return false;
-      }
-      if (target.startsWith(input)) word.displayText = getUnderscoreText(word.typedInput, input.length > 0 ? 1 : 0);
-      else word.displayText = getUnderscoreText(word.typedInput, 0);
-      return true;
-    });
-
-    if (typed === '' && words.length === 0) {
-      const newWord = spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave);
-      if (newWord) words.push(newWord);
-      currentTermStartTime = performance.now();
-      wpmActive = true;
-      console.log('WPM calculation reactivated - New term started');
-    }
-    updateTimeIndicator(timeIndicator, sessionStartTime);
-    updateStatsDisplay(scoreDisplay, waveDisplay, timerDisplay, wpmDisplay, termsToWaveDisplay, termsCoveredDisplay, score, wave, timeLeft, currentWPM, correctTermsCount, vocabData, amalgamateVocab, coveredTerms);
   }
+  lastInputTime = performance.now();
+  if (!wpmActive && input.length > 0) {
+    wpmActive = true;
+    sessionStartTime = performance.now();
+    console.log('WPM calculation activated - First keypress detected');
+  }
+}
+
+userInput.addEventListener('input', handleInput); // Ensure this is set once and persists
 
   resetButton.addEventListener('click', () => {
     console.log('Reset button clicked');
