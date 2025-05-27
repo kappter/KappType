@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function showGameScreen() {
     document.getElementById('settings').classList.add('hidden');
-    document.getElementById('app-title').classList.add('hidden');
+    document.querySelector('.app-title').classList.add('hidden');
     document.getElementById('game').classList.remove('hidden');
     document.getElementById('stats').classList.remove('hidden');
     document.getElementById('input').classList.remove('hidden');
@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('controls').classList.add('hidden');
       document.getElementById('keyboard').classList.add('hidden');
       document.getElementById('settings').classList.remove('hidden');
-      document.getElementById('app-title').classList.remove('hidden');
+      document.querySelector('.app-title').classList.remove('hidden');
     }, 500);
   }
 
