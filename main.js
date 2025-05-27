@@ -74,7 +74,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function showGameScreen() {
     document.getElementById('settings').classList.add('hidden');
-    document.querySelector('.app-title').classList.add('hidden');
+    const appTitle = document.querySelector('.app-title');
+    if (appTitle) {
+      appTitle.classList.add('hidden');
+    } else {
+      console.warn('App title element (.app-title) not found in DOM');
+    }
     document.getElementById('game').classList.remove('hidden');
     document.getElementById('stats').classList.remove('hidden');
     document.getElementById('input').classList.remove('hidden');
@@ -102,7 +107,12 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('controls').classList.add('hidden');
       document.getElementById('keyboard').classList.add('hidden');
       document.getElementById('settings').classList.remove('hidden');
-      document.querySelector('.app-title').classList.remove('hidden');
+      const appTitle = document.querySelector('.app-title');
+      if (appTitle) {
+        appTitle.classList.remove('hidden');
+      } else {
+        console.warn('App title element (.app-title) not found in DOM');
+      }
     }, 500);
   }
 
@@ -111,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('wave').textContent = wave;
     document.getElementById('terms').textContent = `${correctTermsCount}/${vocabData.length + amalgamateVocab.length}`;
     document.getElementById('wpm').textContent = calculateWPM(totalChars, correctChars, sessionStartTime, lastInputTime || performance.now());
-    document.getElementById('time').textContent = mode === 'game' ? `${30 - Math.floor((performance.now() - sessionStartTime) / 1000)}s` : '∞';
+    document.getElementById('time').textContent = mode === 'game' ? `${Math.max(0, 30 - Math.floor((performance.now() - sessionStartTime) / 1000))}s` : '∞';
     document.getElementById('toWave').textContent = 10;
   }
 
