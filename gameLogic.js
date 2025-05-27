@@ -51,7 +51,7 @@ export function spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensi
     displayText,
     prompt: promptType === 'definition' ? wordData.Definition : wordData.Term,
     speed,
-    typedSoFar: '',
+    textAlign: 'center',
     width: ctx.measureText(displayText).width,
     height: 20
   };
@@ -75,13 +75,13 @@ export function getUnderscoreText(word, userInput, caseSensitive) {
     return word.typedInput;
   }
 
-  console.log('Showing first character due to mismatch:', word.typedInput[0] || '');
-  return word.typedInput[0] || '';
+  console.log('Showing partial word up to last correct input:', word.typedInput.slice(0, input.length) || target);
+  return word.typedInput.slice(0, input.length) || '';
 }
 
 export function renderWord(ctx, word, userInput, caseSensitive) {
   const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
-  const input = caseSensitive ? userInput : userInput.toLowerCase();
+  const input = caseSensitive ? userInput : userInput.value.toLowerCase();
   const displayText = getUnderscoreText(word, userInput, caseSensitive);
 
   ctx.font = '20px Arial';
@@ -126,7 +126,7 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
   const gradient = ctx.createLinearGradient(0, startY, 0, startY + totalHeight);
   const neonCyan = getComputedStyle(document.body).getPropertyValue('--neon-cyan').trim();
   const neonPurple = getComputedStyle(document.body).getPropertyValue('--neon-purple').trim();
-  gradient.addColorStop(0, `${neonCyan}80`); // 50% opacity
+  gradient.addColorStop(0, `${neonCyan}80`);
   gradient.addColorStop(1, `${neonPurple}80`);
 
   ctx.fillStyle = gradient;
@@ -156,7 +156,7 @@ export function updateGame(
 
   words.forEach(word => {
     word.y += word.speed * deltaTime * 60;
-    renderWord(ctx, word, userInput.value, caseSensitive);
+    renderWord(ctx, word, userInput, caseSensitive);
     wrapText(ctx, word.prompt, ctx.canvas.width / 2, ctx.canvas.height / 2, ctx.canvas.width - 40, 30);
     console.log('Rendering word:', getUnderscoreText(word, userInput.value, caseSensitive), 'at', word.x, word.y);
   });
@@ -186,8 +186,8 @@ export function calculateCorrectChars(target, input) {
   return correct;
 }
 
-export function calculateWPM(totalChars, correctChars, sessionStartTime, sessionEndTime) {
-  const timeInMinutes = (sessionEndTime - sessionStartTime) / 1000 / 60;
+export function calculateWPM(totalChars, correctChars, startTime, endTime) {
+  const timeInMinutes = (endTime - startTime) / 1000 / 60;
   if (timeInMinutes <= 0) return 0;
   return Math.min(200, Math.round((correctChars / 5) / timeInMinutes));
 }
@@ -195,4 +195,10 @@ export function calculateWPM(totalChars, correctChars, sessionStartTime, session
 export function calculateAccuracy(correctChars, totalChars) {
   if (totalChars === 0) return 0;
   return Math.round((correctChars / totalChars) * 100);
+}
+
+export function calculateTermAccuracy(coveredTerms) {
+  if (coveredTerms.size === 0) return 0;
+  const correctCount = Array.from(coveredTerms.values()).filter(status => status === 'Correct').length;
+  return Math.round((correctCount / coveredTerms.size) * 100);
 }
