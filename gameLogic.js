@@ -1,263 +1,142 @@
-export function getWordSpeed(level, mode, wave, waveSpeeds) {
-  const baseSpeed = level === 0 ? 0.15 : (level === 1 ? 0.25 : 0.5);
-  const speedIncreasePerLevel = 0.1;
-  if (mode === 'game') {
-    return waveSpeeds[wave] || waveSpeeds[waveSpeeds.length - 1];
-  } else {
-    return baseSpeed + (level > 1 ? (level - 1) * speedIncreasePerLevel : 0);
-  }
-}
-
 export function spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds, lastSpawnedWord) {
   console.log('Attempting to spawn new word');
-  if (vocabData.length === 0) {
-    console.warn('vocabData is empty, using defaultVocabData');
-    vocabData = [...defaultVocabData]; // Ensure defaultVocabData is imported or defined
-  }
-
-  const allVocab = [...vocabData, ...amalgamateVocab].filter(v => v && v.Term && v.Definition);
+  const allVocab = [...vocabData, ...amalgamateVocab];
   if (allVocab.length === 0) {
-    console.error('No valid vocab available');
+    console.error('No vocabulary available');
     return null;
   }
 
-  let index;
-  const usedIndices = [...usedVocabIndices, ...usedAmalgamateIndices];
-  const availableIndices = Array.from({ length: allVocab.length }, (_, i) => i).filter(i => !usedIndices.includes(i));
-
-  if (availableIndices.length > 0) {
-    index = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+  let wordData;
+  if (randomizeTerms) {
+    const availableIndices = Array.from({ length: allVocab.length }, (_, i) => i).filter(
+      i => !usedVocabIndices.includes(i) && !usedAmalgamateIndices.includes(i)
+    );
+    if (availableIndices.length === 0) {
+      usedVocabIndices.length = 0;
+      usedAmalgamateIndices.length = 0;
+      availableIndices.push(...Array.from({ length: allVocab.length }, (_, i) => i));
+    }
+    const randomIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+    wordData = allVocab[randomIndex];
+    if (randomIndex < vocabData.length) {
+      usedVocabIndices.push(randomIndex);
+    } else {
+      usedAmalgamateIndices.push(randomIndex - vocabData.length);
+    }
   } else {
-    console.log('Resetting used indices, all vocab cycled');
-    usedVocabIndices = [];
-    usedAmalgamateIndices = [];
-    let attempts = 0;
-    const maxAttempts = 10;
-    do {
-      index = Math.floor(Math.random() * allVocab.length);
-      attempts++;
-    } while (allVocab[index].Term === lastSpawnedWord && attempts < maxAttempts);
+    wordData = allVocab[vocabIndex % allVocab.length];
+    if (vocabIndex < vocabData.length) {
+      usedVocabIndices.push(vocabIndex);
+    } else {
+      usedAmalgamateIndices.push(vocabIndex - vocabData.length);
+    }
+    vocabIndex++;
   }
 
-  const vocab = allVocab[index];
-  let prompt, typedInput;
-  if (promptType === 'definition') {
-    prompt = vocab.Definition;
-    typedInput = vocab.Term;
-  } else if (promptType === 'term') {
-    prompt = vocab.Term;
-    typedInput = vocab.Definition;
-  } else {
-    const randomType = Math.random() < 0.5 ? 'definition' : 'term';
-    prompt = randomType === 'definition' ? vocab.Definition : vocab.Term;
-    typedInput = randomType === 'definition' ? vocab.Term : vocab.Definition;
+  if (!wordData || !wordData.Term || !wordData.Definition) {
+    console.error('Invalid word data:', wordData);
+    return null;
   }
 
-  const displayText = getUnderscoreText(typedInput, 0);
-  ctx.font = '18px Arial';
-  const textWidth = ctx.measureText(displayText).width;
-
-  const padding = 20;
-  const maxX = 800 - textWidth - padding; // Updated to match canvas width=800
-  const minX = padding;
-  const x = minX + Math.random() * (maxX - minX);
-
+  const typedInput = promptType === 'definition' ? wordData.Term : wordData.Definition;
+  const displayText = caseSensitive ? typedInput : typedInput.toLowerCase();
+  const x = Math.random() * (ctx.canvas.width - 100) + 50;
   const y = 0;
-  const speed = getWordSpeed(level, mode, wave, waveSpeeds);
-  const word = { 
-    prompt, typedInput, displayText, x, y, speed, matched: '', definition: vocab.Definition, 
-    isExiting: false, opacity: 0, fadeState: 'in', spawnWave: wave 
+  const speed = waveSpeeds[Math.min(wave - 1, waveSpeeds.length - 1)] * level;
+
+  const word = {
+    x,
+    y,
+    typedInput,
+    displayText,
+    prompt: promptType === 'definition' ? wordData.Definition : wordData.Term,
+    speed,
+    typedSoFar: '',
+    width: ctx.measureText(displayText).width,
+    height: 20
   };
 
-  if (index < vocabData.length) {
-    if (!usedVocabIndices.includes(index)) usedVocabIndices.push(index);
-  } else {
-    const amalgamateIndex = index - vocabData.length;
-    if (!usedAmalgamateIndices.includes(amalgamateIndex)) usedAmalgamateIndices.push(amalgamateIndex);
-  }
-
-  console.log('Spawned word:', typedInput);
+  console.log('Spawned word:', word.typedInput);
   return word;
 }
 
-export function updateGame(ctx, words, userInput, gameActive, mode, caseSensitive, textColor, waveSpeeds, wave, score, correctTermsCount, coveredTerms, totalChars, correctChars, missedWords, lastFrameTime, vocabData, amalgamateVocab, promptType, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, level, lastSpawnedWord) {
-  if (!gameActive) return;
+export function getUnderscoreText(word, userInput, caseSensitive) {
+  if (!word) return '';
+  const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
+  const input = caseSensitive ? userInput : userInput.toLowerCase();
 
+  if (input.length > 0 && target.startsWith(input)) {
+    console.log('Showing full word:', word.typedInput);
+    return word.typedInput;
+  }
+
+  console.log('Showing first character:', word.typedInput[0] || '');
+  return word.typedInput[0] || '';
+}
+
+export function updateGame(
+  ctx, words, userInput, gameActive, mode, caseSensitive, textColor, waveSpeeds,
+  wave, score, correctTermsCount, coveredTerms, totalChars, correctChars, missedWords,
+  lastFrameTime, vocabData, amalgamateVocab, promptType, randomizeTerms,
+  usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, level, lastSpawnedWord
+) {
   const now = performance.now();
   const deltaTime = (now - lastFrameTime) / 1000;
-  const newLastFrameTime = now;
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
-  ctx.clearRect(0, 0, 800, 350); // Updated to match canvas width=800, height=350
+  ctx.font = '20px Arial';
+  ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--canvas-text').trim();
+  ctx.textAlign = 'center';
 
-  const hexToRgb = (hex) => {
-    hex = hex.replace(/^#/, '');
-    if (hex.length === 3) hex = hex.split('').map(h => h + h).join('');
-    if (hex.length !== 6) return '255, 255, 255';
-    const r = parseInt(hex.slice(0, 2), 16);
-    const g = parseInt(hex.slice(2, 4), 16);
-    const b = parseInt(hex.slice(4, 6), 16);
-    return `${r}, ${g}, ${b}`;
-  };
-
-  if (words.length > 0) {
-    const word = words[0];
-    const definition = word.definition;
-
-    const fadeDuration = 2;
-    const fadeSpeed = 0.3 / fadeDuration;
-    if (word.fadeState === 'in') word.opacity = Math.min(word.opacity + fadeSpeed * deltaTime, 0.3);
-    else if (word.fadeState === 'out') word.opacity = Math.max(word.opacity - fadeSpeed * deltaTime, 0);
-
-    const maxWidth = 800 - 40; // Updated to match canvas width=800
-    const wordsArray = definition.split(' ');
-    let lines = [], line = '';
-    ctx.font = '32px Arial';
-    for (let w of wordsArray) {
-      const testLine = line + w + ' ';
-      if (ctx.measureText(testLine).width > maxWidth && line) {
-        lines.push(line.trim());
-        line = w + ' ';
-      } else line = testLine;
-    }
-    if (line) lines.push(line.trim());
-
-    if (lines.length > 4) {
-      lines = lines.slice(0, 3);
-      let truncated = lines[2];
-      while (ctx.measureText(truncated + '...').width > maxWidth && truncated.length) truncated = truncated.slice(0, -1);
-      lines[2] = truncated + '...';
-    }
-
-    const lineHeight = 40;
-    const totalHeight = lines.length * lineHeight;
-    const startY = (350 - totalHeight) / 2 - 20; // Updated to match canvas height=350
-    ctx.textAlign = 'center';
-
-    for (let i = 0; i < lines.length; i++) {
-      ctx.fillStyle = `rgba(${hexToRgb(textColor)}, ${word.opacity})`;
-      ctx.fillText(lines[i], 400, startY + i * lineHeight); // Updated to center on canvas width=800
-    }
+  if (!gameActive) {
+    ctx.fillText('Game Paused', ctx.canvas.width / 2, ctx.canvas.height / 2);
+    return now;
   }
 
-  const rectHeight = 20, rectY = 350 - rectHeight; // Updated to match canvas height=350
-  ctx.beginPath();
-  ctx.roundRect(0, rectY, 800, rectHeight, 8); // Updated to match canvas width=800
-  ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
-  ctx.fill();
-  ctx.strokeStyle = '#333333';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  ctx.font = '18px Arial';
-  ctx.textAlign = 'left';
-
-  words = words.filter(word => {
-    word.y += word.speed;
-    const typed = userInput.value;
-    const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
-    const input = caseSensitive ? typed : typed.toLowerCase();
-    word.matched = target.startsWith(input) ? input : '';
-
-    // Update displayText dynamically based on matched input
-    if (word.matched) {
-      const remainingLength = target.length - word.matched.length;
-      word.displayText = word.matched + '_'.repeat(remainingLength > 0 ? remainingLength : 0);
-    } else {
-      word.displayText = getUnderscoreText(target, 0);
-    }
-
-    ctx.clearRect(word.x - 5, word.y - 20, ctx.measureText(word.displayText).width + 10, 25);
-
-    if (word.matched) {
-      ctx.fillStyle = 'red';
-      ctx.fillText(word.matched, word.x, word.y);
-      const remainingText = word.displayText.slice(word.matched.length);
-      if (remainingText) {
-        ctx.fillStyle = textColor;
-        ctx.fillText(remainingText, word.x + ctx.measureText(word.matched).width, word.y);
-      }
-    } else {
-      ctx.fillStyle = textColor;
-      ctx.fillText(word.displayText, word.x, word.y);
-    }
-
-    if (word.y >= 350) { // Updated to match canvas height=350
-      console.log(`Word missed: ${word.typedInput}, Time Left: ${timeLeft}s, CorrectTermsCount: ${correctTermsCount}`);
-      missedWords.push(word.typedInput);
-      coveredTerms.set(word.typedInput, 'Missed');
-      totalChars += word.typedInput.length;
-      word.isExiting = true;
-      word.fadeState = 'out';
-      if (words.length === 1 && mode === 'game') {
-        gameActive = false;
-        sessionEndTime = performance.now();
-        console.log(`Game Over due to missed word. Score: ${score}, WPM: ${calculateWPM(wpmActive, sessionStartTime, sessionEndTime, score)}, Accuracy: ${calculateAccuracy(totalChars, correctChars)}%`);
-        alert(`Game Over! Score: ${score}, WPM: ${calculateWPM(wpmActive, sessionStartTime, sessionEndTime, score)}, Accuracy: ${calculateAccuracy(totalChars, correctChars)}%`);
-        return false;
-      }
-    }
-    return !word.isExiting;
+  words.forEach(word => {
+    word.y += word.speed * deltaTime * 60;
+    const displayText = getUnderscoreText(word, userInput.value, caseSensitive);
+    ctx.fillText(displayText, word.x, word.y);
+    ctx.fillText(word.prompt, word.x, word.y - 20);
+    console.log('Rendering word:', displayText, 'at', word.x, word.y);
   });
 
-  if (words.length > 0 && words[0].isExiting && words[0].opacity <= 0) {
-    words = [];
-    console.log('Word faded out, resetting words array');
-    if (mode !== 'game') spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds, lastSpawnedWord);
-  } else if (words.length === 0) {
-    console.log('No words left, attempting to spawn new word');
-    const newWord = spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds, lastSpawnedWord ? words.length > 0 ? words[0].typedInput : lastSpawnedWord : null);
+  words = words.filter(word => word.y < ctx.canvas.height + word.height);
+
+  if (words.length === 0) {
+    const newWord = spawnWord(
+      ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms,
+      usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex,
+      wave, level, mode, waveSpeeds, lastSpawnedWord
+    );
     if (newWord) {
       words.push(newWord);
-      console.log('New word spawned:', newWord.typedInput);
-    } else {
-      console.error('Failed to spawn new word');
     }
   }
 
-  return newLastFrameTime;
+  ctx.fillText(`Score: ${score}`, 50, 30);
+  ctx.fillText(`Wave: ${wave}`, 50, 50);
+  ctx.fillText(`Correct Terms: ${correctTermsCount}`, 50, 70);
+
+  return now;
 }
 
 export function calculateCorrectChars(target, input) {
   let correct = 0;
   for (let i = 0; i < Math.min(target.length, input.length); i++) {
     if (target[i] === input[i]) correct++;
+    else break;
   }
   return correct;
 }
 
-export function calculateWPM(wpmActive, sessionStartTime, sessionEndTime, score) {
-  if (!wpmActive) return 0;
-  const correctTermsFromCovered = Array.from(coveredTerms.values()).filter(status => status === 'Correct').length;
-  if (correctTermsFromCovered === 0) return 0;
-
-  const sessionTimeMs = (sessionEndTime || performance.now()) - sessionStartTime || 1;
-  const sessionTimeMin = sessionTimeMs / 1000 / 60;
-  const wpm = Math.round((score / 5) / sessionTimeMin);
-  console.log('WPM calc - sessionTimeMs:', sessionTimeMs, 'sessionTimeMin:', sessionTimeMin, 'score:', score, 'wpm:', wpm);
-  return Math.min(wpm, 200);
+export function calculateWPM(totalChars, correctChars, sessionStartTime, sessionEndTime) {
+  const timeInMinutes = (sessionEndTime - sessionStartTime) / 1000 / 60;
+  if (timeInMinutes <= 0) return 0;
+  return Math.round((correctChars / 5) / timeInMinutes);
 }
 
-export function calculateAccuracy(totalChars, correctChars) {
-  return totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 100;
-}
-
-export function calculateTermAccuracy(coveredTerms) {
-  const correctTerms = Array.from(coveredTerms.values()).filter(status => status === 'Correct').length;
-  const totalAttempts = coveredTerms.size;
-  return totalAttempts > 0 ? Math.round((correctTerms / totalAttempts) * 100) : 100;
-}
-
-export function getUnderscoreText(text, typedLength = 0) {
-  const maxLength = 50;
-  let displayText;
-  if (typedLength === 0) {
-    const underscoreCount = Math.min(text.length - 1, maxLength - 1);
-    displayText = text.slice(0, 1) + '_'.repeat(underscoreCount);
-  } else {
-    displayText = text;
-  }
-  if (text.length > maxLength) {
-    displayText = displayText.slice(0, 47) + '...';
-  }
-  return displayText;
+export function calculateAccuracy(correctChars, totalChars) {
+  if (totalChars === 0) return 0;
+  return Math.round((correctChars / totalChars) * 100);
 }

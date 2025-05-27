@@ -11,20 +11,20 @@ const defaultVocabData = [
 document.addEventListener('DOMContentLoaded', () => {
   console.log('DOM fully loaded and parsed');
 
-  // Get DOM elements
   const startButton = document.getElementById('startButton');
+  const resetButton = document.getElementById('resetGame');
   const userInput = document.getElementById('userInput');
   const canvas = document.getElementById('gameCanvas');
   const vocabSelect = document.getElementById('vocabSelect');
   const amalgamateSelect = document.getElementById('amalgamateSelect');
   const loadingIndicator = document.getElementById('loadingIndicator');
 
-  // Debug: Check if elements exist
-  if (!vocabSelect || !amalgamateSelect || !startButton || !userInput || !canvas || !loadingIndicator) {
+  if (!vocabSelect || !amalgamateSelect || !startButton || !resetButton || !userInput || !canvas || !loadingIndicator) {
     console.error('DOM elements missing:', {
       vocabSelect: !!vocabSelect,
       amalgamateSelect: !!amalgamateSelect,
       startButton: !!startButton,
+      resetButton: !!resetButton,
       userInput: !!userInput,
       canvas: !!canvas,
       loadingIndicator: !!loadingIndicator
@@ -33,7 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
-  // Populate dropdowns
   console.log('Calling populateVocabDropdown');
   try {
     populateVocabDropdown(vocabSelect, amalgamateSelect);
@@ -66,18 +65,44 @@ document.addEventListener('DOMContentLoaded', () => {
   let level = 1;
   let mode = 'game';
   let lastSpawnedWord = null;
-  let textColor = '#000000';
-  const waveSpeeds = [0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6];
-
-  // WPM variables
   let wpmActive = false;
   let sessionStartTime = 0;
   let sessionEndTime = 0;
   let lastInputTime = 0;
 
+  const waveSpeeds = [0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6];
+
+  function showGameScreen() {
+    document.getElementById('game').classList.add('active');
+    document.getElementById('stats').classList.add('active');
+    document.getElementById('input').classList.add('active');
+    document.getElementById('controls').classList.add('active');
+    document.getElementById('keyboard').classList.add('active');
+  }
+
+  function hideGameScreen() {
+    document.getElementById('game').classList.remove('active');
+    document.getElementById('stats').classList.remove('active');
+    document.getElementById('input').classList.remove('active');
+    document.getElementById('controls').classList.remove('active');
+    document.getElementById('keyboard').classList.remove('active');
+  }
+
+  function updateStatsDisplay() {
+    document.getElementById('score').textContent = score;
+    document.getElementById('wave').textContent = wave;
+    document.getElementById('terms').textContent = `${correctTermsCount}/${vocabData.length + amalgamateVocab.length}`;
+    document.getElementById('wpm').textContent = calculateWPM(totalChars, correctChars, sessionStartTime, lastInputTime || performance.now());
+  }
+
   startButton.addEventListener('click', () => {
     console.log('Start button clicked');
     startGame();
+  });
+
+  resetButton.addEventListener('click', () => {
+    console.log('Reset button clicked');
+    resetGame();
   });
 
   async function startGame() {
@@ -89,7 +114,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (amalgamateUrl) console.log('Loading amalgamate vocab from URL:', amalgamateUrl);
 
     try {
-      // Load primary vocabulary
       const vocabResult = await loadVocab(
         vocabUrl,
         false,
@@ -104,7 +128,6 @@ document.addEventListener('DOMContentLoaded', () => {
       vocabData = vocabResult.vocab || defaultVocabData;
       console.log(`Vocab loaded: ${vocabData.length} terms, setName: ${vocabResult.vocabSetName}`);
 
-      // Load amalgamate vocabulary
       if (amalgamateUrl) {
         const amalgamateResult = await loadVocab(
           amalgamateUrl,
@@ -124,7 +147,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('No amalgamate vocab selected');
       }
 
-      // Validate vocabulary
       if (vocabData.length === 0 && amalgamateVocab.length === 0) {
         console.warn('No valid vocabulary loaded, using default');
         vocabData = [...defaultVocabData];
@@ -137,7 +159,6 @@ document.addEventListener('DOMContentLoaded', () => {
       randomizeTerms = document.getElementById('randomizeTerms')?.checked || true;
       console.log(`Starting game with level: ${level}, mode: ${mode}, promptType: ${promptType}, caseSensitive: ${caseSensitive}, randomizeTerms: ${randomizeTerms}`);
 
-      // Reset game state
       words = [];
       gameActive = true;
       wave = 1;
@@ -163,7 +184,6 @@ document.addEventListener('DOMContentLoaded', () => {
       userInput.focus();
       userInput.value = '';
 
-      // Initial word spawn
       const newWord = spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds, lastSpawnedWord);
       if (newWord) {
         words.push(newWord);
@@ -172,6 +192,8 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Failed to spawn initial word');
       }
 
+      showGameScreen();
+      updateStatsDisplay();
       gameLoop();
       console.log('Game loop started');
     } catch (error) {
@@ -180,7 +202,6 @@ document.addEventListener('DOMContentLoaded', () => {
       vocabData = [...defaultVocabData];
       amalgamateVocab = [];
 
-      // Initialize game with default vocabulary
       level = 1;
       mode = 'game';
       promptType = 'definition';
@@ -217,9 +238,38 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Initial word spawned with default vocab:', newWord.typedInput);
       }
 
+      showGameScreen();
+      updateStatsDisplay();
       gameLoop();
       console.log('Game loop started with default vocabulary');
     }
+  }
+
+  function resetGame() {
+    console.log('Resetting game');
+    gameActive = false;
+    words = [];
+    wave = 1;
+    score = 0;
+    correctTermsCount = 0;
+    coveredTerms.clear();
+    totalChars = 0;
+    correctChars = 0;
+    missedWords = [];
+    usedVocabIndices = [];
+    usedAmalgamateIndices = [];
+    vocabIndex = 0;
+    amalgamateIndex = 0;
+    lastSpawnedWord = null;
+    wpmActive = false;
+    sessionStartTime = 0;
+    sessionEndTime = 0;
+    lastInputTime = 0;
+    userInput.value = '';
+    userInput.disabled = true;
+    hideGameScreen();
+    updateStatsDisplay();
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   }
 
   function handleInput(event) {
@@ -242,6 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
         words.shift();
         console.log(`Term completed. CorrectTermsCount: ${correctTermsCount}, Wave: ${wave}, Score: ${score}`);
         wpmActive = false;
+        updateStatsDisplay();
       } else {
         correctChars += calculateCorrectChars(target, userInputText);
       }
@@ -258,7 +309,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function gameLoop() {
     if (!gameActive) return;
 
-    lastFrameTime = updateGame(ctx, words, userInput, gameActive, mode, caseSensitive, textColor, waveSpeeds, wave, score, correctTermsCount, coveredTerms, totalChars, correctChars, missedWords, lastFrameTime, vocabData, amalgamateVocab, promptType, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, level, lastSpawnedWord);
+    lastFrameTime = updateGame(ctx, words, userInput, gameActive, mode, caseSensitive, getComputedStyle(document.body).getPropertyValue('--canvas-text').trim(), waveSpeeds, wave, score, correctTermsCount, coveredTerms, totalChars, correctChars, missedWords, lastFrameTime, vocabData, amalgamateVocab, promptType, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, level, lastSpawnedWord);
+    updateStatsDisplay();
     requestAnimationFrame(gameLoop);
   }
 
