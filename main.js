@@ -20,8 +20,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const amalgamateSelect = document.getElementById('amalgamateSelect');
   const loadingIndicator = document.getElementById('loadingIndicator');
   const generateCertificateButton = document.getElementById('generateCertificate');
+  const promptSelect = document.getElementById('promptType');
+  const pageLoadTime = performance.now();
 
-  if (!vocabSelect || !amalgamateSelect || !startButton || !resetButton || !userInput || !canvas || !loadingIndicator || !generateCertificateButton) {
+  if (!vocabSelect || !amalgamateSelect || !startButton || !resetButton || !userInput || !canvas || !loadingIndicator || !generateCertificateButton || !promptSelect) {
     console.error('DOM elements missing:', {
       vocabSelect: !!vocabSelect,
       amalgamateSelect: !!amalgamateSelect,
@@ -30,7 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
       userInput: !!userInput,
       canvas: !!canvas,
       loadingIndicator: !!loadingIndicator,
-      generateCertificateButton: !!generateCertificateButton
+      generateCertificateButton: !!generateCertificateButton,
+      promptSelect: !!promptSelect
     });
     alert('Error: Required DOM elements not found. Please check index.html.');
     return;
@@ -72,6 +75,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let wordStartTime = 0;
   let wordEndTime = 0;
   let lastWPM = 0;
+  let sessionStartTime = 0;
+  let sessionEndTime = 0;
 
   const waveSpeeds = [0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6];
 
@@ -124,8 +129,21 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('wave').textContent = wave;
     document.getElementById('terms').textContent = `${correctTermsCount}/${vocabData.length + amalgamateVocab.length}`;
     document.getElementById('wpm').textContent = lastWPM;
-    document.getElementById('time').textContent = mode === 'game' ? `${Math.max(0, 30 - Math.floor((performance.now() - wordStartTime) / 1000))}s` : '∞';
+    document.getElementById('time').textContent = mode === 'game' ? `${Math.max(0, 30 - Math.floor((performance.now() - sessionStartTime) / 1000))}s` : '∞';
     document.getElementById('toWave').textContent = 10;
+  }
+
+  function endGame() {
+    console.log('Game ended');
+    gameActive = false;
+    sessionEndTime = performance.now();
+    userInput.disabled = true;
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.font = '30px Orbitron';
+    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--neon-cyan').trim();
+    ctx.textAlign = 'center';
+    ctx.fillText('Game Over', ctx.canvas.width / 2, ctx.canvas.height / 2);
+    updateStatsDisplay();
   }
 
   startButton.addEventListener('click', () => {
@@ -140,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   generateCertificateButton.addEventListener('click', () => {
     console.log('Generate certificate button clicked');
-    generateCertificate(score, wave, correctTermsCount, lastWPM);
+    generateCertificate(pageLoadTime, sessionStartTime, sessionEndTime, score, wave, promptSelect, vocabData, amalgamateVocab, coveredTerms, lastWPM, totalChars, correctChars);
   });
 
   async function startGame() {
@@ -216,6 +234,8 @@ document.addEventListener('DOMContentLoaded', () => {
       wordStartTime = 0;
       wordEndTime = 0;
       lastWPM = 0;
+      sessionStartTime = performance.now();
+      sessionEndTime = 0;
 
       console.log(`Starting game mode at Level ${level} with speed: ${waveSpeeds[0]}`);
       userInput.disabled = false;
@@ -265,6 +285,8 @@ document.addEventListener('DOMContentLoaded', () => {
       wordStartTime = 0;
       wordEndTime = 0;
       lastWPM = 0;
+      sessionStartTime = performance.now();
+      sessionEndTime = 0;
 
       userInput.disabled = false;
       userInput.focus();
@@ -303,6 +325,8 @@ document.addEventListener('DOMContentLoaded', () => {
     wordStartTime = 0;
     wordEndTime = 0;
     lastWPM = 0;
+    sessionStartTime = 0;
+    sessionEndTime = 0;
     userInput.value = '';
     userInput.disabled = true;
     hideGameScreen();
@@ -314,8 +338,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!gameActive) return;
 
     let input = event.target.value.trim();
-    // Normalize apostrophe and quotes
-    input = input.replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"');
+    // Normalize apostrophes, quotes, and spaces
+    input = input.replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"').replace(/\s+/g, ' ');
     event.target.value = input;
     console.log('Input received:', input);
 
@@ -343,6 +367,10 @@ document.addEventListener('DOMContentLoaded', () => {
         wordStartTime = 0;
         wordEndTime = 0;
         updateStatsDisplay();
+        if (coveredTerms.size >= vocabData.length + amalgamateVocab.length) {
+          endGame();
+          return;
+        }
         if (words.length === 0) {
           const newWord = spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds, lastSpawnedWord);
           if (newWord) {
@@ -364,6 +392,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function gameLoop() {
     if (!gameActive) return;
+
+    if (mode === 'game' && performance.now() - sessionStartTime > 30000) {
+      endGame();
+      return;
+    }
 
     lastFrameTime = updateGame(ctx, words, userInput, gameActive, mode, caseSensitive, getComputedStyle(document.body).getPropertyValue('--canvas-text').trim(), waveSpeeds, wave, score, correctTermsCount, coveredTerms, totalChars, correctChars, missedWords, lastFrameTime, vocabData, amalgamateVocab, promptType, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, level, lastSpawnedWord);
     updateStatsDisplay();
