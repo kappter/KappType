@@ -101,6 +101,41 @@ export function renderWord(ctx, word, userInput, caseSensitive) {
   }
 }
 
+// Helper function to wrap text
+function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+  const words = text.split(' ');
+  let line = '';
+  const lines = [];
+  ctx.font = '24px Arial';
+
+  for (let i = 0; i < words.length; i++) {
+    const testLine = line + words[i] + ' ';
+    const metrics = ctx.measureText(testLine);
+    if (metrics.width > maxWidth && line !== '') {
+      lines.push(line.trim());
+      line = words[i] + ' ';
+    } else {
+      line = testLine;
+    }
+  }
+  lines.push(line.trim());
+
+  const totalHeight = lines.length * lineHeight;
+  const startY = y - totalHeight / 2;
+
+  const gradient = ctx.createLinearGradient(0, startY, 0, startY + totalHeight);
+  const neonCyan = getComputedStyle(document.body).getPropertyValue('--neon-cyan').trim();
+  const neonPurple = getComputedStyle(document.body).getPropertyValue('--neon-purple').trim();
+  gradient.addColorStop(0, `${neonCyan}80`); // 50% opacity
+  gradient.addColorStop(1, `${neonPurple}80`);
+
+  ctx.fillStyle = gradient;
+  ctx.textAlign = 'center';
+  lines.forEach((line, index) => {
+    ctx.fillText(line, x, startY + index * lineHeight);
+  });
+}
+
 export function updateGame(
   ctx, words, userInput, gameActive, mode, caseSensitive, textColor, waveSpeeds,
   wave, score, correctTermsCount, coveredTerms, totalChars, correctChars, missedWords,
@@ -122,10 +157,7 @@ export function updateGame(
   words.forEach(word => {
     word.y += word.speed * deltaTime * 60;
     renderWord(ctx, word, userInput.value, caseSensitive);
-    ctx.font = '16px Arial';
-    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--canvas-text').trim();
-    ctx.textAlign = 'center';
-    ctx.fillText(word.prompt, ctx.canvas.width / 2, ctx.canvas.height / 2);
+    wrapText(ctx, word.prompt, ctx.canvas.width / 2, ctx.canvas.height / 2, ctx.canvas.width - 40, 30);
     console.log('Rendering word:', getUnderscoreText(word, userInput.value, caseSensitive), 'at', word.x, word.y);
   });
 
@@ -141,13 +173,6 @@ export function updateGame(
       words.push(newWord);
     }
   }
-
-  ctx.font = '16px Arial';
-  ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--canvas-text').trim();
-  ctx.textAlign = 'left';
-  ctx.fillText(`Score: ${score}`, 50, 30);
-  ctx.fillText(`Wave: ${wave}`, 50, 50);
-  ctx.fillText(`Correct Terms: ${correctTermsCount}`, 50, 70);
 
   return now;
 }
