@@ -73,11 +73,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const waveSpeeds = [0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6];
 
   function showGameScreen() {
-    document.getElementById('game').classList.add('active');
-    document.getElementById('stats').classList.add('active');
-    document.getElementById('input').classList.add('active');
-    document.getElementById('controls').classList.add('active');
-    document.getElementById('keyboard').classList.add('active');
+    document.getElementById('settings').classList.add('hidden');
+    document.getElementById('app-title').classList.add('hidden');
+    document.getElementById('game').classList.remove('hidden');
+    document.getElementById('stats').classList.remove('hidden');
+    document.getElementById('input').classList.remove('hidden');
+    document.getElementById('controls').classList.remove('hidden');
+    document.getElementById('keyboard').classList.remove('hidden');
+    setTimeout(() => {
+      document.getElementById('game').classList.add('active');
+      document.getElementById('stats').classList.add('active');
+      document.getElementById('input').classList.add('active');
+      document.getElementById('controls').classList.add('active');
+      document.getElementById('keyboard').classList.add('active');
+    }, 10);
   }
 
   function hideGameScreen() {
@@ -86,6 +95,15 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('input').classList.remove('active');
     document.getElementById('controls').classList.remove('active');
     document.getElementById('keyboard').classList.remove('active');
+    setTimeout(() => {
+      document.getElementById('game').classList.add('hidden');
+      document.getElementById('stats').classList.add('hidden');
+      document.getElementById('input').classList.add('hidden');
+      document.getElementById('controls').classList.add('hidden');
+      document.getElementById('keyboard').classList.add('hidden');
+      document.getElementById('settings').classList.remove('hidden');
+      document.getElementById('app-title').classList.remove('hidden');
+    }, 500);
   }
 
   function updateStatsDisplay() {
@@ -93,6 +111,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('wave').textContent = wave;
     document.getElementById('terms').textContent = `${correctTermsCount}/${vocabData.length + amalgamateVocab.length}`;
     document.getElementById('wpm').textContent = calculateWPM(totalChars, correctChars, sessionStartTime, lastInputTime || performance.now());
+    document.getElementById('time').textContent = mode === 'game' ? `${30 - Math.floor((performance.now() - sessionStartTime) / 1000)}s` : '∞';
+    document.getElementById('toWave').textContent = 10;
   }
 
   startButton.addEventListener('click', () => {
@@ -293,6 +313,13 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(`Term completed. CorrectTermsCount: ${correctTermsCount}, Wave: ${wave}, Score: ${score}`);
         wpmActive = false;
         updateStatsDisplay();
+        if (words.length === 0) {
+          const newWord = spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds, lastSpawnedWord);
+          if (newWord) {
+            words.push(newWord);
+            console.log('New word spawned after completion:', newWord.typedInput);
+          }
+        }
       } else {
         correctChars += calculateCorrectChars(target, userInputText);
       }

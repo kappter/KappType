@@ -11,6 +11,7 @@
   --box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   --text: #1a1a1a;
   --canvas-text: #ffffff;
+  --active-letter: #0000ff;
   --background-pattern: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" fill="none" stroke="rgba(0,0,0,0.05)" stroke-width="1"><path d="M10 10 Q 50 90 90 10" /><path d="M10 90 Q 50 10 90 90" /></svg>');
 }
 
@@ -101,7 +102,7 @@ body::before {
 }
 
 body.medieval,
-body.medieval .start-card h1,
+body.medieval .app-title,
 body.medieval button,
 body.medieval .stats span {
   font-family: 'Cinzel', serif;
@@ -109,6 +110,16 @@ body.medieval .stats span {
 
 .hidden {
   display: none;
+}
+
+.app-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 2rem;
+  color: var(--neon-cyan);
+  text-shadow: var(--text-shadow);
+  text-align: center;
+  margin: 1rem 0;
+  animation: scaleIn 0.8s ease-in-out;
 }
 
 #settings {
@@ -377,6 +388,10 @@ body.medieval .stats span {
 }
 
 @media (min-width: 768px) and (max-width: 1024px) {
+  .app-title {
+    font-size: 1.8rem;
+  }
+
   #settings {
     padding: 15px;
     max-width: 500px;
@@ -435,6 +450,10 @@ body.medieval .stats span {
 }
 
 @media (max-width: 600px) {
+  .app-title {
+    font-size: 1.5rem;
+  }
+
   #settings {
     padding: 8px;
     width: 95%;

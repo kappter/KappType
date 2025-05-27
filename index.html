@@ -48,6 +48,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" onerror="this.onerror=null;this.src='/KappType/papaparse.min.js';"></script>
 </head>
 <body>
+  <h1 class="app-title">KappType</h1>
   <form id="settings">
     <label for="themeSelect">Theme:</label>
     <select id="themeSelect">
@@ -100,11 +101,11 @@
     <div id="loadingIndicator" class="hidden">Loading...</div>
   </form>
 
-  <section id="game">
+  <section id="game" class="hidden">
     <canvas id="gameCanvas" width="800" height="350"></canvas>
   </section>
 
-  <section id="stats">
+  <section id="stats" class="hidden">
     <p>Score: <span id="score">0</span></p>
     <p>Wave: <span id="wave">1</span></p>
     <p>Time: <span id="time">30s</span></p>
@@ -113,16 +114,16 @@
     <p>Terms: <span id="terms">0/0</span></p>
   </section>
 
-  <section id="input">
+  <section id="input" class="hidden">
     <input type="text" id="userInput" />
   </section>
 
-  <section id="controls">
+  <section id="controls" class="hidden">
     <button id="generateCertificate">Generate Certificate</button>
     <button id="resetGame">Reset Game</button>
   </section>
 
-  <section id="keyboard">
+  <section id="keyboard" class="hidden">
     <div class="row">
       <button class="key">~</button><button class="key">1</button><button class="key">2</button><button class="key">3</button><button class="key">4</button><button class="key">5</button><button class="key">6</button><button class="key">7</button><button class="key">8</button><button class="key">9</button><button class="key">0</button><button class="key">-</button><button class="key">=</button><button class="key wide">Backspace</button>
     </div>
