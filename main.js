@@ -1,5 +1,6 @@
 import { spawnWord, updateGame, calculateCorrectChars, calculateWPM, calculateAccuracy } from './gameLogic.js';
 import { populateVocabDropdown, loadVocab } from './dataLoader.js';
+import { generateCertificate } from './certificate-generator.js';
 
 const defaultVocabData = [
   { Term: 'Algorithm', Definition: 'A set of rules to solve a problem' },
@@ -18,8 +19,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const vocabSelect = document.getElementById('vocabSelect');
   const amalgamateSelect = document.getElementById('amalgamateSelect');
   const loadingIndicator = document.getElementById('loadingIndicator');
+  const generateCertificateButton = document.getElementById('generateCertificate');
 
-  if (!vocabSelect || !amalgamateSelect || !startButton || !resetButton || !userInput || !canvas || !loadingIndicator) {
+  if (!vocabSelect || !amalgamateSelect || !startButton || !resetButton || !userInput || !canvas || !loadingIndicator || !generateCertificateButton) {
     console.error('DOM elements missing:', {
       vocabSelect: !!vocabSelect,
       amalgamateSelect: !!amalgamateSelect,
@@ -27,7 +29,8 @@ document.addEventListener('DOMContentLoaded', () => {
       resetButton: !!resetButton,
       userInput: !!userInput,
       canvas: !!canvas,
-      loadingIndicator: !!loadingIndicator
+      loadingIndicator: !!loadingIndicator,
+      generateCertificateButton: !!generateCertificateButton
     });
     alert('Error: Required DOM elements not found. Please check index.html.');
     return;
@@ -66,9 +69,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let mode = 'game';
   let lastSpawnedWord = null;
   let wpmActive = false;
-  let sessionStartTime = 0;
-  let sessionEndTime = 0;
-  let lastInputTime = 0;
+  let wordStartTime = 0;
+  let wordEndTime = 0;
+  let lastWPM = 0;
 
   const waveSpeeds = [0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6];
 
@@ -120,8 +123,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('score').textContent = score;
     document.getElementById('wave').textContent = wave;
     document.getElementById('terms').textContent = `${correctTermsCount}/${vocabData.length + amalgamateVocab.length}`;
-    document.getElementById('wpm').textContent = calculateWPM(totalChars, correctChars, sessionStartTime, lastInputTime || performance.now());
-    document.getElementById('time').textContent = mode === 'game' ? `${Math.max(0, 30 - Math.floor((performance.now() - sessionStartTime) / 1000))}s` : '∞';
+    document.getElementById('wpm').textContent = lastWPM;
+    document.getElementById('time').textContent = mode === 'game' ? `${Math.max(0, 30 - Math.floor((performance.now() - wordStartTime) / 1000))}s` : '∞';
     document.getElementById('toWave').textContent = 10;
   }
 
@@ -133,6 +136,11 @@ document.addEventListener('DOMContentLoaded', () => {
   resetButton.addEventListener('click', () => {
     console.log('Reset button clicked');
     resetGame();
+  });
+
+  generateCertificateButton.addEventListener('click', () => {
+    console.log('Generate certificate button clicked');
+    generateCertificate(score, wave, correctTermsCount, lastWPM);
   });
 
   async function startGame() {
@@ -205,9 +213,9 @@ document.addEventListener('DOMContentLoaded', () => {
       amalgamateIndex = 0;
       lastSpawnedWord = null;
       wpmActive = false;
-      sessionStartTime = performance.now();
-      sessionEndTime = 0;
-      lastInputTime = 0;
+      wordStartTime = 0;
+      wordEndTime = 0;
+      lastWPM = 0;
 
       console.log(`Starting game mode at Level ${level} with speed: ${waveSpeeds[0]}`);
       userInput.disabled = false;
@@ -254,9 +262,9 @@ document.addEventListener('DOMContentLoaded', () => {
       amalgamateIndex = 0;
       lastSpawnedWord = null;
       wpmActive = false;
-      sessionStartTime = performance.now();
-      sessionEndTime = 0;
-      lastInputTime = 0;
+      wordStartTime = 0;
+      wordEndTime = 0;
+      lastWPM = 0;
 
       userInput.disabled = false;
       userInput.focus();
@@ -292,9 +300,9 @@ document.addEventListener('DOMContentLoaded', () => {
     amalgamateIndex = 0;
     lastSpawnedWord = null;
     wpmActive = false;
-    sessionStartTime = 0;
-    sessionEndTime = 0;
-    lastInputTime = 0;
+    wordStartTime = 0;
+    wordEndTime = 0;
+    lastWPM = 0;
     userInput.value = '';
     userInput.disabled = true;
     hideGameScreen();
@@ -305,7 +313,12 @@ document.addEventListener('DOMContentLoaded', () => {
   function handleInput(event) {
     if (!gameActive) return;
 
-    const input = event.target.value.trim();
+    let input = event.target.value.trim();
+    // Normalize apostrophe and quotes
+    input = input.replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"');
+    event.target.value = input;
+    console.log('Input received:', input);
+
     const word = words[0];
     if (word) {
       const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
@@ -319,9 +332,16 @@ document.addEventListener('DOMContentLoaded', () => {
         score += Math.max(5, word.typedInput.length * 2);
         totalChars += word.typedInput.length;
         correctChars += calculateCorrectChars(word.typedInput, userInputText);
+        wordEndTime = performance.now();
+        if (wpmActive && wordStartTime > 0) {
+          lastWPM = calculateWPM(word.typedInput.length, word.typedInput.length, wordStartTime, wordEndTime);
+          console.log(`Word completed, WPM: ${lastWPM}`);
+        }
         words.shift();
         console.log(`Term completed. CorrectTermsCount: ${correctTermsCount}, Wave: ${wave}, Score: ${score}`);
         wpmActive = false;
+        wordStartTime = 0;
+        wordEndTime = 0;
         updateStatsDisplay();
         if (words.length === 0) {
           const newWord = spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds, lastSpawnedWord);
@@ -335,11 +355,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    lastInputTime = performance.now();
     if (!wpmActive && input.length > 0) {
       wpmActive = true;
-      sessionStartTime = performance.now();
-      console.log('WPM calculation activated');
+      wordStartTime = performance.now();
+      console.log('WPM calculation started for new word');
     }
   }
 
@@ -352,4 +371,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   userInput.addEventListener('input', handleInput);
+
+  // Virtual keyboard handling
+  document.querySelectorAll('.key').forEach(key => {
+    key.addEventListener('click', () => {
+      const char = key.textContent;
+      console.log('Virtual key pressed:', char);
+      userInput.value += char;
+      userInput.dispatchEvent(new Event('input'));
+      key.classList.add('pressed');
+      setTimeout(() => key.classList.remove('pressed'), 100);
+    });
+  });
 });
