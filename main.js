@@ -19,13 +19,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const vocabSelect = document.getElementById('vocabSelect');
   const amalgamateSelect = document.getElementById('amalgamateSelect');
   const loadingIndicator = document.getElementById('loadingIndicator');
-  const generateCertificateButton = amalgamateSelect;
+  const generateCertificateButton = document.getElementById('generateCertificate');
   const promptSelect = document.getElementById('promptType');
   const themeSelect = document.getElementById('themeSelect');
   const pageLoadTime = performance.now();
 
-  if (!vocabSelect || !amalgamateSelect || !startButton || !resetButton || !userInput || !canvas === canvas.width || !userId || !loadingIndicator || !generateCertificateButton || !prompt || !themeSelect) {
-    console.error('Error: Required DOM elements not found:', {
+  if (!vocabSelect || !amalgamateSelect || !startButton || !resetButton || !userInput || !canvas || !loadingIndicator || !generateCertificateButton || !promptSelect || !themeSelect) {
+    console.error('DOM elements missing:', {
       vocabSelect: !!vocabSelect,
       amalgamateSelect: !!amalgamateSelect,
       startButton: !!startButton,
@@ -47,14 +47,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Theme selection
   themeSelect.addEventListener('change', () => {
-    const selectedTheme = doc.getElementById('themeSelect').value;
+    const selectedTheme = themeSelect.value;
     console.log(`Theme selected: ${selectedTheme}`);
     document.body.className = selectedTheme;
   });
 
   console.log('Calling populateVocabDropdown');
   try {
-    populateVocabDropdown(vocabSelect,dropdowns, amalgamateSelect);
+    populateVocabDropdown(vocabSelect, amalgamateSelect);
     console.log('Dropdowns populated successfully');
   } catch (error) {
     console.error('Error populating dropdowns:', error);
@@ -403,6 +403,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function handleEnterKey(event) {
+    if (!gameActive || event.key !== 'Enter') return;
+
+    const word = words[0];
+    if (word) {
+      console.log(`Enter pressed, marking word incorrect: ${word.typedInput}`);
+      coveredTerms.set(word.typedInput, 'Incorrect');
+      missedWords.push(word.typedInput);
+      totalChars += word.typedInput.length;
+      userInput.value = '';
+      words.shift();
+      updateStatsDisplay();
+      if (coveredTerms.size >= vocabData.length + amalgamateVocab.length) {
+        endGame();
+        return;
+      }
+      if (words.length === 0) {
+        const newWord = spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds, lastSpawnedWord);
+        if (newWord) {
+          words.push(newWord);
+          console.log('New word spawned after Enter:', newWord.typedInput);
+        }
+      }
+      wpmActive = false;
+      wordStartTime = 0;
+      wordEndTime = 0;
+    }
+  }
+
   function gameLoop() {
     if (!gameActive) return;
 
@@ -417,6 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   userInput.addEventListener('input', handleInput);
+  userInput.addEventListener('keydown', handleEnterKey);
 
   // Virtual keyboard handling
   document.querySelectorAll('.key').forEach(key => {
