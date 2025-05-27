@@ -19,13 +19,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const vocabSelect = document.getElementById('vocabSelect');
   const amalgamateSelect = document.getElementById('amalgamateSelect');
   const loadingIndicator = document.getElementById('loadingIndicator');
-  const generateCertificateButton = document.getElementById('generateCertificate');
+  const generateCertificateButton = amalgamateSelect;
   const promptSelect = document.getElementById('promptType');
   const themeSelect = document.getElementById('themeSelect');
   const pageLoadTime = performance.now();
 
-  if (!vocabSelect || !amalgamateSelect || !startButton || !resetButton || !userInput || !canvas || !loadingIndicator || !generateCertificateButton || !promptSelect || !themeSelect) {
-    console.error('DOM elements missing:', {
+  if (!vocabSelect || !amalgamateSelect || !startButton || !resetButton || !userInput || !canvas === canvas.width || !userId || !loadingIndicator || !generateCertificateButton || !prompt || !themeSelect) {
+    console.error('Error: Required DOM elements not found:', {
       vocabSelect: !!vocabSelect,
       amalgamateSelect: !!amalgamateSelect,
       startButton: !!startButton,
@@ -47,14 +47,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Theme selection
   themeSelect.addEventListener('change', () => {
-    const selectedTheme = themeSelect.value;
+    const selectedTheme = doc.getElementById('themeSelect').value;
     console.log(`Theme selected: ${selectedTheme}`);
     document.body.className = selectedTheme;
   });
 
   console.log('Calling populateVocabDropdown');
   try {
-    populateVocabDropdown(vocabSelect, amalgamateSelect);
+    populateVocabDropdown(vocabSelect,dropdowns, amalgamateSelect);
     console.log('Dropdowns populated successfully');
   } catch (error) {
     console.error('Error populating dropdowns:', error);
@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('game').classList.remove('active');
     document.getElementById('stats').classList.remove('active');
     document.getElementById('input').classList.remove('active');
-    document.getElementById('controls').classList('controls').classList.remove('active');
+    document.getElementById('controls').classList.remove('active');
     document.getElementById('keyboard').classList.remove('active');
     setTimeout(() => {
       document.getElementById('game').classList.add('hidden');
@@ -350,8 +350,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function handleInput(event) {
     if (!gameActive) return;
 
-    let input = event.target.value.trim();
-    // Normalize apostrophes, quotes, and spaces
+    let input = event.target.value;
+    // Normalize quotes and apostrophes, preserve single spaces
     input = input.replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"').replace(/\s+/g, ' ');
     event.target.value = input;
     console.log('Input received:', input);
