@@ -1,44 +1,67 @@
 export function spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds, lastSpawnedWord) {
   console.log('Attempting to spawn new word');
-  const allVocab = [...vocabData, ...amalgamateVocab];
-  if (allVocab.length === 0) {
-    console.error('No vocabulary available');
+  const hasAmalgamate = amalgamateVocab.length > 0;
+  let primaryWordData, amalgamateWordData;
+
+  // Select primary term
+  if (vocabData.length === 0) {
+    console.error('No primary vocabulary available');
     return null;
   }
 
-  let wordData;
   if (randomizeTerms) {
-    const availableIndices = Array.from({ length: allVocab.length }, (_, i) => i).filter(
-      i => !usedVocabIndices.includes(i) && !usedAmalgamateIndices.includes(i)
-    );
-    if (availableIndices.length === 0) {
+    const availableVocabIndices = Array.from({ length: vocabData.length }, (_, i) => i).filter(i => !usedVocabIndices.includes(i));
+    if (availableVocabIndices.length === 0) {
       usedVocabIndices.length = 0;
-      usedAmalgamateIndices.length = 0;
-      availableIndices.push(...Array.from({ length: allVocab.length }, (_, i) => i));
+      availableVocabIndices.push(...Array.from({ length: vocabData.length }, (_, i) => i));
     }
-    const randomIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
-    wordData = allVocab[randomIndex];
-    if (randomIndex < vocabData.length) {
-      usedVocabIndices.push(randomIndex);
-    } else {
-      usedAmalgamateIndices.push(randomIndex - vocabData.length);
-    }
+    const vocabRandomIndex = availableVocabIndices[Math.floor(Math.random() * availableVocabIndices.length)];
+    primaryWordData = vocabData[vocabRandomIndex];
+    usedVocabIndices.push(vocabRandomIndex);
   } else {
-    wordData = allVocab[vocabIndex % allVocab.length];
-    if (vocabIndex < vocabData.length) {
-      usedVocabIndices.push(vocabIndex);
-    } else {
-      usedAmalgamateIndices.push(vocabIndex - vocabData.length);
-    }
+    primaryWordData = vocabData[vocabIndex % vocabData.length];
+    usedVocabIndices.push(vocabIndex % vocabData.length);
     vocabIndex++;
   }
 
-  if (!wordData || !wordData.Term || !wordData.Definition) {
-    console.error('Invalid word data:', wordData);
+  // Select amalgamate term if available
+  if (hasAmalgamate) {
+    if (randomizeTerms) {
+      const availableAmalgamateIndices = Array.from({ length: amalgamateVocab.length }, (_, i) => i).filter(i => !usedAmalgamateIndices.includes(i));
+      if (availableAmalgamateIndices.length === 0) {
+        usedAmalgamateIndices.length = 0;
+        availableAmalgamateIndices.push(...Array.from({ length: amalgamateVocab.length }, (_, i) => i));
+      }
+      const amalgamateRandomIndex = availableAmalgamateIndices[Math.floor(Math.random() * availableAmalgamateIndices.length)];
+      amalgamateWordData = amalgamateVocab[amalgamateRandomIndex];
+      usedAmalgamateIndices.push(amalgamateRandomIndex);
+    } else {
+      amalgamateWordData = amalgamateVocab[amalgamateIndex % amalgamateVocab.length];
+      usedAmalgamateIndices.push(amalgamateIndex % amalgamateVocab.length);
+      amalgamateIndex++;
+    }
+  }
+
+  if (!primaryWordData || !primaryWordData.Term || !primaryWordData.Definition || (hasAmalgamate && (!amalgamateWordData || !amalgamateWordData.Term || !amalgamateWordData.Definition))) {
+    console.error('Invalid word data:', { primary: primaryWordData, amalgamate: amalgamateWordData });
     return null;
   }
 
-  const typedInput = promptType === 'definition' ? wordData.Term : wordData.Definition;
+  // Combine terms and definitions
+  const primaryTyped = promptType === 'definition' ? primaryWordData.Term : primaryWordData.Definition;
+  const primaryPrompt = promptType === 'definition' ? primaryWordData.Definition : primaryWordData.Term;
+  let typedInput, prompt;
+
+  if (hasAmalgamate) {
+    const amalgamateTyped = promptType === 'definition' ? amalgamateWordData.Term : amalgamateWordData.Definition;
+    const amalgamatePrompt = promptType === 'definition' ? amalgamateWordData.Definition : amalgamateWordData.Term;
+    typedInput = `${primaryTyped} ${amalgamateTyped}`;
+    prompt = `${primaryPrompt} ${amalgamatePrompt}`;
+  } else {
+    typedInput = primaryTyped;
+    prompt = primaryPrompt;
+  }
+
   const displayText = caseSensitive ? typedInput : typedInput.toLowerCase();
   const x = Math.random() * (ctx.canvas.width - 100) + 50;
   const y = 0;
@@ -49,14 +72,14 @@ export function spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensi
     y,
     typedInput,
     displayText,
-    prompt: promptType === 'definition' ? wordData.Definition : wordData.Term,
+    prompt,
     speed,
     textAlign: 'center',
     width: ctx.measureText(displayText).width,
     height: 20
   };
 
-  console.log('Spawned word:', word.typedInput);
+  console.log('Spawned word:', word.typedInput, 'Prompt:', word.prompt);
   return word;
 }
 

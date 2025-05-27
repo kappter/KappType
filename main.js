@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('wpm').textContent = lastWPM;
     document.getElementById('time').textContent = '∞';
     document.getElementById('lives').textContent = lives;
-    document.getElementById('toWave').textContent = Math.max(0, termsPerWave - (coveredTerms.size % termsPerWave));
+    document.getElementById('toWave').textContent = Math.max(0, termsPerWave - (coveredTerms.size / Math.max(1, amalgamateVocab.length > 0 ? 2 : 1)));
   }
 
   function endGame() {
@@ -169,9 +169,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function checkWaveCompletion() {
-    if (coveredTerms.size % termsPerWave === 0 && coveredTerms.size > 0) {
+    const termsPerSet = amalgamateVocab.length > 0 ? termsPerWave * 2 : termsPerWave;
+    if (coveredTerms.size % termsPerSet === 0 && coveredTerms.size > 0) {
       console.log(`Wave ${wave} completed`);
-      const waveTerms = Array.from(coveredTerms.entries()).slice(-termsPerWave);
+      const waveTerms = Array.from(coveredTerms.entries()).slice(-termsPerSet);
       const allCorrect = waveTerms.every(([_, status]) => status === 'Correct');
       if (allCorrect && lives < 5) {
         lives = Math.min(5, lives + 1);
@@ -437,7 +438,7 @@ document.addEventListener('DOMContentLoaded', () => {
         wordEndTime = 0;
         checkWaveCompletion();
         updateStatsDisplay();
-        if (coveredTerms.size >= vocabData.length + amalgamateVocab.length) {
+        if (coveredTerms.size >= (vocabData.length + amalgamateVocab.length) * (amalgamateVocab.length > 0 ? 2 : 1)) {
           endGame();
           return;
         }
@@ -473,7 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
       words.shift();
       checkWaveCompletion();
       updateStatsDisplay();
-      if (coveredTerms.size >= vocabData.length + amalgamateVocab.length) {
+      if (coveredTerms.size >= (vocabData.length + amalgamateVocab.length) * (amalgamateVocab.length > 0 ? 2 : 1)) {
         endGame();
         return;
       }
