@@ -101,7 +101,6 @@ export function renderWord(ctx, word, userInput, caseSensitive) {
   }
 }
 
-// Helper function to wrap text
 function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
   const words = text.split(' ');
   let line = '';
@@ -148,14 +147,22 @@ export function updateGame(
 
   if (!gameActive) {
     ctx.font = '20px Arial';
-    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--canvas-text').trim();
+    ctx.fillStyle = textColor;
     ctx.textAlign = 'center';
     ctx.fillText('Game Paused', ctx.canvas.width / 2, ctx.canvas.height / 2);
-    return now;
+    return { lastFrameTime: now, words, lostLife: false };
   }
+
+  let lostLife = false;
+  let missedWord = '';
 
   words.forEach(word => {
     word.y += word.speed * deltaTime * 60;
+    if (word.y >= ctx.canvas.height + word.height && !lostLife) {
+      console.log(`Word reached bottom: ${word.typedInput}`);
+      lostLife = true;
+      missedWord = word.typedInput;
+    }
     renderWord(ctx, word, userInput, caseSensitive);
     wrapText(ctx, word.prompt, ctx.canvas.width / 2, ctx.canvas.height / 2, ctx.canvas.width - 40, 30);
     console.log('Rendering word:', getUnderscoreText(word, userInput, caseSensitive), 'at', word.x, word.y);
@@ -163,18 +170,7 @@ export function updateGame(
 
   words = words.filter(word => word.y < ctx.canvas.height + word.height);
 
-  if (words.length === 0) {
-    const newWord = spawnWord(
-      ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms,
-      usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex,
-      wave, level, mode, waveSpeeds, lastSpawnedWord
-    );
-    if (newWord) {
-      words.push(newWord);
-    }
-  }
-
-  return now;
+  return { lastFrameTime: now, words, lostLife, missedWord };
 }
 
 export function calculateCorrectChars(target, input) {

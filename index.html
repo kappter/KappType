@@ -40,16 +40,59 @@
         </script><!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KappType</title>
-  <link rel="icon" type="image/x-icon" href="/KappType/favicon.ico" />
-  <link rel="stylesheet" href="styles.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" onerror="this.onerror=null;this.src='/KappType/papaparse.min.js';"></script>
+  <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-  <h1 class="app-title">KappType</h1>
-  <form id="settings">
+<body class="natural-light">
+  <header>
+    <h1 class="app-title">KappType</h1>
+  </header>
+
+  <div id="settings">
+    <h2>Game Settings</h2>
+    <label for="vocabSelect">Vocabulary Set:</label>
+    <select id="vocabSelect"></select>
+    <label for="amalgamateSelect">Amalgamate Set:</label>
+    <select id="amalgamateSelect"></select>
+    <label for="customVocab">Custom Vocabulary (CSV):</label>
+    <input type="file" id="customVocab" accept=".csv">
+    <label for="amalgamateVocab">Amalgamation Vocabulary (CSV):</label>
+    <input type="file" id="amalgamateVocab" accept=".csv">
+    <label for="levelSelect">Level (1-10):</label>
+    <select id="levelSelect">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6">6</option>
+      <option value="7">7</option>
+      <option value="8">8</option>
+      <option value="9">9</option>
+      <option value="10">10</option>
+    </select>
+    <label for="modeSelect">Mode:</label>
+    <select id="modeSelect">
+      <option value="game">Game</option>
+      <option value="practice">Practice</option>
+    </select>
+    <label for="promptType">Prompt Type:</label>
+    <select id="promptType">
+      <option value="definition">Definition</option>
+      <option value="term">Term</option>
+      <option value="random">Random</option>
+    </select>
+    <label for="caseSensitivity">Case Sensitivity:</label>
+    <select id="caseSensitivity">
+      <option value="insensitive">Insensitive</option>
+      <option value="sensitive">Sensitive</option>
+    </select>
+    <label for="randomizeTerms">Randomize Terms:</label>
+    <input type="checkbox" id="randomizeTerms" checked>
+    <label for="livesSelect">Lives (1-5):</label>
+    <input type="number" id="livesSelect" min="1" max="5" value="3">
     <label for="themeSelect">Theme:</label>
     <select id="themeSelect">
       <option value="natural-light">Natural Light</option>
@@ -58,94 +101,46 @@
       <option value="space">Space</option>
       <option value="medieval">Medieval</option>
     </select>
-
-    <label for="levelSelect">Level (1-10):</label>
-    <input type="number" id="levelSelect" min="1" max="10" value="1">
-
-    <label for="modeSelect">Mode:</label>
-    <select id="modeSelect">
-      <option value="game">Game</option>
-      <option value="practice">Practice</option>
-    </select>
-
-    <label for="promptType">Prompt Type:</label>
-    <select id="promptType">
-      <option value="definition">Definition</option>
-      <option value="term">Term</option>
-      <option value="random">Random</option>
-    </select>
-
-    <label for="caseSensitivity">Case Sensitivity:</label>
-    <select id="caseSensitivity">
-      <option value="insensitive">Insensitive</option>
-      <option value="sensitive">Sensitive</option>
-    </select>
-
-    <label for="vocabSelect">Vocabulary Set:</label>
-    <select id="vocabSelect"></select>
-
-    <label for="amalgamateSelect">Amalgamate Set:</label>
-    <select id="amalgamateSelect"></select>
-
-    <label for="customVocab">Custom Vocabulary (CSV):</label>
-    <input type="file" id="customVocab" accept=".csv">
-
-    <label for="amalgamationVocab">Amalgamation Vocabulary (CSV):</label>
-    <input type="file" id="amalgamationVocab" accept=".csv">
-
-    <label>
-      <input type="checkbox" id="randomizeTerms" checked> Randomize Terms
-    </label>
-
-    <button type="button" id="startButton">Start Game</button>
+    <button id="startButton">Start Game</button>
     <div id="loadingIndicator" class="hidden">Loading...</div>
-  </form>
+  </div>
 
-  <section id="game" class="hidden">
-    <canvas id="gameCanvas" width="800" height="350"></canvas>
-  </section>
+  <div id="game" class="hidden">
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+  </div>
 
-  <section id="stats" class="hidden">
+  <div id="stats" class="hidden">
     <p>Score: <span id="score">0</span></p>
     <p>Wave: <span id="wave">1</span></p>
-    <p>Time: <span id="time">30s</span></p>
-    <p>Recent WPM: <span id="wpm">0</span></p>
-    <p>To Wave: <span id="toWave">10</span></p>
     <p>Terms: <span id="terms">0/0</span></p>
-  </section>
+    <p>Recent WPM: <span id="wpm">0</span></p>
+    <p>Time: <span id="time">∞</span></p>
+    <p>Lives: <span id="lives">3</span></p>
+    <p>To Next Wave: <span id="toWave">10</span></p>
+  </div>
 
-  <section id="input" class="hidden">
-    <input type="text" id="userInput" />
-  </section>
+  <div id="input" class="hidden">
+    <input type="text" id="userInput" autocomplete="off">
+  </div>
 
-  <section id="controls" class="hidden">
-    <button id="generateCertificate">Generate Certificate</button>
+  <div id="controls" class="hidden">
     <button id="resetGame">Reset Game</button>
-  </section>
+    <button id="generateCertificate">Generate Certificate</button>
+  </div>
 
-  <section id="keyboard" class="hidden">
-    <div class="row">
-      <button class="key">~</button><button class="key">1</button><button class="key">2</button><button class="key">3</button><button class="key">4</button><button class="key">5</button><button class="key">6</button><button class="key">7</button><button class="key">8</button><button class="key">9</button><button class="key">0</button><button class="key">-</button><button class="key">=</button><button class="key wide">Backspace</button>
-    </div>
-    <div class="row">
-      <button class="key wide">Tab</button><button class="key">q</button><button class="key">w</button><button class="key">e</button><button class="key">r</button><button class="key">t</button><button class="key">y</button><button class="key">u</button><button class="key">i</button><button class="key">o</button><button class="key">p</button><button class="key">[</button><button class="key">]</button><button class="key">\</button>
-    </div>
-    <div class="row">
-      <button class="key wider">Caps Lock</button><button class="key">a</button><button class="key">s</button><button class="key">d</button><button class="key">f</button><button class="key">g</button><button class="key">h</button><button class="key">j</button><button class="key">k</button><button class="key">l</button><button class="key">;</button><button class="key">'</button><button class="key wide">Enter</button>
-    </div>
-    <div class="row">
-      <button class="key wider">Shift</button><button class="key">z</button><button class="key">x</button><button class="key">c</button><button class="key">v</button><button class="key">b</button><button class="key">n</button><button class="key">m</button><button class="key">,</button><button class="key">.</button><button class="key">/</button><button class="key wider">Shift</button>
-    </div>
-    <div class="row">
-      <button class="key">Ctrl</button><button class="key">Win</button><button class="key">Alt</button><button class="key widest">Space</button><button class="key">Alt</button><button class="key">Win</button><button class="key">Ctrl</button>
-    </div>
-  </section>
+  <div id="keyboard" class="hidden">
+    <div class="key">~</div><div class="key">1</div><div class="key">2</div><div class="key">3</div><div class="key">4</div><div class="key">5</div><div class="key">6</div><div class="key">7</div><div class="key">8</div><div class="key">9</div><div class="key">0</div><div class="key">-</div><div class="key">=</div><div class="key backspace">Backspace</div>
+    <div class="key tab">Tab</div><div class="key">q</div><div class="key">w</div><div class="key">e</div><div class="key">r</div><div class="key">t</div><div class="key">y</div><div class="key">u</div><div class="key">i</div><div class="key">o</div><div class="key">p</div><div class="key">[</div><div class="key">]</div><div class="key">\</div>
+    <div class="key caps">Caps Lock</div><div class="key">a</div><div class="key">s</div><div class="key">d</div><div class="key">f</div><div class="key">g</div><div class="key">h</div><div class="key">j</div><div class="key">k</div><div class="key">l</div><div class="key">;</div><div class="key">'</div><div class="key enter">Enter</div>
+    <div class="key shift">Shift</div><div class="key">z</div><div class="key">x</div><div class="key">c</div><div class="key">v</div><div class="key">b</div><div class="key">n</div><div class="key">m</div><div class="key">,</div><div class="key">.</div><div class="key">/</div><div class="key shift">Shift</div>
+    <div class="key ctrl">Ctrl</div><div class="key win">Win</div><div class="key alt">Alt</div><div class="key space">Space</div><div class="key alt">Alt</div><div class="key win">Win</div><div class="key ctrl">Ctrl</div>
+  </div>
 
-  <footer class="footer">
-    <p>© 2025 Ken Kapptie | For educational use only | All rights reserved. More tools like this | Want your own? | Learn by Quiz</p>
+  <footer>
+    <p>© 2025 Ken Kapptie | For educational use only | All rights reserved. <a href="#">More tools like this</a> | <a href="#">Want your own?</a> | <a href="#">Learn by Quiz</a></p>
   </footer>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
   <script type="module" src="main.js"></script>
-  <script type="module" src="certificate-generator.js"></script>
 </body>
 </html>
