@@ -6,33 +6,31 @@ body {
   flex-direction: column;
   align-items: center;
   min-height: 100vh;
-  max-width: 768px; /* iPad width */
-  margin: 0 auto;
   background-color: var(--background);
   color: var(--text);
-  overflow-x: hidden;
 }
 
 header {
   width: 100%;
   text-align: center;
-  padding: 10px 0;
+  padding: 20px 0;
   background: var(--header-bg);
 }
 
 .app-title {
-  font-size: 2em;
+  font-size: 2.5em;
   color: var(--neon-cyan);
-  text-shadow: 0 0 8px var(--neon-cyan);
+  text-shadow: 0 0 10px var(--neon-cyan);
   margin: 0;
 }
 
 #settings {
   background: var(--panel-bg);
-  padding: 10px;
-  border-radius: 8px;
-  box-shadow: 0 0 15px var(--shadow);
-  margin: 10px;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 20px var(--shadow);
+  margin: 20px;
+  max-width: 600px;
   width: 90%;
   transition: opacity 0.5s ease;
 }
@@ -42,22 +40,9 @@ header {
   pointer-events: none;
 }
 
-.settings-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-
-.settings-group {
-  flex: 1;
-  min-width: 150px;
-}
-
 #settings label {
   display: block;
-  margin: 5px 0 3px;
-  font-size: 0.9em;
+  margin: 10px 0 5px;
   font-weight: bold;
 }
 
@@ -65,28 +50,26 @@ header {
 #settings input[type="number"],
 #settings input[type="file"] {
   width: 100%;
-  padding: 6px;
-  margin-bottom: 5px;
+  padding: 8px;
+  margin-bottom: 10px;
   border: 1px solid var(--neon-cyan);
-  border-radius: 4px;
+  border-radius: 5px;
   background: var(--input-bg);
   color: var(--text);
-  font-size: 0.9em;
 }
 
 #settings input[type="checkbox"] {
-  margin-right: 8px;
+  margin-right: 10px;
 }
 
 #startButton {
   background: var(--neon-cyan);
   color: var(--background);
   border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
+  padding: 10px 20px;
+  border-radius: 5px;
   cursor: pointer;
-  font-size: 1em;
-  width: 100%;
+  font-size: 1.1em;
   transition: background 0.3s;
 }
 
@@ -97,14 +80,12 @@ header {
 #loadingIndicator {
   color: var(--neon-cyan);
   font-style: italic;
-  font-size: 0.9em;
 }
 
 #game {
-  margin: 10px;
+  margin: 20px;
   opacity: 0;
   transition: opacity 0.5s ease;
-  width: 100%;
 }
 
 #game.active {
@@ -113,24 +94,21 @@ header {
 
 #gameCanvas {
   border: 2px solid var(--neon-cyan);
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--canvas-bg);
-  box-shadow: 0 0 15px var(--shadow);
-  width: 100%;
-  max-width: 700px;
-  height: 300px; /* Reduced for iPad */
+  box-shadow: 0 0 20px var(--shadow);
 }
 
 #stats {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
+  justify-content: space-around;
   background: var(--panel-bg);
-  padding: 8px;
-  border-radius: 8px;
+  padding: 10px;
+  border-radius: 10px;
   margin: 10px 0;
-  width: 90%;
-  box-shadow: 0 0 8px var(--shadow);
+  width: 800px;
+  max-width: 90%;
+  box-shadow: 0 0 10px var(--shadow);
   opacity: 0;
   transition: opacity 0.5s ease;
 }
@@ -140,16 +118,14 @@ header {
 }
 
 #stats p {
-  margin: 5px;
+  margin: 0;
   color: var(--text);
-  font-size: 0.9em;
 }
 
 #input {
   margin: 10px 0;
   opacity: 0;
   transition: opacity 0.5s ease;
-  width: 90%;
 }
 
 #input.active {
@@ -157,12 +133,11 @@ header {
 }
 
 #userInput {
-  width: 100%;
-  max-width: 300px;
-  padding: 8px;
-  font-size: 1.1em;
+  width: 300px;
+  padding: 10px;
+  font-size: 1.2em;
   border: 2px solid var(--neon-cyan);
-  border-radius: 4px;
+  border-radius: 5px;
   background: var(--input-bg);
   color: var(--text);
   text-align: center;
@@ -170,10 +145,9 @@ header {
 
 #controls {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   opacity: 0;
   transition: opacity 0.5s ease;
-  width: 90%;
 }
 
 #controls.active {
@@ -184,11 +158,9 @@ header {
   background: var(--neon-cyan);
   color: var(--background);
   border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
+  padding: 10px 20px;
+  border-radius: 5px;
   cursor: pointer;
-  flex: 1;
-  font-size: 0.9em;
   transition: background 0.3s;
 }
 
@@ -198,14 +170,16 @@ header {
 
 #keyboard {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 4px;
   background: var(--panel-bg);
-  padding: 8px;
-  border-radius: 8px;
-  box-shadow: 0 0 8px var(--shadow);
+  padding: 10px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px var(--shadow);
   margin: 10px 0;
-  width: 90%;
+  width: 800px;
+  max-width: 90%;
   opacity: 0;
   transition: opacity 0.5s ease;
 }
@@ -214,25 +188,19 @@ header {
   opacity: 1;
 }
 
-.key-row {
-  display: flex;
-  gap: 4px;
-  justify-content: center;
-}
-
 .key {
   background: var(--key-bg);
   color: var(--text);
   border: 1px solid var(--neon-cyan);
   border-radius: 4px;
-  padding: 8px;
+  padding: 10px;
   text-align: center;
   cursor: pointer;
   transition: background 0.2s, transform 0.1s;
-  width: 36px;
-  height: 36px;
-  line-height: 36px;
-  font-size: 0.9em;
+  width: 40px;
+  height: 40px;
+  line-height: 40px;
+  font-size: 1em;
 }
 
 .key:hover {
@@ -246,24 +214,40 @@ header {
 }
 
 .key.space {
-  width: 180px;
+  width: 200px;
 }
 
 .key.backspace, .key.tab, .key.caps, .key.enter, .key.shift {
-  width: 72px;
+  width: 80px;
 }
 
 .key.ctrl, .key.win, .key.alt {
-  width: 54px;
+  width: 60px;
+}
+
+/* Keyboard row layout */
+#keyboard > .key:nth-child(-n+14) { /* Top row: ~ to Backspace */
+  order: 1;
+}
+#keyboard > .key:nth-child(n+15):nth-child(-n+28) { /* Second row: Tab to \ */
+  order: 2;
+}
+#keyboard > .key:nth-child(n+29):nth-child(-n+41) { /* Third row: Caps Lock to Enter */
+  order: 3;
+}
+#keyboard > .key:nth-child(n+42):nth-child(-n+53) { /* Fourth row: Shift to Shift */
+  order: 4;
+}
+#keyboard > .key:nth-child(n+54) { /* Bottom row: Ctrl to Ctrl */
+  order: 5;
 }
 
 footer {
   margin-top: auto;
-  padding: 10px;
+  padding: 20px;
   text-align: center;
   color: var(--text);
-  font-size: 0.8em;
-  width: 100%;
+  font-size: 0.9em;
 }
 
 footer a {
