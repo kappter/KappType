@@ -63,7 +63,7 @@ export function spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensi
 export function getUnderscoreText(word, userInput, caseSensitive) {
   if (!word) return '';
   const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
-  const input = caseSensitive ? userInput : userInput.toLowerCase();
+  const input = caseSensitive ? (userInput.value || '') : (userInput.value || '').toLowerCase();
 
   if (input.length === 0) {
     console.log('Showing first character:', word.typedInput[0] || '');
@@ -81,7 +81,7 @@ export function getUnderscoreText(word, userInput, caseSensitive) {
 
 export function renderWord(ctx, word, userInput, caseSensitive) {
   const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
-  const input = caseSensitive ? userInput : userInput.value.toLowerCase();
+  const input = caseSensitive ? (userInput.value || '') : (userInput.value || '').toLowerCase();
   const displayText = getUnderscoreText(word, userInput, caseSensitive);
 
   ctx.font = '20px Arial';
@@ -158,7 +158,7 @@ export function updateGame(
     word.y += word.speed * deltaTime * 60;
     renderWord(ctx, word, userInput, caseSensitive);
     wrapText(ctx, word.prompt, ctx.canvas.width / 2, ctx.canvas.height / 2, ctx.canvas.width - 40, 30);
-    console.log('Rendering word:', getUnderscoreText(word, userInput.value, caseSensitive), 'at', word.x, word.y);
+    console.log('Rendering word:', getUnderscoreText(word, userInput, caseSensitive), 'at', word.x, word.y);
   });
 
   words = words.filter(word => word.y < ctx.canvas.height + word.height);

@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Theme selection
   themeSelect.addEventListener('change', () => {
     const selectedTheme = themeSelect.value;
-    console.log('Theme selected:', selectedTheme);
+    console.log(`Theme selected: ${selectedTheme}`);
     document.body.className = selectedTheme;
   });
 
@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('game').classList.remove('active');
     document.getElementById('stats').classList.remove('active');
     document.getElementById('input').classList.remove('active');
-    document.getElementById('controls').classList.remove('active');
+    document.getElementById('controls').classList('controls').classList.remove('active');
     document.getElementById('keyboard').classList.remove('active');
     setTimeout(() => {
       document.getElementById('game').classList.add('hidden');
@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
           defaultVocabData
         );
         amalgamateVocab = amalgamateResult.vocab || [];
-        console.log(`Amalgamate vocab loaded: ${amalgamateVocab.length} terms, ${amalgamateResult.amalgamateSetName}`);
+        console.log(`Amalgamate vocab loaded: ${amalgamateVocab.length} terms, setName: ${amalgamateResult.amalgamateSetName}`);
       } else {
         amalgamateVocab = [];
         console.log('No amalgamate vocab selected');
