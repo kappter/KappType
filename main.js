@@ -153,10 +153,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('time').textContent = '∞';
     document.getElementById('lives').textContent = lives;
     document.getElementById('toWave').textContent = Math.max(0, termsPerWave - (coveredTerms.size / Math.max(1, amalgamateVocab.length > 0 ? 2 : 1)));
+    console.log(`Stats updated: Lives=${lives}, CoveredTerms=${coveredTerms.size}`);
   }
 
   function endGame() {
-    console.log('Game ended');
+    console.log('Game ended: Lives depleted or all terms covered');
     gameActive = false;
     sessionEndTime = performance.now();
     userInput.disabled = true;
@@ -171,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function checkWaveCompletion() {
     const termsPerSet = amalgamateVocab.length > 0 ? termsPerWave * 2 : termsPerWave;
     if (coveredTerms.size % termsPerSet === 0 && coveredTerms.size > 0) {
-      console.log(`Wave ${wave} completed`);
+      console.log(`Wave ${wave} completed, Terms covered: ${coveredTerms.size}`);
       const waveTerms = Array.from(coveredTerms.entries()).slice(-termsPerSet);
       const allCorrect = waveTerms.every(([_, status]) => status === 'Correct');
       if (allCorrect && lives < 5) {
@@ -393,18 +394,19 @@ document.addEventListener('DOMContentLoaded', () => {
     wpmActive = false;
     wordStartTime = 0;
     wordEndTime = 0;
-    lastWPM = 0;
+    lastWPM = 0';
     sessionStartTime = 0;
     sessionEndTime = 0;
     lives = Math.max(1, Math.min(5, parseInt(livesSelect.value) || 3));
+    console.log(`Resetting lives to ${lives}`);
     userInput.value = '';
     userInput.disabled = true;
     hideGameScreen();
     updateStatsDisplay();
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  }
+    ctx.clearRect(0, 0, ctx.canvasWidth, ctx.canvas.height);
+}
 
-  function handleInput(event) {
+function handleInput(event) {
     if (!gameActive) return;
 
     let input = event.target.value;
@@ -432,13 +434,14 @@ document.addEventListener('DOMContentLoaded', () => {
           console.log(`Word completed, WPM: ${lastWPM}`);
         }
         words.shift();
-        console.log(`Term completed. CorrectTermsCount: ${correctTermsCount}, Wave: ${wave}, Score: ${score}`);
+        console.log(`Term completed. CorrectTermsCount: ${correctTermsCount}, Wave: ${wave}, Score: ${score}, Lives: ${lives}`);
         wpmActive = false;
         wordStartTime = 0;
         wordEndTime = 0;
         checkWaveCompletion();
         updateStatsDisplay();
         if (coveredTerms.size >= (vocabData.length + amalgamateVocab.length) * (amalgamateVocab.length > 0 ? 2 : 1)) {
+          console.log('All terms covered, ending game');
           endGame();
           return;
         }
@@ -472,9 +475,11 @@ document.addEventListener('DOMContentLoaded', () => {
       totalChars += word.typedInput.length;
       userInput.value = '';
       words.shift();
+      console.log(`Enter skip, Lives: ${lives}, CoveredTerms: ${coveredTerms.size}`);
       checkWaveCompletion();
       updateStatsDisplay();
       if (coveredTerms.size >= (vocabData.length + amalgamateVocab.length) * (amalgamateVocab.length > 0 ? 2 : 1)) {
+        console.log('All terms covered via Enter, ending game');
         endGame();
         return;
       }
@@ -508,15 +513,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (updateResult.lostLife) {
       lives--;
-      console.log(`Life lost, remaining: ${lives}`);
+      console.log(`Life lost, Word: ${updateResult.missedWord}, Lives remaining: ${lives}`);
       coveredTerms.set(updateResult.missedWord, 'Incorrect');
       missedWords.push(updateResult.missedWord);
       totalChars += updateResult.missedWord.length;
       checkWaveCompletion();
       updateStatsDisplay();
       if (lives <= 0) {
+        console.log('No lives remaining, ending game');
         endGame();
         return;
+      }
+      // Spawn new word immediately after life loss
+      if (words.length === 0) {
+        const newWord = spawnWord(
+          ctx, vocabData, amalgamateVocab, promptType, caseSensitive,
+          randomizeTerms, usedVocabIndices, usedAmalgamateIndices,
+          vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds,
+          lastSpawnedWord
+        );
+        if (newWord) {
+          words.push(newWord);
+          console.log('New word spawned after life loss:', newWord.typedInput);
+        }
       }
     }
 

@@ -173,25 +173,28 @@ export function updateGame(
     ctx.fillStyle = textColor;
     ctx.textAlign = 'center';
     ctx.fillText('Game Paused', ctx.canvas.width / 2, ctx.canvas.height / 2);
-    return { lastFrameTime: now, words, lostLife: false };
+    return { lastFrameTime: now, words, lostLife: false, missedWord: '' };
   }
 
   let lostLife = false;
   let missedWord = '';
 
-  words.forEach(word => {
+  // Process only the first word that hits the bottom per frame
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i];
     word.y += word.speed * deltaTime * 60;
     if (word.y >= ctx.canvas.height + word.height && !lostLife) {
-      console.log(`Word reached bottom: ${word.typedInput}`);
+      console.log(`Word reached bottom: ${word.typedInput}, triggering life loss`);
       lostLife = true;
       missedWord = word.typedInput;
+      words.splice(i, 1); // Remove the word immediately
+      i--; // Adjust index after removal
+    } else {
+      renderWord(ctx, word, userInput, caseSensitive);
+      wrapText(ctx, word.prompt, ctx.canvas.width / 2, ctx.canvas.height / 2, ctx.canvas.width - 40, 30);
+      console.log('Rendering word:', getUnderscoreText(word, userInput, caseSensitive), 'at', word.x, word.y);
     }
-    renderWord(ctx, word, userInput, caseSensitive);
-    wrapText(ctx, word.prompt, ctx.canvas.width / 2, ctx.canvas.height / 2, ctx.canvas.width - 40, 30);
-    console.log('Rendering word:', getUnderscoreText(word, userInput, caseSensitive), 'at', word.x, word.y);
-  });
-
-  words = words.filter(word => word.y < ctx.canvas.height + word.height);
+  }
 
   return { lastFrameTime: now, words, lostLife, missedWord };
 }
