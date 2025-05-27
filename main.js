@@ -21,9 +21,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const loadingIndicator = document.getElementById('loadingIndicator');
   const generateCertificateButton = document.getElementById('generateCertificate');
   const promptSelect = document.getElementById('promptType');
+  const themeSelect = document.getElementById('themeSelect');
   const pageLoadTime = performance.now();
 
-  if (!vocabSelect || !amalgamateSelect || !startButton || !resetButton || !userInput || !canvas || !loadingIndicator || !generateCertificateButton || !promptSelect) {
+  if (!vocabSelect || !amalgamateSelect || !startButton || !resetButton || !userInput || !canvas || !loadingIndicator || !generateCertificateButton || !promptSelect || !themeSelect) {
     console.error('DOM elements missing:', {
       vocabSelect: !!vocabSelect,
       amalgamateSelect: !!amalgamateSelect,
@@ -33,11 +34,23 @@ document.addEventListener('DOMContentLoaded', () => {
       canvas: !!canvas,
       loadingIndicator: !!loadingIndicator,
       generateCertificateButton: !!generateCertificateButton,
-      promptSelect: !!promptSelect
+      promptSelect: !!promptSelect,
+      themeSelect: !!themeSelect
     });
     alert('Error: Required DOM elements not found. Please check index.html.');
     return;
   }
+
+  // Set default theme
+  document.body.className = 'natural-light';
+  console.log('Default theme set: natural-light');
+
+  // Theme selection
+  themeSelect.addEventListener('change', () => {
+    const selectedTheme = themeSelect.value;
+    console.log('Theme selected:', selectedTheme);
+    document.body.className = selectedTheme;
+  });
 
   console.log('Calling populateVocabDropdown');
   try {
@@ -197,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
           defaultVocabData
         );
         amalgamateVocab = amalgamateResult.vocab || [];
-        console.log(`Amalgamate vocab loaded: ${amalgamateVocab.length} terms, setName: ${amalgamateResult.amalgamateSetName}`);
+        console.log(`Amalgamate vocab loaded: ${amalgamateVocab.length} terms, ${amalgamateResult.amalgamateSetName}`);
       } else {
         amalgamateVocab = [];
         console.log('No amalgamate vocab selected');
