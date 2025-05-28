@@ -1,75 +1,86 @@
-export function spawnWord(wordData, ctx) {
-  console.log("spawnWord called with wordData:", wordData, "ctx:", ctx);
+export function spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds, lastSpawnedWord) {
+  console.log('Attempting to spawn new word');
+  const hasAmalgamate = amalgamateVocab.length > 0;
+  let primaryWordData, amalgamateWordData;
 
-  // Validate wordData
-  if (!wordData || typeof wordData !== "object" || !wordData.term || !wordData.definition) {
-    console.error("Invalid word data:", wordData);
-    return false;
+  // Select primary term
+  if (vocabData.length === 0) {
+    console.error('No primary vocabulary available');
+    return null;
   }
 
-  // Validate canvas context
-  if (!ctx || !(ctx instanceof CanvasRenderingContext2D)) {
-    console.error("Invalid canvas context:", ctx);
-    return false;
-  }
-
-  // Get promptType (adjust based on your global or passed variable)
-  const promptType = window.promptType || "definition";
-  const displayText = promptType === "definition" ? wordData.definition : wordData.term;
-
-  if (!displayText) {
-    console.error("No valid display text for:", wordData);
-    return false;
-  }
-
-  // Set up canvas drawing
-  ctx.font = "16px sans-serif"; // Adjust font as needed
-  ctx.fillStyle = "black"; // Text color
-  const x = Math.random() * (ctx.canvas.width - 100); // Random x-position
-  const y = 0; // Start at top
-
-  // Draw text
-  ctx.fillText(displayText, x, y);
-
-  // Store word data for animation (e.g., in a global array)
-  if (!window.activeWords) window.activeWords = [];
-  window.activeWords.push({
-    text: displayText,
-    x: x,
-    y: y,
-    term: wordData.term,
-    definition: wordData.definition
-  });
-
-  return true;
-}
-
-// Function to animate words (call this in gameLoop)
-export function animateWords(ctx, speed = 0.15) {
-  if (!window.activeWords) return;
-
-  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); // Clear canvas
-  window.activeWords = window.activeWords.filter(word => {
-    word.y += speed; // Move down
-    if (word.y < ctx.canvas.height) {
-      ctx.font = "16px sans-serif";
-      ctx.fillStyle = "black";
-      ctx.fillText(word.text, word.x, word.y);
-      return true; // Keep word
+  if (randomizeTerms) {
+    const availableVocabIndices = Array.from({ length: vocabData.length }, (_, i) => i).filter(i => !usedVocabIndices.includes(i));
+    if (availableVocabIndices.length === 0) {
+      usedVocabIndices.length = 0;
+      availableVocabIndices.push(...Array.from({ length: vocabData.length }, (_, i) => i));
     }
-    return false; // Remove off-screen word
-  });
-}
-
-// Function to spawn a random word
-export function spawnRandomWord(vocab, ctx) {
-  if (!vocab || !vocab.length) {
-    console.error("No vocabulary data available.");
-    return;
+    const vocabRandomIndex = availableVocabIndices[Math.floor(Math.random() * availableVocabIndices.length)];
+    primaryWordData = vocabData[vocabRandomIndex];
+    usedVocabIndices.push(vocabRandomIndex);
+  } else {
+    primaryWordData = vocabData[vocabIndex % vocabData.length];
+    usedVocabIndices.push(vocabIndex % vocabData.length);
+    vocabIndex++;
   }
-  const randomIndex = Math.floor(Math.random() * vocab.length);
-  const selectedTerm = vocab[randomIndex];
-  spawnWord(selectedTerm, ctx);
+
+  // Select amalgamate term if available
+  if (hasAmalgamate) {
+    if (randomizeTerms) {
+      const availableAmalgamateIndices = Array.from({ length: amalgamateVocab.length }, (_, i) => i).filter(i => !usedAmalgamateIndices.includes(i));
+      if (availableAmalgamateIndices.length === 0) {
+        usedAmalgamateIndices.length = 0;
+        availableAmalgamateIndices.push(...Array.from({ length: amalgamateVocab.length }, (_, i) => i));
+      }
+      const amalgamateRandomIndex = availableAmalgamateIndices[Math.floor(Math.random() * availableAmalgamateIndices.length)];
+      amalgamateWordData = amalgamateVocab[amalgamateRandomIndex];
+      usedAmalgamateIndices.push(amalgamateRandomIndex);
+    } else {
+      amalgamateWordData = amalgamateVocab[amalgamateIndex % amalgamateVocab.length];
+      usedAmalgamateIndices.push(amalgamateIndex % amalgamateVocab.length);
+      amalgamateIndex++;
+    }
+  }
+
+  if (!primaryWordData || !primaryWordData.Term || !primaryWordData.Definition || (hasAmalgamate && (!amalgamateWordData || !amalgamateWordData.Term || !amalgamateWordData.Definition))) {
+    console.error('Invalid word data:', { primary: primaryWordData, amalgamate: amalgamateWordData });
+    return null;
+  }
+
+  // Combine terms and definitions
+  const primaryTyped = promptType === 'definition' ? primaryWordData.Term : primaryWordData.Definition;
+  const primaryPrompt = promptType === 'definition' ? primaryWordData.Definition : primaryWordData.Term;
+  let typedInput, prompt;
+
+  if (hasAmalgamate) {
+    const amalgamateTyped = promptType === 'definition' ? amalgamateWordData.Term : amalgamateWordData.Definition;
+    const amalgamatePrompt = promptType === 'definition' ? amalgamateWordData.Definition : amalgamateWordData.Term;
+    typedInput = `${primaryTyped} ${amalgamateTyped}`;
+    prompt = `${primaryPrompt} ${amalgamatePrompt}`;
+  } else {
+    typedInput = primaryTyped;
+    prompt = primaryPrompt;
+  }
+
+  const displayText = caseSensitive ? typedInput : typedInput.toLowerCase();
+  const x = Math.random() * (ctx.canvas.width - 100) + 50;
+  const y = 0;
+  const speed = waveSpeeds[Math.min(wave - 1, waveSpeeds.length - 1)] * level;
+
+  const word = {
+    x,
+    y,
+    typedInput,
+    displayText,
+    prompt,
+    speed,
+    textAlign: 'center',
+    width: ctx.measureText(displayText).width,
+    height: 20
+  };
+
+  console.log('Spawned word:', word.typedInput, 'Prompt:', word.prompt);
+  return word;
 }
 
 export function getUnderscoreText(word, userInput, caseSensitive) {
@@ -87,7 +98,7 @@ export function getUnderscoreText(word, userInput, caseSensitive) {
     return word.typedInput;
   }
 
-  console.log('Showing partial word up to last correct input:', word.typedInput.slice(0, input.length) || '');
+  console.log('Showing partial word up to last correct input:', word.typedInput.slice(0, input.length) || target);
   return word.typedInput.slice(0, input.length) || '';
 }
 
@@ -96,7 +107,7 @@ export function renderWord(ctx, word, userInput, caseSensitive) {
   const input = caseSensitive ? (userInput.value || '') : (userInput.value || '').toLowerCase();
   const displayText = getUnderscoreText(word, userInput, caseSensitive);
 
-  ctx.font = '20px monospace';
+  ctx.font = '20px Arial';
   ctx.textAlign = 'center';
 
   if (displayText.length === 1) {
@@ -117,7 +128,7 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
   const words = text.split(' ');
   let line = '';
   const lines = [];
-  ctx.font = '24px monospace';
+  ctx.font = '24px Arial';
 
   for (let i = 0; i < words.length; i++) {
     const testLine = line + words[i] + ' ';
@@ -158,7 +169,7 @@ export function updateGame(
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
   if (!gameActive) {
-    ctx.font = '20px monospace';
+    ctx.font = '20px Arial';
     ctx.fillStyle = textColor;
     ctx.textAlign = 'center';
     ctx.fillText('Game Paused', ctx.canvas.width / 2, ctx.canvas.height / 2);
@@ -172,11 +183,11 @@ export function updateGame(
   for (let i = 0; i < words.length; i++) {
     const word = words[i];
     word.y += word.speed * deltaTime * 60;
-    if (word.y >= ctx.canvas.height && !lostLife) {
+    if (word.y >= ctx.canvas.height + word.height && !lostLife) {
       console.log(`Word reached bottom: ${word.typedInput}, triggering life loss`);
       lostLife = true;
       missedWord = word.typedInput;
-      words.splice(i, 1); // Remove one word
+      words.splice(i, 1); // Remove the word immediately
       i--; // Adjust index after removal
     } else {
       renderWord(ctx, word, userInput, caseSensitive);
@@ -191,34 +202,25 @@ export function updateGame(
 export function calculateCorrectChars(target, input) {
   let correct = 0;
   for (let i = 0; i < Math.min(target.length, input.length); i++) {
-    if (target[i] === input[i]) {
-      correct++;
-    } else {
-      break;
-    }
+    if (target[i] === input[i]) correct++;
+    else break;
   }
   return correct;
 }
 
 export function calculateWPM(totalChars, correctChars, startTime, endTime) {
   const timeInMinutes = (endTime - startTime) / 1000 / 60;
-  if (timeInMinutes <= 0) {
-    return 0;
-  }
+  if (timeInMinutes <= 0) return 0;
   return Math.min(200, Math.round((correctChars / 5) / timeInMinutes));
 }
 
 export function calculateAccuracy(correctChars, totalChars) {
-  if (totalChars === 0) {
-    return 0;
-  }
+  if (totalChars === 0) return 0;
   return Math.round((correctChars / totalChars) * 100);
 }
 
 export function calculateTermAccuracy(coveredTerms) {
-  if (coveredTerms.size === 0) {
-    return 0;
-  }
+  if (coveredTerms.size === 0) return 0;
   const correctCount = Array.from(coveredTerms.values()).filter(status => status === 'Correct').length;
   return Math.round((correctCount / coveredTerms.size) * 100);
 }

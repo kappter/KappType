@@ -1,8 +1,6 @@
-import { spawnWord, updateGame, calculateCorrectChars, calculateWPM } from './gameLogic.js';
+import { spawnWord, updateGame, calculateCorrectChars, calculateWPM, calculateAccuracy } from './gameLogic.js';
 import { populateVocabDropdown, loadVocab } from './dataLoader.js';
 import { generateCertificate } from './certificate-generator.js';
-import { spawnRandomWord } from './gameLogic.js';
-import { animateWords, spawnRandomWord } from './gameLogic.js';
 
 const defaultVocabData = [
   { Term: 'Algorithm', Definition: 'A set of rules to solve a problem' },
@@ -115,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('stats').classList.remove('hidden');
     document.getElementById('input').classList.remove('hidden');
     document.getElementById('controls').classList.remove('hidden');
-    document.getElementById('keyboard').classList.add('hidden');
+    document.getElementById('keyboard').classList.remove('hidden');
     setTimeout(() => {
       document.getElementById('game').classList.add('active');
       document.getElementById('stats').classList.add('active');
@@ -220,22 +218,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function startGame() {
     console.log('startGame initiated');
-    const canvas = document.getElementById("gameCanvas");
-  if (!canvas) {
-    console.error("Canvas element not found.");
-    return;
-  }
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    console.error("Failed to get canvas context.");
-    return;
-  }
-
-  const vocab = window.vocabData || []; // Adjust based on your variable
-  if (!vocab.length) {
-    console.error("No vocabulary loaded.");
-    return;
-  }
     let vocabUrl = vocabSelect.value;
     let amalgamateUrl = amalgamateSelect.value;
     const customVocabFile = customVocabInput.files[0];
@@ -387,11 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       showGameScreen();
       updateStatsDisplay();
-      // Spawn initial word
-  spawnRandomWord(vocab, ctx);
-
-  // Start game loop
-  gameLoop(ctx);
+      gameLoop();
       console.log('Game loop started with default vocabulary');
     }
   }
@@ -432,14 +410,14 @@ document.addEventListener('DOMContentLoaded', () => {
     let input = event.target.value;
     // Normalize quotes and apostrophes, preserve single spaces
     input = input.replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"').replace(/\s+/g, ' ');
-    userInput.value = input;
+    event.target.value = input;
     console.log('Input received:', input);
 
     const word = words[0];
     if (word) {
       const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
       const userInputText = caseSensitive ? input : input.toLowerCase();
-      console.log(`Input: ${userInputText}, Target: ${target}`);
+      console.log('Input:', userInputText, 'Target:', target);
 
       if (userInputText === target) {
         event.target.value = '';
@@ -501,12 +479,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       if (words.length === 0) {
-        const newWord = spawnWord(
-          ctx, vocabData, amalgamateVocab, promptType, caseSensitive,
-          randomizeTerms, usedVocabIndices, usedAmalgamateIndices,
-          vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds,
-          lastSpawnedWord
-        );
+        const newWord = spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds, lastSpawnedWord);
         if (newWord) {
           words.push(newWord);
           console.log('New word spawned after Enter:', newWord.typedInput);
@@ -518,13 +491,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function gameLoop(ctx) {
-    animateWords(ctx, 0.15); // Animate existing words
+  function gameLoop() {
     if (!gameActive) return;
-    if (!window.lastSpawnTime || Date.now() - window.lastSpawnTime > 2000) {
-    spawnRandomWord(window.vocabData || [], ctx);
-    window.lastSpawnTime = Date.now();
-  }
 
     const updateResult = updateGame(
       ctx, words, userInput, gameActive, mode, caseSensitive,
@@ -566,7 +534,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     updateStatsDisplay();
-    requestAnimationFrame(() => gameLoop(ctx));
+    requestAnimationFrame(gameLoop);
   }
 
   userInput.addEventListener('input', handleInput);
@@ -590,7 +558,6 @@ document.addEventListener('DOMContentLoaded', () => {
       userInput.dispatchEvent(new Event('input'));
       key.classList.add('pressed');
       setTimeout(() => key.classList.remove('pressed'), 100);
-      console.log('Key visual feedback triggered');
     });
   });
 });
