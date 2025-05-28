@@ -1,4 +1,4 @@
-import { spawnWord, updateGame, calculateCorrectChars, calculateWPM, calculateAccuracy } from './gameLogic.js';
+import { spawnWord, updateGame, calculateCorrectChars, calculateWPM } from './gameLogic.js';
 import { populateVocabDropdown, loadVocab } from './dataLoader.js';
 import { generateCertificate } from './certificate-generator.js';
 
