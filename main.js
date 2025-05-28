@@ -1,6 +1,8 @@
 import { spawnWord, updateGame, calculateCorrectChars, calculateWPM } from './gameLogic.js';
 import { populateVocabDropdown, loadVocab } from './dataLoader.js';
 import { generateCertificate } from './certificate-generator.js';
+import { spawnRandomWord } from './gameLogic.js';
+import { animateWords, spawnRandomWord } from './gameLogic.js';
 
 const defaultVocabData = [
   { Term: 'Algorithm', Definition: 'A set of rules to solve a problem' },
@@ -218,6 +220,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function startGame() {
     console.log('startGame initiated');
+    const canvas = document.getElementById("gameCanvas");
+  if (!canvas) {
+    console.error("Canvas element not found.");
+    return;
+  }
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    console.error("Failed to get canvas context.");
+    return;
+  }
+
+  const vocab = window.vocabData || []; // Adjust based on your variable
+  if (!vocab.length) {
+    console.error("No vocabulary loaded.");
+    return;
+  }
     let vocabUrl = vocabSelect.value;
     let amalgamateUrl = amalgamateSelect.value;
     const customVocabFile = customVocabInput.files[0];
@@ -369,7 +387,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       showGameScreen();
       updateStatsDisplay();
-      gameLoop();
+      // Spawn initial word
+  spawnRandomWord(vocab, ctx);
+
+  // Start game loop
+  gameLoop(ctx);
       console.log('Game loop started with default vocabulary');
     }
   }
@@ -496,8 +518,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function gameLoop() {
+  function gameLoop(ctx) {
+    animateWords(ctx, 0.15); // Animate existing words
     if (!gameActive) return;
+    if (!window.lastSpawnTime || Date.now() - window.lastSpawnTime > 2000) {
+    spawnRandomWord(window.vocabData || [], ctx);
+    window.lastSpawnTime = Date.now();
+  }
 
     const updateResult = updateGame(
       ctx, words, userInput, gameActive, mode, caseSensitive,
@@ -539,7 +566,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     updateStatsDisplay();
-    requestAnimationFrame(gameLoop);
+    requestAnimationFrame(() => gameLoop(ctx));
   }
 
   userInput.addEventListener('input', handleInput);
