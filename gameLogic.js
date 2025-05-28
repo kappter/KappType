@@ -1,85 +1,56 @@
-export function spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds, lastSpawnedWord) {
-  console.log('Attempting to spawn new word');
-  const hasAmalgamate = amalgamateVocab.length > 0;
-  let primaryWordData, amalgamateWordData;
+export function spawnWord(wordData) {
+  console.log("spawnWord called with:", wordData);
 
-  // Select primary term
-  if (vocabData.length === 0) {
-    console.error('No primary vocabulary available');
-    return null;
+  // Validate wordData
+  if (!wordData || typeof wordData !== "object" || !wordData.term || !wordData.definition) {
+    console.error("Invalid word data:", wordData);
+    return false;
   }
 
-  if (randomizeTerms) {
-    const availableVocabIndices = Array.from({ length: vocabData.length }, (_, i) => i).filter(i => !usedVocabIndices.includes(i));
-    if (availableVocabIndices.length === 0) {
-      usedVocabIndices.length = 0;
-      availableVocabIndices.push(...Array.from({ length: vocabData.length }, (_, i) => i));
-    }
-    const vocabRandomIndex = availableVocabIndices[Math.floor(Math.random() * availableVocabIndices.length)];
-    primaryWordData = vocabData[vocabRandomIndex];
-    usedVocabIndices.push(vocabRandomIndex);
-  } else {
-    primaryWordData = vocabData[vocabIndex % vocabData.length];
-    usedVocabIndices.push(vocabIndex % vocabData.length);
-    vocabIndex++;
+  // Check for game container
+  const gameContainer = document.getElementById("game-container"); // Adjust ID if different
+  if (!gameContainer) {
+    console.error("Game container not found. Check HTML layout.");
+    return false;
   }
 
-  // Select amalgamate term if available
-  if (hasAmalgamate) {
-    if (randomizeTerms) {
-      const availableAmalgamateIndices = Array.from({ length: amalgamateVocab.length }, (_, i) => i).filter(i => !usedAmalgamateIndices.includes(i));
-      if (availableAmalgamateIndices.length === 0) {
-        usedAmalgamateIndices.length = 0;
-        availableAmalgamateIndices.push(...Array.from({ length: amalgamateVocab.length }, (_, i) => i));
-      }
-      const amalgamateRandomIndex = availableAmalgamateIndices[Math.floor(Math.random() * availableAmalgamateIndices.length)];
-      amalgamateWordData = amalgamateVocab[amalgamateRandomIndex];
-      usedAmalgamateIndices.push(amalgamateRandomIndex);
+  // Get promptType (adjust based on your code; might be global or passed)
+  const promptType = window.promptType || "definition";
+  const displayText = promptType === "definition" ? wordData.definition : wordData.term;
+
+  if (!displayText) {
+    console.error("No valid display text for:", wordData);
+    return false;
+  }
+
+  // Create word element
+  const wordElement = document.createElement("div");
+  wordElement.className = "word";
+  wordElement.textContent = displayText;
+
+  // Set initial position
+  wordElement.style.position = "absolute";
+  wordElement.style.left = `${Math.random() * (gameContainer.offsetWidth - 100)}px`;
+  wordElement.style.top = "0px";
+
+  // Append to container
+  gameContainer.appendChild(wordElement);
+
+  // Animate word
+  let posY = 0;
+  const speed = 0.15; // From your log
+  function animate() {
+    posY += speed;
+    wordElement.style.top = `${posY}px`;
+    if (posY < gameContainer.offsetHeight) {
+      requestAnimationFrame(animate);
     } else {
-      amalgamateWordData = amalgamateVocab[amalgamateIndex % amalgamateVocab.length];
-      usedAmalgamateIndices.push(amalgamateIndex % amalgamateVocab.length);
-      amalgamateIndex++;
+      wordElement.remove();
     }
   }
+  animate();
 
-  if (!primaryWordData || !primaryWordData.term || !primaryWordData.Definition || (hasAmalgamate && (!amalgamateWordData || !amalgamateWordData.term || !amalgamateWordData.Definition))) {
-    console.error('Invalid word data:', { primary: primaryWordData, secondary: amalgamateWordData });
-    return null;
-  }
-
-  // Combine terms and definitions
-  const primaryTyped = promptType === 'definition' ? primaryWordData.term : primaryWordData.definition;
-  const primaryPrompt = promptType === 'definition' ? primaryWordData.definition : primaryWordData.term;
-  let typedInput, prompt;
-
-  if (hasAmalgamate) {
-    const amalgamateTyped = promptType === 'definition' ? amalgamateWordData.term : amalgamateWordData.definition;
-    const amalgamatePrompt = promptType === 'definition' ? amalgamateWordData.definition : amalgamateWordData.term;
-    typedInput = `${primaryTyped} ${amalgamateTyped}`;
-    prompt = `${primaryPrompt} ${amalgamatePrompt}`;
-  } else {
-    typedInput = primaryTyped;
-    prompt = primaryPrompt;
-  }
-
-  const displayText = caseSensitive ? typedInput : typedInput.toLowerCase();
-  const x = Math.max(100, Math.min(700, Math.random() * 200 - 100 + ctx.canvas.width / 2)); // Center ±100px, clamped
-  const y = 0;
-  const speed = waveSpeeds[Math.min(wave - 1, waveSpeeds.length - 1)];
-  const word = {
-    x,
-    y,
-    typedInput,
-    displayText,
-    prompt,
-    speed,
-    textAlign: 'center',
-    width: ctx.measureText(displayText).width,
-    height: 20
-  };
-
-  console.log('Spawned word:', word.typedInput, 'Prompt:', prompt);
-  return word;
+  return true;
 }
 
 export function getUnderscoreText(word, userInput, caseSensitive) {
