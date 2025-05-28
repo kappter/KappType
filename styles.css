@@ -170,16 +170,15 @@ header {
 
 #keyboard {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 4px;
+  flex-direction: column;
+  gap: 6px;
   background: var(--panel-bg);
-  padding: 10px;
+  padding: 15px;
   border-radius: 10px;
   box-shadow: 0 0 10px var(--shadow);
   margin: 10px 0;
-  width: 800px;
-  max-width: 90%;
+  width: 900px;
+  max-width: 95%;
   opacity: 0;
   transition: opacity 0.5s ease;
 }
@@ -188,19 +187,40 @@ header {
   opacity: 1;
 }
 
+#keyboard .row {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+#keyboard .row:nth-child(2) {
+  margin-left: 30px; /* Stagger second row */
+}
+
+#keyboard .row:nth-child(3) {
+  margin-left: 60px; /* Stagger third row */
+}
+
+#keyboard .row:nth-child(4) {
+  margin-left: 90px; /* Stagger fourth row */
+}
+
 .key {
   background: var(--key-bg);
   color: var(--text);
   border: 1px solid var(--neon-cyan);
   border-radius: 4px;
-  padding: 10px;
+  padding: 0;
   text-align: center;
   cursor: pointer;
   transition: background 0.2s, transform 0.1s;
-  width: 40px;
-  height: 40px;
-  line-height: 40px;
-  font-size: 1em;
+  width: 42px;
+  height: 42px;
+  line-height: 42px;
+  font-size: 1.1em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .key:hover {
@@ -214,11 +234,11 @@ header {
 }
 
 .key.space {
-  width: 200px;
+  width: 240px;
 }
 
 .key.backspace, .key.tab, .key.caps, .key.enter, .key.shift {
-  width: 80px;
+  width: 90px;
 }
 
 .key.ctrl, .key.win, .key.alt {
