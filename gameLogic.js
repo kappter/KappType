@@ -1,5 +1,5 @@
-export function spawnWord(wordData) {
-  console.log("spawnWord called with:", wordData);
+export function spawnWord(wordData, ctx) {
+  console.log("spawnWord called with wordData:", wordData, "ctx:", ctx);
 
   // Validate wordData
   if (!wordData || typeof wordData !== "object" || !wordData.term || !wordData.definition) {
@@ -7,14 +7,13 @@ export function spawnWord(wordData) {
     return false;
   }
 
-  // Check for game container
-  const gameContainer = document.getElementById("game-container"); // Adjust ID if different
-  if (!gameContainer) {
-    console.error("Game container not found. Check HTML layout.");
+  // Validate canvas context
+  if (!ctx || !(ctx instanceof CanvasRenderingContext2D)) {
+    console.error("Invalid canvas context:", ctx);
     return false;
   }
 
-  // Get promptType (adjust based on your code; might be global or passed)
+  // Get promptType (adjust based on your global or passed variable)
   const promptType = window.promptType || "definition";
   const displayText = promptType === "definition" ? wordData.definition : wordData.term;
 
@@ -23,34 +22,54 @@ export function spawnWord(wordData) {
     return false;
   }
 
-  // Create word element
-  const wordElement = document.createElement("div");
-  wordElement.className = "word";
-  wordElement.textContent = displayText;
+  // Set up canvas drawing
+  ctx.font = "16px sans-serif"; // Adjust font as needed
+  ctx.fillStyle = "black"; // Text color
+  const x = Math.random() * (ctx.canvas.width - 100); // Random x-position
+  const y = 0; // Start at top
 
-  // Set initial position
-  wordElement.style.position = "absolute";
-  wordElement.style.left = `${Math.random() * (gameContainer.offsetWidth - 100)}px`;
-  wordElement.style.top = "0px";
+  // Draw text
+  ctx.fillText(displayText, x, y);
 
-  // Append to container
-  gameContainer.appendChild(wordElement);
-
-  // Animate word
-  let posY = 0;
-  const speed = 0.15; // From your log
-  function animate() {
-    posY += speed;
-    wordElement.style.top = `${posY}px`;
-    if (posY < gameContainer.offsetHeight) {
-      requestAnimationFrame(animate);
-    } else {
-      wordElement.remove();
-    }
-  }
-  animate();
+  // Store word data for animation (e.g., in a global array)
+  if (!window.activeWords) window.activeWords = [];
+  window.activeWords.push({
+    text: displayText,
+    x: x,
+    y: y,
+    term: wordData.term,
+    definition: wordData.definition
+  });
 
   return true;
+}
+
+// Function to animate words (call this in gameLoop)
+export function animateWords(ctx, speed = 0.15) {
+  if (!window.activeWords) return;
+
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); // Clear canvas
+  window.activeWords = window.activeWords.filter(word => {
+    word.y += speed; // Move down
+    if (word.y < ctx.canvas.height) {
+      ctx.font = "16px sans-serif";
+      ctx.fillStyle = "black";
+      ctx.fillText(word.text, word.x, word.y);
+      return true; // Keep word
+    }
+    return false; // Remove off-screen word
+  });
+}
+
+// Function to spawn a random word
+export function spawnRandomWord(vocab, ctx) {
+  if (!vocab || !vocab.length) {
+    console.error("No vocabulary data available.");
+    return;
+  }
+  const randomIndex = Math.floor(Math.random() * vocab.length);
+  const selectedTerm = vocab[randomIndex];
+  spawnWord(selectedTerm, ctx);
 }
 
 export function getUnderscoreText(word, userInput, caseSensitive) {
