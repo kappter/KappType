@@ -42,6 +42,27 @@ header {
   margin: 0;
 }
 
+#settings, #game, #stats, #input, #controls, #keyboard {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  transform: translateY(0);
+}
+
+#settings.hidden {
+  opacity: 0;
+  transform: translateY(-20px); /* Slight slide-up effect */
+  pointer-events: none;
+}
+
+#game, #stats, #input, #controls, #keyboard {
+  opacity: 0;
+  transform: translateY(20px); /* Slide-down when hidden */
+}
+
+#game.active, #stats.active, #input.active, #controls.active, #keyboard.active {
+  opacity: 1;
+  transform: translateY(0); /* Slide back to position */
+}
+
 #settings {
   background: var(--panel-bg);
   padding: 15px;
