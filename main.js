@@ -1,7 +1,7 @@
 import { populateVocabDropdown, loadVocab } from './dataLoader.js';
 import { startGame } from './gameLogic.js';
 import { generateCertificate } from './certificate-generator.js';
-import { updateUI, updateStats } from './uiUtils.js';
+import { updateStatsDisplay } from './uiUtils.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const vocabSelect = document.getElementById('vocabSelect');
@@ -141,6 +141,7 @@ function createVirtualKeyboard() {
     const keyElement = document.createElement('div');
     keyElement.className = `key ${key.toLowerCase()}`;
     keyElement.textContent = key;
+    keyElement.setAttribute('data-key', key === 'space' ? ' ' : key);
     keyElement.addEventListener('click', () => {
       const input = document.getElementById('userInput');
       if (!input) return;
