@@ -102,48 +102,42 @@ document.addEventListener('DOMContentLoaded', () => {
   const waveSpeeds = [0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6];
 
   function showGameScreen() {
-    document.getElementById('settings').classList.add('hidden');
-    const appTitle = document.querySelector('.app-title');
-    if (appTitle) {
-      appTitle.classList.add('hidden');
-    } else {
-      console.warn('App title element (.app-title) not found in DOM');
-    }
-    document.getElementById('game').classList.remove('hidden');
-    document.getElementById('stats').classList.remove('hidden');
-    document.getElementById('input').classList.remove('hidden');
-    document.getElementById('controls').classList.remove('hidden');
-    document.getElementById('keyboard').classList.remove('hidden');
-    setTimeout(() => {
-      document.getElementById('game').classList.add('active');
-      document.getElementById('stats').classList.add('active');
-      document.getElementById('input').classList.add('active');
-      document.getElementById('controls').classList.add('active');
-      document.getElementById('keyboard').classList.add('active');
-    }, 10);
-  }
+  document.body.className = `game-screen ${themeSelect.value}`; // Set game-screen class and theme
+  document.getElementById('settings').classList.add('hidden');
+  const appTitle = document.querySelector('.app-title');
+  if (appTitle) appTitle.classList.add('hidden');
+  document.getElementById('game').classList.remove('hidden');
+  document.getElementById('stats').classList.remove('hidden');
+  document.getElementById('input').classList.remove('hidden');
+  document.getElementById('controls').classList.remove('hidden');
+  document.getElementById('keyboard').classList.remove('hidden');
+  setTimeout(() => {
+    document.getElementById('game').classList.add('active');
+    document.getElementById('stats').classList.add('active');
+    document.getElementById('input').classList.add('active');
+    document.getElementById('controls').classList.add('active');
+    document.getElementById('keyboard').classList.add('active');
+  }, 10);
+}
 
-  function hideGameScreen() {
-    document.getElementById('game').classList.remove('active');
-    document.getElementById('stats').classList.remove('active');
-    document.getElementById('input').classList.remove('active');
-    document.getElementById('controls').classList.remove('active');
-    document.getElementById('keyboard').classList.remove('active');
-    setTimeout(() => {
-      document.getElementById('game').classList.add('hidden');
-      document.getElementById('stats').classList.add('hidden');
-      document.getElementById('input').classList.add('hidden');
-      document.getElementById('controls').classList.add('hidden');
-      document.getElementById('keyboard').classList.add('hidden');
-      document.getElementById('settings').classList.remove('hidden');
-      const appTitle = document.querySelector('.app-title');
-      if (appTitle) {
-        appTitle.classList.remove('hidden');
-      } else {
-        console.warn('App title element (.app-title) not found in DOM');
-      }
-    }, 500);
-  }
+function hideGameScreen() {
+  document.body.className = `start-screen ${themeSelect.value}`; // Set start-screen class and theme
+  document.getElementById('game').classList.remove('active');
+  document.getElementById('stats').classList.remove('active');
+  document.getElementById('input').classList.remove('active');
+  document.getElementById('controls').classList.remove('active');
+  document.getElementById('keyboard').classList.remove('active');
+  setTimeout(() => {
+    document.getElementById('game').classList.add('hidden');
+    document.getElementById('stats').classList.add('hidden');
+    document.getElementById('input').classList.add('hidden');
+    document.getElementById('controls').classList.add('hidden');
+    document.getElementById('keyboard').classList.add('hidden');
+    document.getElementById('settings').classList.remove('hidden');
+    const appTitle = document.querySelector('.app-title');
+    if (appTitle) appTitle.classList.remove('hidden');
+  }, 300); // Match CSS transition duration
+}
 
   function updateStatsDisplay() {
     document.getElementById('score').textContent = score;
