@@ -549,6 +549,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   userInput.addEventListener('input', handleInput);
   userInput.addEventListener('keydown', handleEnterKey);
+  userInput.addEventListener('touchstart', () => userInput.focus());
 
   // Virtual keyboard handling
   document.querySelectorAll('.key').forEach(key => {
