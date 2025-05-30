@@ -81,7 +81,8 @@ header {
 
 #settings label {
   display: block;
-  margin: 10px 0 5px;
+  margin: 5px 0; /* Reduce margin */
+  font-size: 0.9em; /* Smaller font */
   font-weight: bold;
 }
 
@@ -89,7 +90,8 @@ header {
 #settings input[type="number"],
 #settings input[type="file"] {
   width: 100%;
-  padding: 8px;
+  padding: 5px;
+  font-size: 0.9em;
   margin-bottom: 10px;
   border: 1px solid var(--neon-cyan);
   border-radius: 5px;
