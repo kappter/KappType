@@ -202,9 +202,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   startButton.addEventListener('click', () => {
-    console.log('Start button clicked');
-    startGame();
-  });
+  const settings = {
+    vocabUrl: vocabSelect.value,
+    amalgamateUrl: amalgamateSelect.value,
+    level: document.getElementById('levelSelect')?.value || 1,
+    mode: document.getElementById('modeSelect')?.value || 'game',
+    promptType: document.getElementById('promptType')?.value || 'definition',
+    caseSensitive: document.getElementById('caseSensitivity')?.value === 'sensitive',
+    randomizeTerms: document.getElementById('randomizeTerms')?.checked || true,
+    lives: parseInt(livesSelect.value) || 3,
+    theme: themeSelect.value
+  };
+  window.location.href = `game.html?settings=${encodeURIComponent(JSON.stringify(settings))}`;
+});
 
   resetButton.addEventListener('click', () => {
     console.log('Reset button clicked');
