@@ -407,6 +407,8 @@ document.addEventListener('DOMContentLoaded', () => {
     hideGameScreen();
     updateStatsDisplay();
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    window.scrollTo(0, 0); // Scroll to top
+    console.log('Scrolled to top after reset');
   }
 
   function handleInput(event) {
@@ -485,21 +487,22 @@ document.addEventListener('DOMContentLoaded', () => {
         endGame();
         return;
       }
-      if (coveredTerms.size >= vocabData.length + amalgamateVocab.length && mode !== 'practice') {
+      if (coveredTerms.size >= vocabData.length && mode !== 'game') {
         endGame();
         return;
       }
-      if (words.length === 0) {
-        const newWord = spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds, lastSpawnedWord);
-        if (newWord) {
-          words.push(newWord);
-          console.log('New word spawned after Enter:', newWord.typedInput);
-        }
+
+    if (words.length === 0) {
+      const newWord = spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds, lastSpawnedWord);
+      if (newWord) {
+        words.push(newWord);
+        console.log('New word spawned after Enter:', newWord.typedInput);
       }
-      wpmActive = false;
-      wordStartTime = 0;
-      wordEndTime = 0;
     }
+
+    wpmActive = false;
+    wordStartTime = 0;
+    wordEndTime = 0;
   }
 
   function gameLoop() {
@@ -563,12 +566,17 @@ document.addEventListener('DOMContentLoaded', () => {
       } else if (char === 'enter') {
         userInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
         return;
-      } else if (char.length === 1) {
-        userInput.value += char;
       }
-      userInput.dispatchEvent(new Event('input'));
-      key.classList.add('pressed');
-      setTimeout(() => key.classList.remove('pressed'), 100);
-    });
+
+      if (char.length === 1 ) {
+        userInput.value += char;
+      } else {
+        userInput.dispatchEvent(new Event('input'));
+        key.classList.add('pressed');
+        setTimeout(() => key.classList.remove('pressed'), 100);
+      }
+
+      userInput.dispatchEventListener;
+      userInput();
   });
 });
