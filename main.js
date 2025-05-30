@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const userInput = document.getElementById('userInput');
 
   // Initialize start screen
-  document.body.className = `start-screen ${themeSelect.value}`;
+  document.body.className = `start-screen ${themeSelect.value || 'natural-light'}`;
   document.getElementById('settings').classList.remove('hidden');
   const appTitle = document.querySelector('.app-title');
   if (appTitle) appTitle.classList.remove('hidden');
@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // Virtual keyboard
-  createVirtualKeyboard('keyboard');
+  createVirtualKeyboard();
 
   // Touch support for iPad
   userInput.addEventListener('touchstart', () => userInput.focus());
@@ -114,10 +114,13 @@ function hideGameScreen() {
   }, 300);
 }
 
-function createVirtualKeyboard(containerId) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-  container.innerHTML = ''; // Clear existing content
+function createVirtualKeyboard() {
+  const container = document.getElementById('keyboard');
+  if (!container) {
+    console.warn('Keyboard container not found');
+    return;
+  }
+  container.innerHTML = '';
   const keys = [
     '`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 'backspace',
     'tab', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\\',
@@ -131,6 +134,7 @@ function createVirtualKeyboard(containerId) {
     keyElement.textContent = key;
     keyElement.addEventListener('click', () => {
       const input = document.getElementById('userInput');
+      if (!input) return;
       if (key === 'backspace') {
         input.value = input.value.slice(0, -1);
       } else if (key === 'space') {
