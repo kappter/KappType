@@ -58,15 +58,17 @@
     <div class="settings-grid">
       <div class="settings-column">
         <label for="vocabSelect">Vocabulary Set:</label>
-        <select id="vocabSelect"></select>
-
+        <select id="vocabSelect">
+          <option value="" disabled selected>Loading...</option>
+        </select>
         <label for="customVocab">Custom Vocab (CSV):</label>
         <input type="file" id="customVocab" accept=".csv">
       </div>
       <div class="settings-column">
         <label for="amalgamateSelect">Amalgamate Set:</label>
-        <select id="amalgamateSelect"></select>
-
+        <select id="amalgamateSelect">
+          <option value="" disabled selected>Loading...</option>
+        </select>
         <label for="amalgamateVocab">Amalgamate Vocab (CSV):</label>
         <input type="file" id="amalgamateVocab" accept=".csv">
       </div>
@@ -84,7 +86,6 @@
           <option value="9">9</option>
           <option value="10">10</option>
         </select>
-
         <label for="modeSelect">Mode:</label>
         <select id="modeSelect">
           <option value="game">Game</option>
@@ -98,7 +99,6 @@
           <option value="term">Term</option>
           <option value="random">Random</option>
         </select>
-
         <label for="caseSensitivity">Case Sensitivity:</label>
         <select id="caseSensitivity">
           <option value="insensitive">Insensitive</option>
@@ -108,10 +108,8 @@
       <div class="settings-column full-width">
         <label for="randomizeTerms">Randomize Terms:</label>
         <input type="checkbox" id="randomizeTerms" checked>
-
         <label for="livesSelect">Lives (1-5):</label>
         <input type="number" id="livesSelect" min="1" max="5" value="3">
-
         <label for="themeSelect">Theme:</label>
         <select id="themeSelect">
           <option value="natural-light">Natural Light</option>
