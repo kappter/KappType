@@ -148,13 +148,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateStatsDisplay() {
-    document.getElementById('score').textContent = score;
-    document.getElementById('wave').textContent = wave;
-    document.getElementById('terms').textContent = `${correctTermsCount}/${vocabData.length + amalgamateVocab.length}`;
-    document.getElementById('wpm').textContent = lastWPM;
-    document.getElementById('time').textContent = '∞';
-    document.getElementById('lives').textContent = lives;
-    document.getElementById('toWave').textContent = Math.max(0, termsPerWave - (coveredTerms.size / Math.max(1, amalgamateVocab.length > 0 ? 2 : 1)));
+    document.getElementById('score').textContent = `Score: ${score}`;
+    document.getElementById('wave').textContent = `Wave: ${wave}`;
+    document.getElementById('terms').textContent = `Terms: ${correctTermsCount}/${vocabData.length + amalgamateVocab.length}`;
+    document.getElementById('wpm').textContent = `Recent WPM: ${lastWPM}`;
+    document.getElementById('time').textContent = 'Time: ∞';
+    document.getElementById('lives').textContent = `Lives: ${lives}`;
+    document.getElementById('toWave').textContent = `To Next Wave: ${Math.max(0, termsPerWave - (coveredTerms.size % termsPerWave))}`;
   }
 
   function endGame() {
@@ -171,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function checkWaveCompletion() {
-    const termsPerSet = amalgamateVocab.length > 0 ? termsPerWave * 2 : termsPerWave;
+    const termsPerSet = termsPerWave;
     if (coveredTerms.size % termsPerSet === 0 && coveredTerms.size > 0) {
       console.log(`Wave ${wave} completed`);
       const waveTerms = Array.from(coveredTerms.entries()).slice(-termsPerSet);
@@ -190,6 +190,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!file) resolve([]);
       Papa.parse(file, {
         header: true,
+        transformHeader: header => {
+          if (header.toLowerCase() === 'term') return 'Term';
+          if (header.toLowerCase() === 'definition') return 'Definition';
+          return header;
+        },
         complete: (result) => {
           const data = result.data.filter(row => row.Term && row.Definition);
           console.log(`Loaded ${data.length} terms from custom vocab file`);
@@ -241,8 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
           vocabSelect,
           amalgamateSelect,
           loadingIndicator,
-          startButton,
-          defaultVocabData
+          startButton
         );
         vocabData = vocabResult.vocab || defaultVocabData;
         console.log(`Vocab loaded: ${vocabData.length} terms, setName: ${vocabResult.vocabSetName}`);
@@ -260,8 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
           vocabSelect,
           amalgamateSelect,
           loadingIndicator,
-          startButton,
-          defaultVocabData
+          startButton
         );
         amalgamateVocab = amalgamateResult.vocab || [];
         console.log(`Amalgamate vocab loaded: ${amalgamateVocab.length} terms, setName: ${amalgamateResult.amalgamateSetName}`);
@@ -440,7 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
         wordEndTime = 0;
         checkWaveCompletion();
         updateStatsDisplay();
-        if (coveredTerms.size >= (vocabData.length + amalgamateVocab.length) * (amalgamateVocab.length > 0 ? 2 : 1)) {
+        if (coveredTerms.size >= vocabData.length + amalgamateVocab.length && mode !== 'practice') {
           endGame();
           return;
         }
@@ -472,11 +475,17 @@ document.addEventListener('DOMContentLoaded', () => {
       coveredTerms.set(word.typedInput, 'Incorrect');
       missedWords.push(word.typedInput);
       totalChars += word.typedInput.length;
+      lives--;
+      console.log(`Life lost on Enter, remaining: ${lives}`);
       userInput.value = '';
       words.shift();
       checkWaveCompletion();
       updateStatsDisplay();
-      if (coveredTerms.size >= (vocabData.length + amalgamateVocab.length) * (amalgamateVocab.length > 0 ? 2 : 1)) {
+      if (lives <= 0) {
+        endGame();
+        return;
+      }
+      if (coveredTerms.size >= vocabData.length + amalgamateVocab.length && mode !== 'practice') {
         endGame();
         return;
       }
