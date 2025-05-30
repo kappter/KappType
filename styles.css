@@ -172,13 +172,13 @@ label {
     margin: 10px auto;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 6px;
 }
 
 .row {
     display: flex;
     justify-content: center;
-    gap: 5px;
+    gap: 6px;
 }
 
 .key {
@@ -210,6 +210,7 @@ label {
 
 .key.pressed {
     background: var(--key-pressed-bg);
+    color: #fff;
     box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
 }
 
