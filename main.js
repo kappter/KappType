@@ -278,6 +278,10 @@ document.addEventListener('DOMContentLoaded', () => {
         vocabData = [...defaultVocabData];
       }
 
+      // Log combined vocabulary
+      const combinedVocab = [...vocabData, ...amalgamateVocab];
+      console.log(`Combined vocabulary: ${combinedVocab.length} terms`, combinedVocab);
+
       level = parseInt(document.getElementById('levelSelect')?.value) || 1;
       mode = document.getElementById('modeSelect')?.value || 'game';
       promptType = document.getElementById('promptType')?.value || 'definition';
@@ -407,7 +411,7 @@ document.addEventListener('DOMContentLoaded', () => {
     hideGameScreen();
     updateStatsDisplay();
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    window.scrollTo(0, 0); // Scroll to top
+    window.scrollTo(0, 0);
     console.log('Scrolled to top after reset');
   }
 
@@ -415,7 +419,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!gameActive) return;
 
     let input = event.target.value;
-    // Normalize quotes and apostrophes, preserve single spaces
     input = input.replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"').replace(/\s+/g, ' ');
     event.target.value = input;
     console.log('Input received:', input);
@@ -487,23 +490,68 @@ document.addEventListener('DOMContentLoaded', () => {
         endGame();
         return;
       }
-      if (coveredTerms.size >= vocabData.length && mode !== 'game') {
+      if (coveredTerms.size >= vocabData.length + amalgamateVocab.length && mode !== 'practice') {
         endGame();
         return;
       }
-
-    if (words.length === 0) {
-      const newWord = spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds, lastSpawnedWord);
-      if (newWord) {
-        words.push(newWord);
-        console.log('New word spawned after Enter:', newWord.typedInput);
+      if (words.length === 0) {
+        const newWord = spawnWord(ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms, usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode, waveSpeeds, lastSpawnedWord);
+        if (newWord) {
+          words.push(newWord);
+          console.log('New word spawned after Enter:', newWord.typedInput);
+        }
       }
+      wpmActive = false;
+      wordStartTime = 0;
+      wordEndTime = 0;
     }
-
-    wpmActive = false;
-    wordStartTime = 0;
-    wordEndTime = 0;
   }
+
+  function highlightKey(key) {
+    const keyElement = document.querySelector(`.key[data-key="${key}"]`);
+    if (keyElement) {
+      keyElement.classList.add('pressed');
+      setTimeout(() => keyElement.classList.remove('pressed'), 100);
+      console.log(`Highlighted key: ${key}`);
+    } else {
+      console.warn(`No key element found for: ${key}`);
+    }
+  }
+
+  userInput.addEventListener('input', handleInput);
+  userInput.addEventListener('keydown', (event) => {
+    handleEnterKey(event);
+    let key = event.key;
+    if (key.length === 1) {
+      key = key.toLowerCase();
+    } else if (key === 'Backspace' || key === 'CapsLock' || key === 'Enter' || key === 'Space') {
+      key = key === 'Space' ? 'space' : key;
+    }
+    highlightKey(key);
+  });
+
+  // Virtual keyboard handling
+  document.querySelectorAll('.key').forEach(key => {
+    key.addEventListener('click', () => {
+      const char = key.getAttribute('data-key').toLowerCase();
+      console.log('Virtual key pressed:', char);
+      if (char === 'space') {
+        userInput.value += ' ';
+      } else if (char === 'backspace') {
+        userInput.value = userInput.value.slice(0, -1);
+      } else if (char === 'enter') {
+        userInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+        return;
+      } else if (char === 'capslock') {
+        // Toggle case sensitivity (optional, can be customized)
+        console.log('CapsLock clicked');
+      } else if (char.length === 1) {
+        userInput.value += char;
+      }
+      userInput.dispatchEvent(new Event('input'));
+      highlightKey(char);
+    });
+  });
 
   function gameLoop() {
     if (!gameActive) return;
@@ -550,33 +598,4 @@ document.addEventListener('DOMContentLoaded', () => {
     updateStatsDisplay();
     requestAnimationFrame(gameLoop);
   }
-
-  userInput.addEventListener('input', handleInput);
-  userInput.addEventListener('keydown', handleEnterKey);
-
-  // Virtual keyboard handling
-  document.querySelectorAll('.key').forEach(key => {
-    key.addEventListener('click', () => {
-      const char = key.textContent.toLowerCase();
-      console.log('Virtual key pressed:', char);
-      if (char === 'space') {
-        userInput.value += ' ';
-      } else if (char === 'backspace') {
-        userInput.value = userInput.value.slice(0, -1);
-      } else if (char === 'enter') {
-        userInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
-        return;
-      }
-
-      if (char.length === 1 ) {
-        userInput.value += char;
-      } else {
-        userInput.dispatchEvent(new Event('input'));
-        key.classList.add('pressed');
-        setTimeout(() => key.classList.remove('pressed'), 100);
-      }
-
-      userInput.dispatchEventListener;
-      userInput();
-  });
 });
