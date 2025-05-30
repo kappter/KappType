@@ -159,44 +159,65 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
 }
 
 export function updateGame(
-  ctx, words, userInput, gameActive, mode, caseSensitive, textColor, waveSpeeds,
-  wave, score, correctTermsCount, coveredTerms, totalChars, correctChars, missedWords,
-  lastFrameTime, vocabData, amalgamateVocab, promptType, randomizeTerms,
-  usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, level, lastSpawnedWord
+  ctx, words, userInput, gameActive, mode, caseSensitive,
+  canvasTextColor, waveSpeeds, wave, score, correctTermsCount,
+  coveredTerms, totalChars, correctChars, missedWords, lastFrameTime,
+  vocabData, amalgamateVocab, promptType, randomizeTerms,
+  usedVocabIndices, usedAmalgamateIndices, vocabIndex,
+  amalgamateIndex, level, lastSpawnedWord
 ) {
-  const now = performance.now();
-  const deltaTime = (now - lastFrameTime) / 1000;
-  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-
-  if (!gameActive) {
-    ctx.font = '20px Arial';
-    ctx.fillStyle = textColor;
-    ctx.textAlign = 'center';
-    ctx.fillText('Game Paused', ctx.canvas.width / 2, ctx.canvas.height / 2);
-    return { lastFrameTime: now, words, lostLife: false, missedWord: '' };
-  }
-
+  const currentTime = performance.now();
+  const deltaTime = (currentTime - lastFrameTime) / 1000;
   let lostLife = false;
   let missedWord = '';
 
-  // Process only the first word that hits the bottom per frame
-  for (let i = 0; i < words.length; i++) {
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+  for (let i = words.length - 1; i >= 0; i--) {
     const word = words[i];
-    word.y += word.speed * deltaTime * 60;
-    if (word.y >= ctx.canvas.height + word.height && !lostLife) {
-      console.log(`Word reached bottom: ${word.typedInput}, triggering life loss`);
-      lostLife = true;
-      missedWord = word.typedInput;
-      words.splice(i, 1); // Remove the word immediately
-      i--; // Adjust index after removal
-    } else {
-      renderWord(ctx, word, userInput, caseSensitive);
-      wrapText(ctx, word.prompt, ctx.canvas.width / 2, ctx.canvas.height / 2, ctx.canvas.width - 40, 30);
-      console.log('Rendering word:', getUnderscoreText(word, userInput, caseSensitive), 'at', word.x, word.y);
+    word.y += waveSpeeds[Math.min(wave - 1, waveSpeeds.length - 1)] * deltaTime * 100;
+
+    if (word.y > ctx.canvas.height) {
+      if (mode !== 'practice') {
+        lostLife = true;
+        missedWord = word.typedInput;
+        words.splice(i, 1);
+        coveredTerms.set(word.typedInput, 'Incorrect');
+        missedWords.push(word.typedInput);
+        totalChars += word.typedInput.length;
+        console.log(`Word missed: ${word.typedInput}`);
+      }
+      continue;
     }
+
+    // Draw word with gradient
+    const draw = () => {
+      ctx.font = '20px Orbitron';
+      ctx.textAlign = 'center';
+      const gradient = ctx.createLinearGradient(word.x, word.y - 20, word.x, word.y + 20);
+      try {
+        gradient.addColorStop(0, '#00f6ff'); // Valid cyan
+        gradient.addColorStop(1, '#ff00ff'); // Valid pink
+        ctx.fillStyle = gradient;
+        console.log('Gradient applied:', { start: '#00f6ff', end: '#ff00ff' });
+      } catch (error) {
+        console.error('Gradient error:', error);
+        ctx.fillStyle = canvasTextColor || '#000'; // Fallback
+      }
+      ctx.fillText(word.displayText, word.x, word.y);
+      ctx.fillStyle = canvasTextColor || '#000';
+      ctx.fillText(word.typedInput, word.x, word.y + 20);
+    };
+
+    draw();
   }
 
-  return { lastFrameTime: now, words, lostLife, missedWord };
+  return {
+    lastFrameTime: currentTime,
+    words,
+    lostLife,
+    missedWord
+  };
 }
 
 export function calculateCorrectChars(target, input) {
