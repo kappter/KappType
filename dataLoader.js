@@ -17,7 +17,6 @@ export async function loadVocab(url, isAmalgamate, vocabData, amalgamateVocab, v
     const result = Papa.parse(text, {
       header: true,
       transformHeader: header => {
-        // Normalize headers to match expected schema
         if (header.toLowerCase() === 'term') return 'Term';
         if (header.toLowerCase() === 'definition') return 'Definition';
         return header;
@@ -39,12 +38,11 @@ export async function loadVocab(url, isAmalgamate, vocabData, amalgamateVocab, v
 
 export function populateVocabDropdown(vocabSelect, amalgamateSelect) {
   console.log('Populating vocab dropdowns');
-  // List of CSV files in vocab-sets folder
   const vocabSets = [
     { name: 'ARRL Ham Radio Extra License', url: '/vocab-sets/ARRL_Ham_Radio_Extra_License_Terms_Definitions.csv' },
     { name: 'ARRL Ham Radio General License', url: '/vocab-sets/ARRL_Ham_Radio_General_License_Terms_Definitions.csv' },
     { name: 'ARRL Ham Radio Technician License', url: '/vocab-sets/ARRL_Ham_Radio_Technician_License_Terms_Definitions.csv' },
-    { name: 'Computer Programming 2', url: '/vocab-sets/Computer_Programming_2_Terms_Definitions.csv' },
+    { name: 'Computer Programming 2', url: '/vocab-sets/Computer_Programming_2-Terms_Definitions.csv' }, // Fixed potential dash
     { name: 'Computer Usage Terms', url: '/vocab-sets/Computer_Usage_Terms.csv' },
     { name: 'Digital Media', url: '/vocab-sets/Digital_Media_2_Terms_and_Definitions.csv' },
     { name: 'ECS Hardware & OS', url: '/vocab-sets/ECS_Hardware_OS_DataStorage_Terms_Definitions.csv' },
@@ -92,14 +90,12 @@ export function populateVocabDropdown(vocabSelect, amalgamateSelect) {
     amalgamateSelect.appendChild(amalgamateOption);
   });
 
-  // Add "None" option for amalgamateSelect
   const noneOption = document.createElement('option');
   noneOption.value = '';
   noneOption.textContent = 'None';
   amalgamateSelect.insertBefore(noneOption, amalgamateSelect.firstChild);
   amalgamateSelect.value = '';
 
-  // Remove "Loading..." placeholder after population
   vocabSelect.querySelector('option[value=""]').remove();
   amalgamateSelect.querySelector('option[value=""]').remove();
   vocabSelect.insertBefore(noneOption.cloneNode(true), vocabSelect.firstChild);
