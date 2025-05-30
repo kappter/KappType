@@ -1,106 +1,57 @@
-export async function populateVocabDropdown(vocabSelect, amalgamateSelect) {
-  console.log('populateVocabDropdown started');
-
-  try {
-    vocabSelect.innerHTML = '<option value="">Select Vocabulary</option>';
-    amalgamateSelect.innerHTML = '<option value="">None</option>';
-
-    console.log('Clearing dropdowns');
-
-    const response = await fetch('https://api.github.com/repos/kappter/vocab-sets/contents');
-    if (!response.ok) {
-      throw new Error(`Failed to fetch vocab sets: ${response.status}`);
-    }
-
-    const files = await response.json();
-    const vocabFiles = files
-      .filter(file => file.name.endsWith('.csv'))
-      .map(file => ({
-        name: file.name.replace('.csv', ''),
-        url: file.download_url
-      }));
-
-    console.log(`Populating dropdowns with ${vocabFiles.length} files`);
-
-    vocabFiles.forEach(file => {
-      const option = document.createElement('option');
-      option.value = file.url;
-      option.textContent = file.name;
-      vocabSelect.appendChild(option);
-
-      const amalgamateOption = document.createElement('option');
-      amalgamateOption.value = file.url;
-      amalgamateOption.textContent = file.name;
-      amalgamateSelect.appendChild(amalgamateOption);
-
-      console.log(`Added ${file.name} to dropdowns`);
-    });
-
-    console.log('populateVocabDropdown completed');
-  } catch (error) {
-    console.error('Error in populateVocabDropdown:', error);
-    vocabSelect.innerHTML = '<option value="">Default Vocabulary</option>';
-    amalgamateSelect.innerHTML = '<option value="">None</option>';
-  }
-}
-
-export async function loadVocab(vocabUrl, isAmalgamate, vocabData, amalgamateVocab, vocabSelect, amalgamateSelect, loadingIndicator, startButton, defaultVocabData) {
-  console.log(`loadVocab started for ${vocabUrl}, isAmalgamate: ${isAmalgamate}`);
-
+export async function loadVocab(url, isAmalgamate, vocabData, amalgamateVocab, vocabSelect, amalgamateSelect, loadingIndicator, startButton, defaultVocabData) {
+  console.log(`Loading vocab from ${url}, isAmalgamate: ${isAmalgamate}`);
   loadingIndicator.classList.remove('hidden');
   startButton.disabled = true;
 
-  let vocab = [];
-  let setName = 'Default';
-
   try {
-    if (!vocabUrl) {
-      console.log('No vocab URL provided, using default vocabulary');
-      vocab = defaultVocabData;
-      setName = 'Default Vocabulary';
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const text = await response.text();
+    const result = Papa.parse(text, { header: true });
+    const data = result.data.filter(row => row.Term && row.Definition);
+    console.log(`Parsed ${data.length} terms from ${url}`);
+
+    if (isAmalgamate) {
+      return { vocab: data, amalgamateSetName: new URL(url).pathname.split('/').pop() };
     } else {
-      const response = await fetch(vocabUrl);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch vocab from ${vocabUrl}: ${response.status}`);
-      }
-      const csvText = await response.text();
-
-      return new Promise((resolve, reject) => {
-        Papa.parse(csvText, {
-          header: true,
-          skipEmptyLines: true,
-          complete: results => {
-            if (results.errors.length > 0) {
-              console.error('Papa Parse errors:', results.errors);
-              reject(new Error('Failed to parse CSV'));
-              return;
-            }
-
-            vocab = results.data.filter(row => row.Term && row.Definition);
-            setName = vocabUrl.split('/').pop().replace('.csv', '');
-            console.log(`Loaded ${vocab.length} terms from ${vocabUrl}`);
-
-            loadingIndicator.classList.add('hidden');
-            startButton.disabled = false;
-
-            resolve({ vocab, vocabSetName: setName, amalgamateSetName: isAmalgamate ? setName : '' });
-          },
-          error: error => {
-            console.error('Papa Parse error:', error);
-            reject(error);
-          }
-        });
-      });
+      return { vocab: data, vocabSetName: new URL(url).pathname.split('/').pop() };
     }
   } catch (error) {
-    console.error('Error loading vocab:', error);
-    vocab = defaultVocabData;
-    setName = 'Default Vocabulary';
+    console.error(`Error loading vocab from ${url}:`, error);
+    return isAmalgamate ? { vocab: [], amalgamateSetName: 'None' } : { vocab: defaultVocabData, vocabSetName: 'Default' };
+  } finally {
     loadingIndicator.classList.add('hidden');
     startButton.disabled = false;
   }
+}
 
-  loadingIndicator.classList.add('hidden');
-  startButton.disabled = false;
-  return { vocab, vocabSetName: setName, amalgamateSetName: isAmalgamate ? setName : '' };
+export function populateVocabDropdown(vocabSelect, amalgamateSelect) {
+  console.log('Populating vocab dropdowns');
+  const vocabSets = [
+    { name: 'Default Vocabulary', url: '' },
+    { name: 'Sample Set 1', url: 'https://example.com/vocab1.csv' },
+    { name: 'Sample Set 2', url: 'https://example.com/vocab2.csv' }
+  ];
+
+  vocabSelect.innerHTML = '';
+  amalgamateSelect.innerHTML = '';
+
+  vocabSets.forEach(set => {
+    const option = document.createElement('option');
+    option.value = set.url;
+    option.textContent = set.name;
+    vocabSelect.appendChild(option);
+    const amalgamateOption = document.createElement('option');
+    amalgamateOption.value = set.url;
+    amalgamateOption.textContent = set.name;
+    amalgamateSelect.appendChild(amalgamateOption);
+  });
+
+  const noneOption = document.createElement('option');
+  noneOption.value = '';
+  noneOption.textContent = 'None';
+  amalgamateSelect.insertBefore(noneOption, amalgamateSelect.firstChild);
+  amalgamateSelect.value = '';
 }

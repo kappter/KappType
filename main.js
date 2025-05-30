@@ -1,6 +1,6 @@
 import { spawnWord, updateGame, calculateCorrectChars, calculateWPM, calculateAccuracy } from './gameLogic.js';
 import { populateVocabDropdown, loadVocab } from './dataLoader.js';
-import { generateCertificate } from './certificate-generator.js';
+import { generateCertificate } from './certificate.js';
 
 const defaultVocabData = [
   { Term: 'Algorithm', Definition: 'A set of rules to solve a problem' },
@@ -48,14 +48,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Set default theme
-  document.body.className = 'natural-light';
+  document.body.className = 'natural-light settings-active';
   console.log('Default theme set: natural-light');
 
   // Theme selection
   themeSelect.addEventListener('change', () => {
     const selectedTheme = themeSelect.value;
     console.log(`Theme selected: ${selectedTheme}`);
-    document.body.className = selectedTheme;
+    document.body.className = `${selectedTheme} ${document.getElementById('settings').classList.contains('hidden') ? '' : 'settings-active'}`;
   });
 
   console.log('Calling populateVocabDropdown');
@@ -114,6 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('input').classList.remove('hidden');
     document.getElementById('controls').classList.remove('hidden');
     document.getElementById('keyboard').classList.remove('hidden');
+    document.body.classList.remove('settings-active');
     setTimeout(() => {
       document.getElementById('game').classList.add('active');
       document.getElementById('stats').classList.add('active');
@@ -142,6 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         console.warn('App title element (.app-title) not found in DOM');
       }
+      document.body.classList.add('settings-active');
     }, 500);
   }
 

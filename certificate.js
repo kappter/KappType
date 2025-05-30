@@ -1,15 +1,17 @@
-export function generateCertificate(pageLoadTime, sessionStartTime, sessionEndTime, score, wave, promptSelect, vocabData, amalgamateVocab, coveredTerms, calculateWPM, calculateAccuracy, calculateTermAccuracy) {
-  const name = prompt('Enter your name for the report:');
+export function generateCertificate(pageLoadTime, sessionStartTime, sessionEndTime, score, wave, promptSelect, vocabData, amalgamateVocab, coveredTerms, lastWPM, totalChars, correctChars) {
+  console.log('Generating certificate:', { score, wave, lastWPM });
+
+  const name = prompt('Enter your name for the certificate:');
   if (!name || name.trim() === '') {
-    alert('Please enter a valid name to generate the report.');
+    alert('Please enter a valid name to generate the certificate.');
     return;
   }
+
   const safeName = escapeHtml(name);
-  const wpm = calculateWPM(sessionStartTime, sessionEndTime, score);
   const charAccuracy = calculateAccuracy(totalChars, correctChars);
   const termAccuracy = calculateTermAccuracy(coveredTerms);
   const promptTypeText = escapeHtml(promptSelect.options[promptSelect.selectedIndex]?.text || 'Unknown');
-  const totalTerms = vocabData.length + (amalgamateVocab.length > 0 ? amalgamateVocab.length : 0);
+  const totalTerms = vocabData.length + amalgamateVocab.length;
   const termsCoveredCount = coveredTerms.size;
   const allTermsCompleted = termsCoveredCount === totalTerms;
 
@@ -27,63 +29,95 @@ export function generateCertificate(pageLoadTime, sessionStartTime, sessionEndTi
   const seconds = durationSeconds % 60;
   const durationStr = `${hours}h ${minutes}m ${seconds}s`;
 
-  let termsTableRows = '';
+  // Initialize jsPDF
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4'
+  });
+
+  // Set fonts and colors
+  doc.setFont('Helvetica');
+  doc.setFontSize(20);
+  doc.setTextColor(0, 100, 100); // Cyan-like color
+
+  // Title
+  doc.text('KappType Performance Report', 105, 20, { align: 'center' });
+  doc.setFontSize(16);
+  doc.text('Certificate of Achievement', 105, 30, { align: 'center' });
+
+  // Certificate text
+  doc.setFontSize(12);
+  doc.text(`This certifies that ${safeName} has completed a session in KappType with the following results:`, 20, 50);
+
+  // Results
+  const results = [
+    `Prompt Type: ${promptTypeText}`,
+    `Typing Speed: ${lastWPM} WPM`,
+    `Character Accuracy: ${charAccuracy}%`,
+    `Term Accuracy: ${termAccuracy}%`,
+    `Wave Reached: ${wave}`,
+    `Total Time: ${durationStr}`,
+    `Score: ${score}`
+  ];
+  let y = 70;
+  results.forEach(line => {
+    doc.text(line, 20, y);
+    y += 10;
+  });
+
+  // Terms Covered Table
+  doc.setFontSize(14);
+  doc.text('Terms Covered', 20, y);
+  y += 10;
+  doc.setFontSize(10);
+  doc.setDrawColor(0);
+  doc.setFillColor(200, 200, 200);
+  doc.rect(20, y, 170, 8, 'F');
+  doc.text('Term', 22, y + 6);
+  doc.text('Status', 150, y + 6);
+  y += 8;
+
+  let termsTableRows = [];
   for (const [term, status] of coveredTerms.entries()) {
-    termsTableRows += `
-      ${escapeTex(term)} & ${escapeTex(status)} \\\\
-      \\hline
-    `;
+    termsTableRows.push([term, status]);
   }
-  if (!termsTableRows) termsTableRows = 'No terms covered. \\\\ \\hline';
+  if (termsTableRows.length === 0) {
+    doc.text('No terms covered.', 22, y + 6);
+    y += 10;
+  } else {
+    termsTableRows.forEach(([term, status]) => {
+      doc.text(term, 22, y + 6);
+      doc.text(status, 150, y + 6);
+      doc.line(20, y + 8, 190, y + 8);
+      y += 10;
+      if (y > 260) {
+        doc.addPage();
+        y = 20;
+      }
+    });
+  }
 
-  const certificateContent = `
-\\documentclass{article}
-\\usepackage{geometry}
-\\usepackage{booktabs}
-\\geometry{a4paper, margin=1in}
-\\begin{document}
-\\begin{center}
-\\textbf{\\Large KappType Performance Report}\\\\
-\\vspace{0.5cm}
-\\textbf{\\large Certificate of Achievement}\\\\
-\\vspace{0.5cm}
-This certifies that \\textbf{${escapeTex(safeName)}} has completed a session in KappType with the following results:
-\\end{center}
-\\vspace{0.3cm}
-\\begin{itemize}
-  \\item Prompt Type: ${escapeTex(promptTypeText)}
-  \\item Typing Speed: ${wpm} WPM
-  \\item Character Accuracy: ${charAccuracy}\\%
-  \\item Term Accuracy: ${termAccuracy}\\%
-  \\item Wave Reached: ${wave}
-  \\item Total Time: ${escapeTex(durationStr)}
-  \\item Score: ${score}
-\\end{itemize}
-\\vspace{0.3cm}
-\\textbf{Terms Covered}\\\\
-\\begin{tabular}{|l|l|}
-  \\hline
-  \\textbf{Term} & \\textbf{Status} \\\\
-  \\hline
-  ${termsTableRows}
-\\end{tabular}\\\\
-\\vspace{0.3cm}
-Total Terms Covered: ${termsCoveredCount} out of ${totalTerms}\\\\
-${allTermsCompleted ? 'Congratulations! All terms in the set were covered.' : 'Not all terms were covered in this session.'}\\\\
-Session Start: ${escapeTex(startDate)}\\\\
-Session End: ${escapeTex(endDate)}\\\\
-Awarded on: ${escapeTex(new Date().toLocaleString())}
-\\end{document}
-  `;
+  // Summary
+  doc.setFontSize(12);
+  doc.text(`Total Terms Covered: ${termsCoveredCount} out of ${totalTerms}`, 20, y);
+  y += 10;
+  doc.text(
+    allTermsCompleted ? 'Congratulations! All terms in the set were covered.' : 'Not all terms were covered in this session.',
+    20,
+    y
+  );
+  y += 10;
+  doc.text(`Session Start: ${startDate}`, 20, y);
+  y += 10;
+  doc.text(`Session End: ${endDate}`, 20, y);
+  y += 10;
+  doc.text(`Awarded on: ${new Date().toLocaleString()}`, 20, y);
 
-  const blob = new Blob([certificateContent], { type: 'text/x-tex' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'kapp-type-report.tex';
-  a.click();
-  URL.revokeObjectURL(url);
-  alert('Performance report downloaded as a .tex file. Compile it in Overleaf (https://www.overleaf.com/) to generate a PDF.');
+  // Save the PDF
+  doc.save('kapp-type-report.pdf');
+  alert('Performance report downloaded as a PDF.');
 }
 
 export function escapeHtml(str) {
@@ -91,9 +125,13 @@ export function escapeHtml(str) {
   return str.replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>').replace(/"/g, '"').replace(/'/g, '\'');
 }
 
-export function escapeTex(str) {
-  if (!str) return 'None';
-  return str.replace(/&/g, '\\&').replace(/%/g, '\\%').replace(/\$/g, '\\$').replace(/#/g, '\\#').replace(/_/g, '\\_')
-    .replace(/{/g, '\\{').replace(/}/g, '\\}').replace(/~/g, '\\textasciitilde{}').replace(/\^/g, '\\textasciicircum{}')
-    .replace(/\\/g, '\\textbackslash{}');
+export function calculateAccuracy(totalChars, correctChars) {
+  if (totalChars === 0) return 0;
+  return Math.round((correctChars / totalChars) * 100);
+}
+
+export function calculateTermAccuracy(coveredTerms) {
+  if (coveredTerms.size === 0) return 0;
+  const correctCount = Array.from(coveredTerms.values()).filter(status => status === 'Correct').length;
+  return Math.round((correctCount / coveredTerms.size) * 100);
 }
