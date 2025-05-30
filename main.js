@@ -1,6 +1,6 @@
 import { spawnWord, updateGame, calculateCorrectChars, calculateWPM, calculateAccuracy } from './gameLogic.js';
 import { populateVocabDropdown, loadVocab } from './dataLoader.js';
-import { generateCertificate } from './certificate.js';
+import { generateCertificate } from './certificate-generator.js';
 
 const defaultVocabData = [
   { Term: 'Algorithm', Definition: 'A set of rules to solve a problem' },
@@ -48,14 +48,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Set default theme
-  document.body.className = 'natural-light settings-active';
+  document.body.className = 'natural-light';
   console.log('Default theme set: natural-light');
 
   // Theme selection
   themeSelect.addEventListener('change', () => {
     const selectedTheme = themeSelect.value;
     console.log(`Theme selected: ${selectedTheme}`);
-    document.body.className = `${selectedTheme} ${document.getElementById('settings').classList.contains('hidden') ? '' : 'settings-active'}`;
+    document.body.className = selectedTheme;
   });
 
   console.log('Calling populateVocabDropdown');
@@ -114,7 +114,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('input').classList.remove('hidden');
     document.getElementById('controls').classList.remove('hidden');
     document.getElementById('keyboard').classList.remove('hidden');
-    document.body.classList.remove('settings-active');
     setTimeout(() => {
       document.getElementById('game').classList.add('active');
       document.getElementById('stats').classList.add('active');
@@ -143,18 +142,17 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         console.warn('App title element (.app-title) not found in DOM');
       }
-      document.body.classList.add('settings-active');
     }, 500);
   }
 
   function updateStatsDisplay() {
-    document.getElementById('score').textContent = `Score: ${score}`;
-    document.getElementById('wave').textContent = `Wave: ${wave}`;
-    document.getElementById('terms').textContent = `Terms: ${correctTermsCount}/${vocabData.length + amalgamateVocab.length}`;
-    document.getElementById('wpm').textContent = `Recent WPM: ${lastWPM}`;
-    document.getElementById('time').textContent = 'Time: ∞';
-    document.getElementById('lives').textContent = `Lives: ${lives}`;
-    document.getElementById('toWave').textContent = `To Next Wave: ${Math.max(0, termsPerWave - (coveredTerms.size % termsPerWave))}`;
+    document.getElementById('score').textContent = score;
+    document.getElementById('wave').textContent = wave;
+    document.getElementById('terms').textContent = `${correctTermsCount}/${vocabData.length + amalgamateVocab.length}`;
+    document.getElementById('wpm').textContent = lastWPM;
+    document.getElementById('time').textContent = '∞';
+    document.getElementById('lives').textContent = lives;
+    document.getElementById('toWave').textContent = Math.max(0, termsPerWave - (coveredTerms.size / Math.max(1, amalgamateVocab.length > 0 ? 2 : 1)));
   }
 
   function endGame() {
@@ -171,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function checkWaveCompletion() {
-    const termsPerSet = termsPerWave;
+    const termsPerSet = amalgamateVocab.length > 0 ? termsPerWave * 2 : termsPerWave;
     if (coveredTerms.size % termsPerSet === 0 && coveredTerms.size > 0) {
       console.log(`Wave ${wave} completed`);
       const waveTerms = Array.from(coveredTerms.entries()).slice(-termsPerSet);
@@ -190,11 +188,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!file) resolve([]);
       Papa.parse(file, {
         header: true,
-        transformHeader: header => {
-          if (header.toLowerCase() === 'term') return 'Term';
-          if (header.toLowerCase() === 'definition') return 'Definition';
-          return header;
-        },
         complete: (result) => {
           const data = result.data.filter(row => row.Term && row.Definition);
           console.log(`Loaded ${data.length} terms from custom vocab file`);
@@ -246,7 +239,8 @@ document.addEventListener('DOMContentLoaded', () => {
           vocabSelect,
           amalgamateSelect,
           loadingIndicator,
-          startButton
+          startButton,
+          defaultVocabData
         );
         vocabData = vocabResult.vocab || defaultVocabData;
         console.log(`Vocab loaded: ${vocabData.length} terms, setName: ${vocabResult.vocabSetName}`);
@@ -264,7 +258,8 @@ document.addEventListener('DOMContentLoaded', () => {
           vocabSelect,
           amalgamateSelect,
           loadingIndicator,
-          startButton
+          startButton,
+          defaultVocabData
         );
         amalgamateVocab = amalgamateResult.vocab || [];
         console.log(`Amalgamate vocab loaded: ${amalgamateVocab.length} terms, setName: ${amalgamateResult.amalgamateSetName}`);
@@ -277,10 +272,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn('No valid vocabulary loaded, using default');
         vocabData = [...defaultVocabData];
       }
-
-      // Log combined vocabulary
-      const combinedVocab = [...vocabData, ...amalgamateVocab];
-      console.log(`Combined vocabulary: ${combinedVocab.length} terms`, combinedVocab);
 
       level = parseInt(document.getElementById('levelSelect')?.value) || 1;
       mode = document.getElementById('modeSelect')?.value || 'game';
@@ -411,14 +402,13 @@ document.addEventListener('DOMContentLoaded', () => {
     hideGameScreen();
     updateStatsDisplay();
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    window.scrollTo(0, 0);
-    console.log('Scrolled to top after reset');
   }
 
   function handleInput(event) {
     if (!gameActive) return;
 
     let input = event.target.value;
+    // Normalize quotes and apostrophes, preserve single spaces
     input = input.replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"').replace(/\s+/g, ' ');
     event.target.value = input;
     console.log('Input received:', input);
@@ -448,7 +438,7 @@ document.addEventListener('DOMContentLoaded', () => {
         wordEndTime = 0;
         checkWaveCompletion();
         updateStatsDisplay();
-        if (coveredTerms.size >= vocabData.length + amalgamateVocab.length && mode !== 'practice') {
+        if (coveredTerms.size >= (vocabData.length + amalgamateVocab.length) * (amalgamateVocab.length > 0 ? 2 : 1)) {
           endGame();
           return;
         }
@@ -480,17 +470,11 @@ document.addEventListener('DOMContentLoaded', () => {
       coveredTerms.set(word.typedInput, 'Incorrect');
       missedWords.push(word.typedInput);
       totalChars += word.typedInput.length;
-      lives--;
-      console.log(`Life lost on Enter, remaining: ${lives}`);
       userInput.value = '';
       words.shift();
       checkWaveCompletion();
       updateStatsDisplay();
-      if (lives <= 0) {
-        endGame();
-        return;
-      }
-      if (coveredTerms.size >= vocabData.length + amalgamateVocab.length && mode !== 'practice') {
+      if (coveredTerms.size >= (vocabData.length + amalgamateVocab.length) * (amalgamateVocab.length > 0 ? 2 : 1)) {
         endGame();
         return;
       }
@@ -506,52 +490,6 @@ document.addEventListener('DOMContentLoaded', () => {
       wordEndTime = 0;
     }
   }
-
-  function highlightKey(key) {
-    const keyElement = document.querySelector(`.key[data-key="${key}"]`);
-    if (keyElement) {
-      keyElement.classList.add('pressed');
-      setTimeout(() => keyElement.classList.remove('pressed'), 100);
-      console.log(`Highlighted key: ${key}`);
-    } else {
-      console.warn(`No key element found for: ${key}`);
-    }
-  }
-
-  userInput.addEventListener('input', handleInput);
-  userInput.addEventListener('keydown', (event) => {
-    handleEnterKey(event);
-    let key = event.key;
-    if (key.length === 1) {
-      key = key.toLowerCase();
-    } else if (key === 'Backspace' || key === 'CapsLock' || key === 'Enter' || key === 'Space') {
-      key = key === 'Space' ? 'space' : key;
-    }
-    highlightKey(key);
-  });
-
-  // Virtual keyboard handling
-  document.querySelectorAll('.key').forEach(key => {
-    key.addEventListener('click', () => {
-      const char = key.getAttribute('data-key').toLowerCase();
-      console.log('Virtual key pressed:', char);
-      if (char === 'space') {
-        userInput.value += ' ';
-      } else if (char === 'backspace') {
-        userInput.value = userInput.value.slice(0, -1);
-      } else if (char === 'enter') {
-        userInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
-        return;
-      } else if (char === 'capslock') {
-        // Toggle case sensitivity (optional, can be customized)
-        console.log('CapsLock clicked');
-      } else if (char.length === 1) {
-        userInput.value += char;
-      }
-      userInput.dispatchEvent(new Event('input'));
-      highlightKey(char);
-    });
-  });
 
   function gameLoop() {
     if (!gameActive) return;
@@ -598,4 +536,28 @@ document.addEventListener('DOMContentLoaded', () => {
     updateStatsDisplay();
     requestAnimationFrame(gameLoop);
   }
+
+  userInput.addEventListener('input', handleInput);
+  userInput.addEventListener('keydown', handleEnterKey);
+
+  // Virtual keyboard handling
+  document.querySelectorAll('.key').forEach(key => {
+    key.addEventListener('click', () => {
+      const char = key.textContent.toLowerCase();
+      console.log('Virtual key pressed:', char);
+      if (char === 'space') {
+        userInput.value += ' ';
+      } else if (char === 'backspace') {
+        userInput.value = userInput.value.slice(0, -1);
+      } else if (char === 'enter') {
+        userInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+        return;
+      } else if (char.length === 1) {
+        userInput.value += char;
+      }
+      userInput.dispatchEvent(new Event('input'));
+      key.classList.add('pressed');
+      setTimeout(() => key.classList.remove('pressed'), 100);
+    });
+  });
 });

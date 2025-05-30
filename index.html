@@ -1,131 +1,216 @@
-<!DOCTYPE html>
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KappType Quiz</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="icon" type="image/x-icon" href="/yearbook-staff-app/favicon.ico"></head>
-<body class="natural-light settings-active">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KappType</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="natural-light">
+  <header>
     <h1 class="app-title">KappType</h1>
-    <section id="settings">
-        <div class="settings-panel">
-            <div class="setting-column">
-                <label for="vocabSelect">Vocabulary Set:</label>
-                <select id="vocabSelect" class="dropdown-select"></select>
-                <label for="customVocab">Custom Vocabulary (CSV):</label>
-                <input type="file" id="customVocab" accept=".csv">
-                <label for="promptType">Prompt Type:</label>
-                <select id="promptType" class="dropdown-select">
-                    <option value="definition">Definition</option>
-                    <option value="term">Term</option>
-                    <option value="random">Random</option>
-                </select>
-                <label for="caseSensitivity">Case Sensitivity:</label>
-                <select id="caseSensitivity" class="dropdown-select">
-                    <option value="insensitive">Insensitive</option>
-                    <option value="sensitive">Sensitive</option>
-                </select>
-                <label for="livesSelect">Lives:</label>
-                <select id="livesSelect" class="dropdown-select">
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3" selected>3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                </select>
-            </div>
-            <div class="setting-column">
-                <label for="amalgamateSelect">Amalgamate Set:</label>
-                <select id="amalgamateSelect" class="dropdown-select">
-                    <option value="" selected>None</option>
-                </select>
-                <label for="amalgamateVocab">Custom Amalgamate (CSV):</label>
-                <input type="file" id="amalgamateVocab" accept=".csv">
-                <label for="themeSelect">Theme:</label>
-                <select id="themeSelect" class="dropdown-select">
-                    <option value="natural-light">Natural Light</option>
-                    <option value="natural-dark">Natural Dark</option>
-                    <option value="space">Space</option>
-                </select>
-                <label for="levelSelect">Level:</label>
-                <select id="levelSelect" class="dropdown-select">
-                    <option value="1">Beginner</option>
-                    <option value="2">Intermediate</option>
-                    <option value="3">Advanced</option>
-                </select>
-                <label for="modeSelect">Mode:</label>
-                <select id="modeSelect" class="dropdown-select">
-                    <option value="game">Game</option>
-                    <option value="practice">Practice</option>
-                </select>
-                <label for="randomizeTerms">Randomize Terms:</label>
-                <input type="checkbox" id="randomizeTerms" checked>
-            </div>
-            <button id="startButton" class="button">Start Game</button>
-            <span id="loadingIndicator" class="loading hidden">Loading...</span>
-        </div>
-    </section>
-    <section id="stats" class="hidden">
-        <p id="score">Score: 0</p>
-        <p id="wave">Wave: 1</p>
-        <p id="terms">Terms: 0/0</p>
-        <p id="wpm">Recent WPM: 0</p>
-        <p id="time">Time: ∞</p>
-        <p id="lives">Lives: 3</p>
-        <p id="toWave">To Next Wave: 10</p>
-    </section>
-    <section id="game" class="hidden">
-        <canvas id="gameCanvas" width="800" height="400"></canvas>
-    </section>
-    <section id="input" class="hidden">
-        <input type="text" id="userInput" placeholder="Type the word here">
-    </section>
-    <section id="controls" class="hidden">
-        <button id="resetGame">Reset</button>
-        <button id="generateCertificate">Generate Certificate</button>
-    </section>
-    <section id="keyboard" class="keyboard hidden">
-    <div class="row">
-        <div class="key" data-key="q">q</div>
-        <div class="key" data-key="w">w</div>
-        <div class="key" data-key="e">e</div>
-        <div class="key" data-key="r">r</div>
-        <div class="key" data-key="t">t</div>
-        <div class="key" data-key="y">y</div>
-        <div class="key" data-key="u">u</div>
-        <div class="key" data-key="i">i</div>
-        <div class="key" data-key="o">o</div>
-        <div class="key" data-key="p">p</div>
-    </div>
-    <div class="row">
-        <div class="key capslock" data-key="CapsLock">CapsLock</div>
-        <div class="key" data-key="a">a</div>
-        <div class="key" data-key="s">s</div>
-        <div class="key" data-key="d">d</div>
-        <div class="key" data-key="f">f</div>
-        <div class="key" data-key="g">g</div>
-        <div class="key" data-key="h">h</div>
-        <div class="key" data-key="j">j</div>
-        <div class="key" data-key="k">k</div>
-        <div class="key" data-key="l">l</div>
-    </div>
-    <div class="row">
-        <div class="key" data-key="z">z</div>
-        <div class="key" data-key="x">x</div>
-        <div class="key" data-key="c">c</div>
-        <div class="key" data-key="v">v</div>
-        <div class="key" data-key="b">b</div>
-        <div class="key" data-key="n">n</div>
-        <div class="key" data-key="m">m</div>
-        <div class="key backspace" data-key="Backspace">Backspace</div>
-    </div>
-    <div class="row">
-        <div class="key enter" data-key="Enter">Enter</div>
-        <div class="key space" data-key="space">Space</div>
-    </div>
-</section>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/papaparse/5.3.0/papaparse.min.js"></script>
-    <script type="module" src="main.js"></script>
+  </header>
+
+  <div id="settings">
+    <h2>Game Settings</h2>
+    <label for="vocabSelect">Vocabulary Set:</label>
+    <select id="vocabSelect"></select>
+    <label for="amalgamateSelect">Amalgamate Set:</label>
+    <select id="amalgamateSelect"></select>
+    <label for="customVocab">Custom Vocabulary (CSV):</label>
+    <input type="file" id="customVocab" accept=".csv">
+    <label for="amalgamateVocab">Amalgamation Vocabulary (CSV):</label>
+    <input type="file" id="amalgamateVocab" accept=".csv">
+    <label for="levelSelect">Level (1-10):</label>
+    <select id="levelSelect">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6">6</option>
+      <option value="7">7</option>
+      <option value="8">8</option>
+      <option value="9">9</option>
+      <option value="10">10</option>
+    </select>
+    <label for="modeSelect">Mode:</label>
+    <select id="modeSelect">
+      <option value="game">Game</option>
+      <option value="practice">Practice</option>
+    </select>
+    <label for="promptType">Prompt Type:</label>
+    <select id="promptType">
+      <option value="definition">Definition</option>
+      <option value="term">Term</option>
+      <option value="random">Random</option>
+    </select>
+    <label for="caseSensitivity">Case Sensitivity:</label>
+    <select id="caseSensitivity">
+      <option value="insensitive">Insensitive</option>
+      <option value="sensitive">Sensitive</option>
+    </select>
+    <label for="randomizeTerms">Randomize Terms:</label>
+    <input type="checkbox" id="randomizeTerms" checked>
+    <label for="livesSelect">Lives (1-5):</label>
+    <input type="number" id="livesSelect" min="1" max="5" value="3">
+    <label for="themeSelect">Theme:</label>
+    <select id="themeSelect">
+      <option value="natural-light">Natural Light</option>
+      <option value="natural-dark">Natural Dark</option>
+      <option value="architecture">Architecture</option>
+      <option value="space">Space</option>
+      <option value="medieval">Medieval</option>
+    </select>
+    <button id="startButton">Start Game</button>
+    <div id="loadingIndicator" class="hidden">Loading...</div>
+  </div>
+
+  <div id="game" class="hidden">
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+  </div>
+
+  <div id="stats" class="hidden">
+    <p>Score: <span id="score">0</span></p>
+    <p>Wave: <span id="wave">1</span></p>
+    <p>Terms: <span id="terms">0/0</span></p>
+    <p>Recent WPM: <span id="wpm">0</span></p>
+    <p>Time: <span id="time">∞</span></p>
+    <p>Lives: <span id="lives">3</span></p>
+    <p>To Next Wave: <span id="toWave">10</span></p>
+  </div>
+
+  <div id="input" class="hidden">
+    <input type="text" id="userInput" autocomplete="off">
+  </div>
+
+  <div id="controls" class="hidden">
+    <button id="resetGame">Reset Game</button>
+    <button id="generateCertificate">Generate Certificate</button>
+  </div>
+
+  <div id="keyboard" class="hidden">
+  <!-- Row 1: Top row (~ to Backspace) -->
+  <div class="row">
+    <div class="key">~</div>
+    <div class="key">1</div>
+    <div class="key">2</div>
+    <div class="key">3</div>
+    <div class="key">4</div>
+    <div class="key">5</div>
+    <div class="key">6</div>
+    <div class="key">7</div>
+    <div class="key">8</div>
+    <div class="key">9</div>
+    <div class="key">0</div>
+    <div class="key">-</div>
+    <div class="key">=</div>
+    <div class="key backspace">Backspace</div>
+  </div>
+  <!-- Row 2: Tab to \ -->
+  <div class="row">
+    <div class="key tab">Tab</div>
+    <div class="key">q</div>
+    <div class="key">w</div>
+    <div class="key">e</div>
+    <div class="key">r</div>
+    <div class="key">t</div>
+    <div class="key">y</div>
+    <div class="key">u</div>
+    <div class="key">i</div>
+    <div class="key">o</div>
+    <div class="key">p</div>
+    <div class="key">[</div>
+    <div class="key">]</div>
+    <div class="key">\</div>
+  </div>
+  <!-- Row 3: Caps Lock to Enter -->
+  <div class="row">
+    <div class="key caps">Caps Lock</div>
+    <div class="key">a</div>
+    <div class="key">s</div>
+    <div class="key">d</div>
+    <div class="key">f</div>
+    <div class="key">g</div>
+    <div class="key">h</div>
+    <div class="key">j</div>
+    <div class="key">k</div>
+    <div class="key">l</div>
+    <div class="key">;</div>
+    <div class="key">'</div>
+    <div class="key enter">Enter</div>
+  </div>
+  <!-- Row 4: Shift to Shift -->
+  <div class="row">
+    <div class="key shift">Shift</div>
+    <div class="key">z</div>
+    <div class="key">x</div>
+    <div class="key">c</div>
+    <div class="key">v</div>
+    <div class="key">b</div>
+    <div class="key">n</div>
+    <div class="key">m</div>
+    <div class="key">,</div>
+    <div class="key">.</div>
+    <div class="key">/</div>
+    <div class="key shift">Shift</div>
+  </div>
+  <!-- Row 5: Ctrl to Ctrl -->
+  <div class="row">
+    <div class="key ctrl">Ctrl</div>
+    <div class="key win">Win</div>
+    <div class="key alt">Alt</div>
+    <div class="key space">Space</div>
+    <div class="key alt">Alt</div>
+    <div class="key win">Win</div>
+    <div class="key ctrl">Ctrl</div>
+  </div>
+</div>
+
+  <footer>
+    <p>© 2025 Ken Kapptie | For educational use only | All rights reserved. <a href="#">More tools like this</a> | <a href="#">Want your own?</a> | <a href="#">Learn by Quiz</a></p>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+  <script type="module" src="main.js"></script>
 </body>
 </html>
