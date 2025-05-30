@@ -1,3 +1,21 @@
+html, body {
+  height: 100%;
+  overflow: hidden; /* Prevent scrolling */
+  margin: 0;
+  padding: 0;
+  touch-action: none; /* Disable touch scrolling on start screen */
+}
+
+#settings {
+  max-height: 80vh; /* Limit settings panel height */
+  overflow-y: auto; /* Allow scrolling within settings if needed */
+  box-sizing: border-box;
+}
+
+#game.active, #stats.active, #input.active, #controls.active, #keyboard.active {
+  touch-action: auto; /* Re-enable touch for game screen */
+}
+
 body {
   font-family: 'Orbitron', sans-serif;
   margin: 0;
@@ -13,12 +31,12 @@ body {
 header {
   width: 100%;
   text-align: center;
-  padding: 20px 0;
+  padding: 10px 0;
   background: var(--header-bg);
 }
 
 .app-title {
-  font-size: 2.5em;
+  font-size: 2em;
   color: var(--neon-cyan);
   text-shadow: 0 0 10px var(--neon-cyan);
   margin: 0;
@@ -26,11 +44,11 @@ header {
 
 #settings {
   background: var(--panel-bg);
-  padding: 20px;
+  padding: 15px;
   border-radius: 10px;
   box-shadow: 0 0 20px var(--shadow);
-  margin: 20px;
-  max-width: 600px;
+  margin: 10px;
+  max-width: 90%;
   width: 90%;
   transition: opacity 0.5s ease;
 }
