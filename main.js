@@ -1,7 +1,7 @@
 import { populateVocabDropdown, loadVocab } from './dataLoader.js';
 import { startGame, resetGame } from './gameLogic.js';
 import { generateCertificate } from './certificate-generator.js';
-import { updateUI, updateStats, createVirtualKeyboard } from './uiUtils.js';
+import { updateUI, updateStats } from './uiUtils.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const vocabSelect = document.getElementById('vocabSelect');
@@ -19,7 +19,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (appTitle) appTitle.classList.remove('hidden');
 
   // Populate vocab dropdowns
-  await populateVocabDropdown(vocabSelect, amalgamateSelect);
+  try {
+    await populateVocabDropdown(vocabSelect, amalgamateSelect);
+  } catch (error) {
+    console.error('Error loading vocab dropdowns:', error);
+    alert('Failed to load vocabulary options. Please try again.');
+  }
 
   // Theme switching
   themeSelect.addEventListener('change', () => {
@@ -67,7 +72,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Virtual keyboard
   createVirtualKeyboard('keyboard');
 
-  // Input handling (placeholder for existing logic)
+  // Touch support for iPad
   userInput.addEventListener('touchstart', () => userInput.focus());
 });
 
@@ -91,7 +96,7 @@ function startGameScreen() {
 }
 
 function hideGameScreen() {
-  document.body.className = `start-screen ${document.getElementById('themeSelect').value || 'default-theme'}`;
+  document.body.className = `start-screen ${document.getElementById('themeSelect').value || 'natural-light'}`;
   document.getElementById('game').classList.remove('active');
   document.getElementById('stats').classList.remove('active');
   document.getElementById('input').classList.remove('active');
@@ -107,4 +112,37 @@ function hideGameScreen() {
     const appTitle = document.querySelector('.app-title');
     if (appTitle) appTitle.classList.remove('hidden');
   }, 300);
+}
+
+function createVirtualKeyboard(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = ''; // Clear existing content
+  const keys = [
+    '`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 'backspace',
+    'tab', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\\',
+    'caps', 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', 'enter',
+    'shift', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 'shift',
+    'ctrl', 'win', 'alt', 'space', 'alt', 'win', 'ctrl'
+  ];
+  keys.forEach(key => {
+    const keyElement = document.createElement('div');
+    keyElement.className = `key ${key.toLowerCase()}`;
+    keyElement.textContent = key;
+    keyElement.addEventListener('click', () => {
+      const input = document.getElementById('userInput');
+      if (key === 'backspace') {
+        input.value = input.value.slice(0, -1);
+      } else if (key === 'space') {
+        input.value += ' ';
+      } else if (key === 'enter') {
+        input.dispatchEvent(new Event('input'));
+      } else if (!['tab', 'caps', 'shift', 'ctrl', 'win', 'alt'].includes(key)) {
+        input.value += key;
+      }
+      input.dispatchEvent(new Event('input'));
+      input.focus();
+    });
+    container.appendChild(keyElement);
+  });
 }
