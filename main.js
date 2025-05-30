@@ -1,5 +1,5 @@
 import { populateVocabDropdown, loadVocab } from './dataLoader.js';
-import { startGame, resetGame } from './gameLogic.js';
+import { startGame } from './gameLogic.js';
 import { generateCertificate } from './certificate-generator.js';
 import { updateUI, updateStats } from './uiUtils.js';
 
@@ -112,6 +112,15 @@ function hideGameScreen() {
     const appTitle = document.querySelector('.app-title');
     if (appTitle) appTitle.classList.remove('hidden');
   }, 300);
+}
+
+function resetGame() {
+  const userInput = document.getElementById('userInput');
+  if (userInput) userInput.value = '';
+  const stats = document.getElementById('stats');
+  if (stats) stats.innerHTML = '';
+  // Reset any game state (e.g., score, lives) if stored globally
+  console.log('Game reset');
 }
 
 function createVirtualKeyboard() {
