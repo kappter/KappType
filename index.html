@@ -41,28 +41,28 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <title>KappType</title>
-  <link rel="icon" type="image/x-icon" href="/yearbook-staff-app/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>KappType</title>
   <link rel="stylesheet" href="styles.css">
+  <script type="module" src="main.js"></script>
 </head>
-<body class="natural-light">
-  <header>
-    <h1 class="app-title">KappType</h1>
-  </header>
-
+<body class="start-screen natural-light">
   <div id="settings">
     <h2>Game Settings</h2>
-    <label for="vocabSelect">Vocabulary Set:</label>
-    <select id="vocabSelect"></select>
-    <label for="amalgamateSelect">Amalgamate Set:</label>
-    <select id="amalgamateSelect"></select>
-    <label for="customVocab">Custom Vocabulary (CSV):</label>
-    <input type="file" id="customVocab" accept=".csv">
-    <label for="amalgamateVocab">Amalgamation Vocabulary (CSV):</label>
-    <input type="file" id="amalgamateVocab" accept=".csv">
-    <label for="levelSelect">Level (1-10):</label>
-    <select id="levelSelect">
+    <label for="vocab-set">Vocabulary Set:</label>
+    <select id="vocab-set"></select>
+
+    <label for="amalgamate-set">Amalgamate Set:</label>
+    <select id="amalgamate-set"></select>
+
+    <label for="custom-vocab">Custom Vocabulary (CSV):</label>
+    <input type="file" id="custom-vocab" accept=".csv">
+
+    <label for="amalgamation-vocab">Amalgamation Vocabulary (CSV):</label>
+    <input type="file" id="amalgamation-vocab" accept=".csv">
+
+    <label for="level-select">Level (1-10):</label>
+    <select id="level-select">
       <option value="1">1</option>
       <option value="2">2</option>
       <option value="3">3</option>
@@ -74,144 +74,151 @@
       <option value="9">9</option>
       <option value="10">10</option>
     </select>
-    <label for="modeSelect">Mode:</label>
-    <select id="modeSelect">
+
+    <label for="mode-select">Mode:</label>
+    <select id="mode-select">
       <option value="game">Game</option>
       <option value="practice">Practice</option>
     </select>
-    <label for="promptType">Prompt Type:</label>
-    <select id="promptType">
+
+    <label for="prompt-type">Prompt Type:</label>
+    <select id="prompt-type">
       <option value="definition">Definition</option>
       <option value="term">Term</option>
       <option value="random">Random</option>
     </select>
-    <label for="caseSensitivity">Case Sensitivity:</label>
-    <select id="caseSensitivity">
+
+    <label for="case-sensitivity">Case Sensitivity:</label>
+    <select id="case-sensitivity">
       <option value="insensitive">Insensitive</option>
       <option value="sensitive">Sensitive</option>
     </select>
-    <label for="randomizeTerms">Randomize Terms:</label>
-    <input type="checkbox" id="randomizeTerms" checked>
-    <label for="livesSelect">Lives (1-5):</label>
-    <input type="number" id="livesSelect" min="1" max="5" value="3">
-    <label for="themeSelect">Theme:</label>
-    <select id="themeSelect">
+
+    <label for="randomize-terms">Randomize Terms:</label>
+    <input type="checkbox" id="randomize-terms" checked>
+
+    <label for="lives-select">Lives (1-5):</label>
+    <select id="lives-select">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+    </select>
+
+    <label for="theme-select">Theme:</label>
+    <select id="theme-select">
       <option value="natural-light">Natural Light</option>
       <option value="natural-dark">Natural Dark</option>
       <option value="architecture">Architecture</option>
       <option value="space">Space</option>
       <option value="medieval">Medieval</option>
     </select>
-    <button id="startButton">Start Game</button>
-    <div id="loadingIndicator" class="hidden">Loading...</div>
+
+    <button id="start-button">Start Game</button>
+    <div id="loading-indicator">Loading...</div>
   </div>
 
   <div id="game" class="hidden">
-    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    <canvas id="gameCanvas"></canvas>
   </div>
 
   <div id="stats" class="hidden">
-    <p>Score: <span id="score">0</span></p>
-    <p>Wave: <span id="wave">1</span></p>
-    <p>Terms: <span id="terms">0/0</span></p>
-    <p>Recent WPM: <span id="wpm">0</span></p>
-    <p>Time: <span id="time">∞</span></p>
-    <p>Lives: <span id="lives">3</span></p>
-    <p>To Next Wave: <span id="toWave">10</span></p>
+    <p><span id="score">Score: 0</span></p>
+    <p><span id="wave">Wave: 1</span></p>
+    <p><span id="termsCovered">Terms: 0/0</span></p>
+    <p><span id="wpm">Recent WPM: 0</span></p>
+    <p><span id="timer">Time: ∞</span></p>
+    <p><span id="lives">Lives: 3</span></p>
+    <p><span id="termsToWave">To Next Wave: 10</span></p>
   </div>
 
   <div id="input" class="hidden">
-    <input type="text" id="userInput" autocomplete="off">
+    <input type="text" id="user-input">
   </div>
 
   <div id="controls" class="hidden">
-    <button id="resetGame">Reset Game</button>
-    <button id="generateCertificate">Generate Certificate</button>
+    <button id="reset-button">Reset Game</button>
+    <button id="certificate-button">Generate Certificate</button>
   </div>
 
   <div id="keyboard" class="hidden">
-  <!-- Row 1: Top row (~ to Backspace) -->
-  <div class="row">
-    <div class="key">~</div>
-    <div class="key">1</div>
-    <div class="key">2</div>
-    <div class="key">3</div>
-    <div class="key">4</div>
-    <div class="key">5</div>
-    <div class="key">6</div>
-    <div class="key">7</div>
-    <div class="key">8</div>
-    <div class="key">9</div>
-    <div class="key">0</div>
-    <div class="key">-</div>
-    <div class="key">=</div>
-    <div class="key backspace">Backspace</div>
+    <div class="key-row">
+      <div class="key">~</div>
+      <div class="key">1</div>
+      <div class="key">2</div>
+      <div class="key">3</div>
+      <div class="key">4</div>
+      <div class="key">5</div>
+      <div class="key">6</div>
+      <div class="key">7</div>
+      <div class="key">8</div>
+      <div class="key">9</div>
+      <div class="key">0</div>
+      <div class="key">-</div>
+      <div class="key">=</div>
+      <div class="key backspace">Backspace</div>
+    </div>
+    <div class="key-row">
+      <div class="key tab">Tab</div>
+      <div class="key">q</div>
+      <div class="key">w</div>
+      <div class="key">e</div>
+      <div class="key">r</div>
+      <div class="key">t</div>
+      <div class="key">y</div>
+      <div class="key">u</div>
+      <div class="key">i</div>
+      <div class="key">o</div>
+      <div class="key">p</div>
+      <div class="key">[</div>
+      <div class="key">]</div>
+      <div class="key">\</div>
+    </div>
+    <div class="key-row">
+      <div class="key caps">Caps Lock</div>
+      <div class="key">a</div>
+      <div class="key">s</div>
+      <div class="key">d</div>
+      <div class="key">f</div>
+      <div class="key">g</div>
+      <div class="key">h</div>
+      <div class="key">j</div>
+      <div class="key">k</div>
+      <div class="key">l</div>
+      <div class="key">;</div>
+      <div class="key">'</div>
+      <div class="key enter">Enter</div>
+    </div>
+    <div class="key-row">
+      <div class="key shift">Shift</div>
+      <div class="key">z</div>
+      <div class="key">x</div>
+      <div class="key">c</div>
+      <div class="key">v</div>
+      <div class="key">b</div>
+      <div class="key">n</div>
+      <div class="key">m</div>
+      <div class="key">,</div>
+      <div class="key">.</div>
+      <div class="key">/</div>
+      <div class="key shift">Shift</div>
+    </div>
+    <div class="key-row">
+      <div class="key ctrl">Ctrl</div>
+      <div class="key win">Win</div>
+      <div class="key alt">Alt</div>
+      <div class="key space">Space</div>
+      <div class="key alt">Alt</div>
+      <div class="key win">Win</div>
+      <div class="key ctrl">Ctrl</div>
+    </div>
   </div>
-  <!-- Row 2: Tab to \ -->
-  <div class="row">
-    <div class="key tab">Tab</div>
-    <div class="key">q</div>
-    <div class="key">w</div>
-    <div class="key">e</div>
-    <div class="key">r</div>
-    <div class="key">t</div>
-    <div class="key">y</div>
-    <div class="key">u</div>
-    <div class="key">i</div>
-    <div class="key">o</div>
-    <div class="key">p</div>
-    <div class="key">[</div>
-    <div class="key">]</div>
-    <div class="key">\</div>
-  </div>
-  <!-- Row 3: Caps Lock to Enter -->
-  <div class="row">
-    <div class="key caps">Caps Lock</div>
-    <div class="key">a</div>
-    <div class="key">s</div>
-    <div class="key">d</div>
-    <div class="key">f</div>
-    <div class="key">g</div>
-    <div class="key">h</div>
-    <div class="key">j</div>
-    <div class="key">k</div>
-    <div class="key">l</div>
-    <div class="key">;</div>
-    <div class="key">'</div>
-    <div class="key enter">Enter</div>
-  </div>
-  <!-- Row 4: Shift to Shift -->
-  <div class="row">
-    <div class="key shift">Shift</div>
-    <div class="key">z</div>
-    <div class="key">x</div>
-    <div class="key">c</div>
-    <div class="key">v</div>
-    <div class="key">b</div>
-    <div class="key">n</div>
-    <div class="key">m</div>
-    <div class="key">,</div>
-    <div class="key">.</div>
-    <div class="key">/</div>
-    <div class="key shift">Shift</div>
-  </div>
-  <!-- Row 5: Ctrl to Ctrl -->
-  <div class="row">
-    <div class="key ctrl">Ctrl</div>
-    <div class="key win">Win</div>
-    <div class="key alt">Alt</div>
-    <div class="key space">Space</div>
-    <div class="key alt">Alt</div>
-    <div class="key win">Win</div>
-    <div class="key ctrl">Ctrl</div>
-  </div>
-</div>
 
   <footer>
     <p>© 2025 Ken Kapptie | For educational use only | All rights reserved. <a href="#">More tools like this</a> | <a href="#">Want your own?</a> | <a href="#">Learn by Quiz</a></p>
   </footer>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-  <script type="module" src="main.js"></script>
+  <script src="content.js"></script>
 </body>
 </html>

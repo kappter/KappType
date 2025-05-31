@@ -4,24 +4,24 @@ import { generateCertificate } from './certificate-generator.js';
 import { updateStatsDisplay } from './uiUtils.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const vocabSelect = document.getElementById('vocabSelect');
-  const amalgamateSelect = document.getElementById('amalgamateSelect');
-  const startButton = document.getElementById('startButton');
-  const resetButton = document.getElementById('resetButton');
-  const certificateButton = document.getElementById('certificateButton');
-  const themeSelect = document.getElementById('themeSelect');
-  const userInput = document.getElementById('userInput');
-  const loadingIndicator = document.getElementById('loadingIndicator');
+  const vocabSet = document.getElementById('vocab-set');
+  const amalgamateSet = document.getElementById('amalgamate-set');
+  const startButton = document.getElementById('start-button');
+  const resetButton = document.getElementById('reset-button');
+  const certificateButton = document.getElementById('certificate-button');
+  const themeSelect = document.getElementById('theme-select');
+  const userInput = document.getElementById('user-input');
+  const loadingIndicator = document.getElementById('loading-indicator');
 
   // Check for missing elements
-  if (!vocabSelect) console.error('vocabSelect element not found');
-  if (!amalgamateSelect) console.error('amalgamateSelect element not found');
-  if (!startButton) console.error('startButton element not found');
-  if (!resetButton) console.error('resetButton element not found');
-  if (!certificateButton) console.error('certificateButton element not found');
-  if (!themeSelect) console.error('themeSelect element not found');
-  if (!userInput) console.error('userInput element not found');
-  if (!loadingIndicator) console.error('loadingIndicator element not found');
+  if (!vocabSet) console.error('vocab-set element not found');
+  if (!amalgamateSet) console.error('amalgamate-set element not found');
+  if (!startButton) console.error('start-button element not found');
+  if (!resetButton) console.error('reset-button element not found');
+  if (!certificateButton) console.error('certificate-button element not found');
+  if (!themeSelect) console.error('theme-select element not found');
+  if (!userInput) console.error('user-input element not found');
+  if (!loadingIndicator) console.error('loading-indicator element not found');
 
   // Initialize start screen
   document.body.className = `start-screen ${themeSelect?.value || 'natural-light'}`;
@@ -32,9 +32,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Populate vocab dropdowns
   try {
-    await populateVocabDropdown(vocabSelect, amalgamateSelect);
-    console.log('Vocab dropdown options:', Array.from(vocabSelect?.options || []).map(opt => opt.value));
-    console.log('Amalgamate dropdown options:', Array.from(amalgamateSelect?.options || []).map(opt => opt.value));
+    await populateVocabDropdown(vocabSet, amalgamateSet);
+    console.log('Vocab dropdown options:', Array.from(vocabSet?.options || []).map(opt => opt.value));
+    console.log('Amalgamate dropdown options:', Array.from(amalgamateSet?.options || []).map(opt => opt.value));
   } catch (error) {
     console.error('Error loading vocab dropdowns:', error);
     alert('Failed to load vocabulary options. Please try again.');
@@ -52,14 +52,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     startButton.addEventListener('click', async () => {
       if (startButton) startButton.disabled = true;
       if (loadingIndicator) loadingIndicator.style.display = 'block';
-      const vocabUrl = vocabSelect?.value || '';
-      const amalgamateUrl = amalgamateSelect?.value || '';
-      const level = document.getElementById('levelSelect')?.value || 1;
-      const mode = document.getElementById('modeSelect')?.value || 'game';
-      const promptType = document.getElementById('promptType')?.value || 'definition';
-      const caseSensitive = document.getElementById('caseSensitivity')?.value === 'sensitive';
-      const randomizeTerms = document.getElementById('randomizeTerms')?.checked || true;
-      const lives = parseInt(document.getElementById('lives')?.value) || 3;
+      const vocabUrl = vocabSet?.value || '';
+      const amalgamateUrl = amalgamateSet?.value || '';
+      const level = document.getElementById('level-select')?.value || 1;
+      const mode = document.getElementById('mode-select')?.value || 'game';
+      const promptType = document.getElementById('prompt-type')?.value || 'definition';
+      const caseSensitive = document.getElementById('case-sensitivity')?.value === 'sensitive';
+      const randomizeTerms = document.getElementById('randomize-terms')?.checked || true;
+      const lives = parseInt(document.getElementById('lives-select')?.value) || 3;
 
       console.log('Starting game with:', { vocabUrl, amalgamateUrl, level, mode, promptType, caseSensitive, randomizeTerms, lives });
 
@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function startGameScreen() {
-  document.body.className = `game-screen ${document.getElementById('themeSelect')?.value || 'natural-light'}`;
+  document.body.className = `game-screen ${document.getElementById('theme-select')?.value || 'natural-light'}`;
   const settings = document.getElementById('settings');
   if (settings) settings.classList.add('hidden');
   const appTitle = document.querySelector('.app-title');
@@ -140,7 +140,7 @@ function startGameScreen() {
 }
 
 function hideGameScreen() {
-  document.body.className = `start-screen ${document.getElementById('themeSelect')?.value || 'natural-light'}`;
+  document.body.className = `start-screen ${document.getElementById('theme-select')?.value || 'natural-light'}`;
   const game = document.getElementById('game');
   const stats = document.getElementById('stats');
   const input = document.getElementById('input');
@@ -165,10 +165,18 @@ function hideGameScreen() {
 }
 
 function resetGame() {
-  const userInput = document.getElementById('userInput');
+  const userInput = document.getElementById('user-input');
   if (userInput) userInput.value = '';
   const stats = document.getElementById('stats');
-  if (stats) stats.innerHTML = '';
+  if (stats) stats.innerHTML = `
+    <p><span id="score">Score: 0</span></p>
+    <p><span id="wave">Wave: 1</span></p>
+    <p><span id="termsCovered">Terms: 0/0</span></p>
+    <p><span id="wpm">Recent WPM: 0</span></p>
+    <p><span id="timer">Time: ∞</span></p>
+    <p><span id="lives">Lives: 3</span></p>
+    <p><span id="termsToWave">To Next Wave: 10</span></p>
+  `;
   console.log('Game reset');
 }
 
@@ -192,7 +200,7 @@ function createVirtualKeyboard() {
     keyElement.textContent = key;
     keyElement.setAttribute('data-key', key === 'space' ? ' ' : key);
     keyElement.addEventListener('click', () => {
-      const input = document.getElementById('userInput');
+      const input = document.getElementById('user-input');
       if (!input) return;
       if (key === 'backspace') {
         input.value = input.value.slice(0, -1);
@@ -217,7 +225,7 @@ function startGame(vocabData, level, mode, promptType, caseSensitive, randomizeT
     return;
   }
   const ctx = canvas.getContext('2d');
-  const userInput = document.getElementById('userInput');
+  const userInput = document.getElementById('user-input');
   let words = [];
   let gameActive = true;
   let wave = 1;
