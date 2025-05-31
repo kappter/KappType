@@ -1,5 +1,5 @@
 import { populateVocabDropdown, loadVocab } from './dataLoader.js';
-import { startGame } from './gameLogic.js';
+import { spawnWord, updateGame } from './gameLogic.js';
 import { generateCertificate } from './certificate-generator.js';
 import { updateStatsDisplay } from './uiUtils.js';
 
@@ -119,7 +119,6 @@ function resetGame() {
   if (userInput) userInput.value = '';
   const stats = document.getElementById('stats');
   if (stats) stats.innerHTML = '';
-  // Reset any game state (e.g., score, lives) if stored globally
   console.log('Game reset');
 }
 
@@ -159,4 +158,96 @@ function createVirtualKeyboard() {
     });
     container.appendChild(keyElement);
   });
+}
+
+function startGame(vocabData, level, mode, promptType, caseSensitive, randomizeTerms, lives) {
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  const userInput = document.getElementById('userInput');
+  let words = [];
+  let gameActive = true;
+  let wave = 1;
+  let score = 0;
+  let correctTermsCount = 0;
+  let coveredTerms = new Set();
+  let totalChars = 0;
+  let correctChars = 0;
+  let missedWords = [];
+  let lastFrameTime = performance.now();
+  let vocabIndex = 0;
+  let amalgamateIndex = 0;
+  let usedVocabIndices = [];
+  let usedAmalgamateIndices = [];
+  let lastSpawnedWord = null;
+  const waveSpeeds = [1, 1.2, 1.4, 1.6, 1.8, 2];
+  const textColor = getComputedStyle(document.body).getPropertyValue('--canvas-text').trim();
+  const amalgamateVocab = []; // Empty unless loaded separately
+
+  function gameLoop() {
+    if (!gameActive) return;
+    const result = updateGame(
+      ctx, words, userInput, gameActive, mode, caseSensitive, textColor, waveSpeeds,
+      wave, score, correctTermsCount, coveredTerms, totalChars, correctChars, missedWords,
+      lastFrameTime, vocabData, amalgamateVocab, promptType, randomizeTerms,
+      usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, level, lastSpawnedWord
+    );
+    words = result.words;
+    lastFrameTime = result.lastFrameTime;
+    if (result.lostLife) {
+      lives--;
+      if (lives <= 0) {
+        gameActive = false;
+        alert('Game Over!');
+        hideGameScreen();
+        return;
+      }
+    }
+    if (Math.random() < 0.02) { // Spawn new word occasionally
+      const word = spawnWord(
+        ctx, vocabData, amalgamateVocab, promptType, caseSensitive, randomizeTerms,
+        usedVocabIndices, usedAmalgamateIndices, vocabIndex, amalgamateIndex, wave, level, mode,
+        waveSpeeds, lastSpawnedWord
+      );
+      if (word) {
+        words.push(word);
+        lastSpawnedWord = word;
+        vocabIndex++;
+        amalgamateIndex++;
+      }
+    }
+    updateStatsDisplay(
+      document.getElementById('score'), document.getElementById('wave'),
+      document.getElementById('timer'), document.getElementById('wpm'),
+      document.getElementById('termsToWave'), document.getElementById('termsCovered'),
+      score, wave, lives * 30, 0, correctTermsCount, vocabData, amalgamateVocab, coveredTerms
+    );
+    requestAnimationFrame(gameLoop);
+  }
+
+  userInput.addEventListener('input', () => {
+    if (!gameActive) return;
+    const input = caseSensitive ? userInput.value : userInput.value.toLowerCase();
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i];
+      const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
+      if (input === target) {
+        words.splice(i, 1);
+        score += 10;
+        correctTermsCount++;
+        coveredTerms.add(word.typedInput);
+        totalChars += target.length;
+        correctChars += target.length;
+        userInput.value = '';
+        if (correctTermsCount >= 10) {
+          wave++;
+          correctTermsCount = 0;
+        }
+        break;
+      }
+    }
+  });
+
+  canvas.width = 800;
+  canvas.height = 400;
+  gameLoop();
 }
