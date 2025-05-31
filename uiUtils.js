@@ -1,4 +1,3 @@
-// uiUtils.js
 export function updateTimer(timerDisplay, timeLeft, totalTime, mode, sessionStartTime, elapsedTime, gameActive, wpmDisplay, sessionEndTime, score, correctTermsCount, calculateWPM, wpmActive) {
   if (!gameActive) return;
   if (mode === 'game') {
