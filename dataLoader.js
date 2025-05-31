@@ -59,11 +59,11 @@ export async function loadVocab(vocabUrl, amalgamateUrl) {
       if (rows.length < 2) {
         throw new Error('CSV is empty or lacks data rows');
       }
-      const headers = rows[0];
-      const termIndex = headers.indexOf('Term');
-      const defIndex = headers.indexOf('Definition');
+      const headers = rows[0].map(h => h.toLowerCase());
+      const termIndex = headers.indexOf('term');
+      const defIndex = headers.indexOf('definition');
       if (termIndex === -1 || defIndex === -1) {
-        throw new Error('CSV missing Term or Definition columns');
+        throw new Error('CSV missing term or definition columns');
       }
       return rows.slice(1).filter(row => row[termIndex] && row[defIndex]).map(row => ({
         Term: row[termIndex],
