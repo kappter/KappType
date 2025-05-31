@@ -3,6 +3,16 @@ import { spawnWord, updateGame } from './gameLogic.js';
 import { generateCertificate } from './certificate-generator.js';
 import { updateStatsDisplay } from './uiUtils.js';
 
+let pageLoadTime = performance.now();
+let sessionStartTime = 0;
+let sessionEndTime = 0;
+let score = 0;
+let wave = 1;
+let lastWPM = 0;
+let totalChars = 0;
+let correctChars = 0;
+let coveredTerms = new Set();
+
 document.addEventListener('DOMContentLoaded', async () => {
   const vocabSet = document.getElementById('vocab-set');
   const amalgamateSet = document.getElementById('amalgamate-set');
@@ -12,6 +22,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const themeSelect = document.getElementById('theme-select');
   const userInput = document.getElementById('user-input');
   const loadingIndicator = document.getElementById('loading-indicator');
+  const promptSelect = document.getElementById('prompt-type');
+  const customVocab = document.getElementById('custom-vocab');
+  const amalgamationVocab = document.getElementById('amalgamation-vocab');
 
   // Check for missing elements
   if (!vocabSet) console.error('vocab-set element not found');
@@ -22,6 +35,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!themeSelect) console.error('theme-select element not found');
   if (!userInput) console.error('user-input element not found');
   if (!loadingIndicator) console.error('loading-indicator element not found');
+  if (!promptSelect) console.error('prompt-type element not found');
+  if (!customVocab) console.error('custom-vocab element not found');
+  if (!amalgamationVocab) console.error('amalgamation-vocab element not found');
 
   // Initialize start screen
   document.body.className = `start-screen ${themeSelect?.value || 'natural-light'}`;
@@ -47,6 +63,61 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // Handle custom CSV uploads
+  let customVocabData = [];
+  let amalgamationVocabData = [];
+  if (customVocab) {
+    customVocab.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const csvText = e.target.result;
+            customVocabData = parseCsv(csvText);
+            console.log('Custom vocab loaded:', customVocabData);
+          } catch (error) {
+            console.error('Error parsing custom CSV:', error);
+            alert('Failed to parse custom vocabulary CSV.');
+          }
+        };
+        reader.readAsText(file);
+      }
+    });
+  }
+  if (amalgamationVocab) {
+    amalgamationVocab.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const csvText = e.target.result;
+            amalgamationVocabData = parseCsv(csvText);
+            console.log('Amalgamation vocab loaded:', amalgamationVocabData);
+          } catch (error) {
+            console.error('Error parsing amalgamation CSV:', error);
+            alert('Failed to parse amalgamation vocabulary CSV.');
+          }
+        };
+        reader.readAsText(file);
+      }
+    });
+  }
+
+  function parseCsv(csvText) {
+    const rows = csvText.split('\n').map(row => row.split(',').map(cell => cell.trim()));
+    if (rows.length < 2) throw new Error('CSV is empty or lacks data rows');
+    const headers = rows[0].map(h => h.toLowerCase());
+    const termIndex = headers.indexOf('term');
+    const defIndex = headers.indexOf('definition');
+    if (termIndex === -1 || defIndex === -1) throw new Error('CSV missing term or definition columns');
+    return rows.slice(1).filter(row => row[termIndex] && row[defIndex]).map(row => ({
+      Term: row[termIndex],
+      Definition: row[defIndex]
+    }));
+  }
+
   // Start game
   if (startButton) {
     startButton.addEventListener('click', async () => {
@@ -56,7 +127,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const amalgamateUrl = amalgamateSet?.value || '';
       const level = document.getElementById('level-select')?.value || 1;
       const mode = document.getElementById('mode-select')?.value || 'game';
-      const promptType = document.getElementById('prompt-type')?.value || 'definition';
+      const promptType = promptSelect?.value || 'definition';
       const caseSensitive = document.getElementById('case-sensitivity')?.value === 'sensitive';
       const randomizeTerms = document.getElementById('randomize-terms')?.checked || true;
       const lives = parseInt(document.getElementById('lives-select')?.value) || 3;
@@ -65,20 +136,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       try {
         let vocabData = [];
-        if (!vocabUrl) {
-          console.warn('No vocab URL selected, using fallback vocabulary');
+        if (!vocabUrl && !customVocabData.length) {
+          console.warn('No vocab selected, using fallback vocabulary');
           vocabData = [
             { Term: 'test', Definition: 'A procedure to assess something' },
             { Term: 'code', Definition: 'Instructions for a computer' }
           ];
-        } else {
+        } else if (vocabUrl) {
           vocabData = await loadVocab(vocabUrl, amalgamateUrl);
           if (!Array.isArray(vocabData) || vocabData.length === 0) {
             throw new Error('Invalid or empty vocabulary data');
           }
         }
+        if (customVocabData.length) vocabData = [...vocabData, ...customVocabData];
+        if (amalgamationVocabData.length) vocabData = [...vocabData, ...amalgamationVocabData];
+        sessionStartTime = performance.now();
         startGameScreen();
-        startGame(vocabData, parseInt(level), mode, promptType, caseSensitive, randomizeTerms, lives);
+        startGame(vocabData, parseInt(level), mode, promptType, caseSensitive, randomizeTerms, lives, promptSelect);
         if (userInput) userInput.focus();
       } catch (error) {
         console.error('Error starting game:', error, 'Vocab URL:', vocabUrl, 'Amalgamate URL:', amalgamateUrl);
@@ -93,6 +167,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Reset game
   if (resetButton) {
     resetButton.addEventListener('click', () => {
+      sessionEndTime = performance.now();
       resetGame();
       hideGameScreen();
     });
@@ -101,12 +176,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Certificate
   if (certificateButton) {
     certificateButton.addEventListener('click', () => {
-      generateCertificate();
+      sessionEndTime = performance.now();
+      generateCertificate(
+        pageLoadTime, sessionStartTime, sessionEndTime, score, wave, promptSelect,
+        [], [], coveredTerms, lastWPM, totalChars, correctChars
+      );
     });
   }
-
-  // Virtual keyboard
-  createVirtualKeyboard();
 
   // Touch support for iPad
   if (userInput) {
@@ -177,6 +253,12 @@ function resetGame() {
     <p><span id="lives">Lives: 3</span></p>
     <p><span id="termsToWave">To Next Wave: 10</span></p>
   `;
+  score = 0;
+  wave = 1;
+  lastWPM = 0;
+  totalChars = 0;
+  correctChars = 0;
+  coveredTerms.clear();
   console.log('Game reset');
 }
 
@@ -218,7 +300,7 @@ function createVirtualKeyboard() {
   });
 }
 
-function startGame(vocabData, level, mode, promptType, caseSensitive, randomizeTerms, lives) {
+function startGame(vocabData, level, mode, promptType, caseSensitive, randomizeTerms, lives, promptSelect) {
   const canvas = document.getElementById('gameCanvas');
   if (!canvas) {
     console.error('gameCanvas element not found');
@@ -228,12 +310,7 @@ function startGame(vocabData, level, mode, promptType, caseSensitive, randomizeT
   const userInput = document.getElementById('user-input');
   let words = [];
   let gameActive = true;
-  let wave = 1;
-  let score = 0;
   let correctTermsCount = 0;
-  let coveredTerms = new Set();
-  let totalChars = 0;
-  let correctChars = 0;
   let missedWords = [];
   let lastFrameTime = performance.now();
   let vocabIndex = 0;
@@ -259,6 +336,7 @@ function startGame(vocabData, level, mode, promptType, caseSensitive, randomizeT
       lives--;
       if (lives <= 0) {
         gameActive = false;
+        sessionEndTime = performance.now();
         alert('Game Over!');
         hideGameScreen();
         return;
@@ -277,11 +355,12 @@ function startGame(vocabData, level, mode, promptType, caseSensitive, randomizeT
         amalgamateIndex++;
       }
     }
+    lastWPM = result.wpm || 0;
     updateStatsDisplay(
       document.getElementById('score'), document.getElementById('wave'),
       document.getElementById('timer'), document.getElementById('wpm'),
       document.getElementById('termsToWave'), document.getElementById('termsCovered'),
-      score, wave, lives * 30, 0, correctTermsCount, vocabData, amalgamateVocab, coveredTerms
+      score, wave, lives * 30, lastWPM, correctTermsCount, vocabData, amalgamateVocab, coveredTerms
     );
     requestAnimationFrame(gameLoop);
   }
