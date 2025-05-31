@@ -11,104 +11,154 @@ document.addEventListener('DOMContentLoaded', async () => {
   const certificateButton = document.getElementById('certificateButton');
   const themeSelect = document.getElementById('themeSelect');
   const userInput = document.getElementById('userInput');
+  const loadingIndicator = document.getElementById('loadingIndicator');
+
+  // Check for missing elements
+  if (!vocabSelect) console.error('vocabSelect element not found');
+  if (!amalgamateSelect) console.error('amalgamateSelect element not found');
+  if (!startButton) console.error('startButton element not found');
+  if (!resetButton) console.error('resetButton element not found');
+  if (!certificateButton) console.error('certificateButton element not found');
+  if (!themeSelect) console.error('themeSelect element not found');
+  if (!userInput) console.error('userInput element not found');
+  if (!loadingIndicator) console.error('loadingIndicator element not found');
 
   // Initialize start screen
-  document.body.className = `start-screen ${themeSelect.value || 'natural-light'}`;
-  document.getElementById('settings').classList.remove('hidden');
+  document.body.className = `start-screen ${themeSelect?.value || 'natural-light'}`;
+  const settings = document.getElementById('settings');
+  if (settings) settings.classList.remove('hidden');
   const appTitle = document.querySelector('.app-title');
   if (appTitle) appTitle.classList.remove('hidden');
 
   // Populate vocab dropdowns
   try {
     await populateVocabDropdown(vocabSelect, amalgamateSelect);
+    console.log('Vocab dropdown options:', Array.from(vocabSelect?.options || []).map(opt => opt.value));
+    console.log('Amalgamate dropdown options:', Array.from(amalgamateSelect?.options || []).map(opt => opt.value));
   } catch (error) {
     console.error('Error loading vocab dropdowns:', error);
     alert('Failed to load vocabulary options. Please try again.');
   }
 
   // Theme switching
-  themeSelect.addEventListener('change', () => {
-    document.body.className = `${document.body.className.includes('start-screen') ? 'start-screen' : 'game-screen'} ${themeSelect.value}`;
-  });
+  if (themeSelect) {
+    themeSelect.addEventListener('change', () => {
+      document.body.className = `${document.body.className.includes('start-screen') ? 'start-screen' : 'game-screen'} ${themeSelect.value}`;
+    });
+  }
 
   // Start game
-  startButton.addEventListener('click', async () => {
-    startButton.disabled = true;
-    document.getElementById('loadingIndicator').style.display = 'block';
-    const vocabUrl = vocabSelect.value;
-    const amalgamateUrl = amalgamateSelect.value;
-    const level = document.getElementById('levelSelect')?.value || 1;
-    const mode = document.getElementById('modeSelect')?.value || 'game';
-    const promptType = document.getElementById('promptType')?.value || 'definition';
-    const caseSensitive = document.getElementById('caseSensitivity')?.value === 'sensitive';
-    const randomizeTerms = document.getElementById('randomizeTerms')?.checked || true;
-    const lives = parseInt(document.getElementById('lives')?.value) || 3;
+  if (startButton) {
+    startButton.addEventListener('click', async () => {
+      if (startButton) startButton.disabled = true;
+      if (loadingIndicator) loadingIndicator.style.display = 'block';
+      const vocabUrl = vocabSelect?.value || '';
+      const amalgamateUrl = amalgamateSelect?.value || '';
+      const level = document.getElementById('levelSelect')?.value || 1;
+      const mode = document.getElementById('modeSelect')?.value || 'game';
+      const promptType = document.getElementById('promptType')?.value || 'definition';
+      const caseSensitive = document.getElementById('caseSensitivity')?.value === 'sensitive';
+      const randomizeTerms = document.getElementById('randomizeTerms')?.checked || true;
+      const lives = parseInt(document.getElementById('lives')?.value) || 3;
 
-    try {
-      const vocabData = await loadVocab(vocabUrl, amalgamateUrl);
-      startGameScreen();
-      startGame(vocabData, parseInt(level), mode, promptType, caseSensitive, randomizeTerms, lives);
-      userInput.focus();
-    } catch (error) {
-      console.error('Error starting game:', error);
-      alert('Failed to load vocabulary. Please try again.');
-    } finally {
-      startButton.disabled = false;
-      document.getElementById('loadingIndicator').style.display = 'none';
-    }
-  });
+      console.log('Starting game with:', { vocabUrl, amalgamateUrl, level, mode, promptType, caseSensitive, randomizeTerms, lives });
+
+      try {
+        let vocabData = [];
+        if (!vocabUrl) {
+          console.warn('No vocab URL selected, using fallback vocabulary');
+          vocabData = [
+            { Term: 'test', Definition: 'A procedure to assess something' },
+            { Term: 'code', Definition: 'Instructions for a computer' }
+          ];
+        } else {
+          vocabData = await loadVocab(vocabUrl, amalgamateUrl);
+          if (!Array.isArray(vocabData) || vocabData.length === 0) {
+            throw new Error('Invalid or empty vocabulary data');
+          }
+        }
+        startGameScreen();
+        startGame(vocabData, parseInt(level), mode, promptType, caseSensitive, randomizeTerms, lives);
+        if (userInput) userInput.focus();
+      } catch (error) {
+        console.error('Error starting game:', error, 'Vocab URL:', vocabUrl, 'Amalgamate URL:', amalgamateUrl);
+        alert(`Failed to load vocabulary: ${error.message}. Please try again.`);
+      } finally {
+        if (startButton) startButton.disabled = false;
+        if (loadingIndicator) loadingIndicator.style.display = 'none';
+      }
+    });
+  }
 
   // Reset game
-  resetButton.addEventListener('click', () => {
-    resetGame();
-    hideGameScreen();
-  });
+  if (resetButton) {
+    resetButton.addEventListener('click', () => {
+      resetGame();
+      hideGameScreen();
+    });
+  }
 
   // Certificate
-  certificateButton.addEventListener('click', () => {
-    generateCertificate();
-  });
+  if (certificateButton) {
+    certificateButton.addEventListener('click', () => {
+      generateCertificate();
+    });
+  }
 
   // Virtual keyboard
   createVirtualKeyboard();
 
   // Touch support for iPad
-  userInput.addEventListener('touchstart', () => userInput.focus());
+  if (userInput) {
+    userInput.addEventListener('touchstart', () => userInput.focus());
+  }
 });
 
 function startGameScreen() {
-  document.body.className = `game-screen ${document.getElementById('themeSelect').value || 'natural-light'}`;
-  document.getElementById('settings').classList.add('hidden');
+  document.body.className = `game-screen ${document.getElementById('themeSelect')?.value || 'natural-light'}`;
+  const settings = document.getElementById('settings');
+  if (settings) settings.classList.add('hidden');
   const appTitle = document.querySelector('.app-title');
   if (appTitle) appTitle.classList.add('hidden');
-  document.getElementById('game').classList.remove('hidden');
-  document.getElementById('stats').classList.remove('hidden');
-  document.getElementById('input').classList.remove('hidden');
-  document.getElementById('controls').classList.remove('hidden');
-  document.getElementById('keyboard').classList.remove('hidden');
+  const game = document.getElementById('game');
+  const stats = document.getElementById('stats');
+  const input = document.getElementById('input');
+  const controls = document.getElementById('controls');
+  const keyboard = document.getElementById('keyboard');
+  if (game) game.classList.remove('hidden');
+  if (stats) stats.classList.remove('hidden');
+  if (input) input.classList.remove('hidden');
+  if (controls) controls.classList.remove('hidden');
+  if (keyboard) keyboard.classList.remove('hidden');
   setTimeout(() => {
-    document.getElementById('game').classList.add('active');
-    document.getElementById('stats').classList.add('active');
-    document.getElementById('input').classList.add('active');
-    document.getElementById('controls').classList.add('active');
-    document.getElementById('keyboard').classList.add('active');
+    if (game) game.classList.add('active');
+    if (stats) stats.classList.add('active');
+    if (input) input.classList.add('active');
+    if (controls) controls.classList.add('active');
+    if (keyboard) keyboard.classList.add('active');
   }, 10);
 }
 
 function hideGameScreen() {
-  document.body.className = `start-screen ${document.getElementById('themeSelect').value || 'natural-light'}`;
-  document.getElementById('game').classList.remove('active');
-  document.getElementById('stats').classList.remove('active');
-  document.getElementById('input').classList.remove('active');
-  document.getElementById('controls').classList.remove('active');
-  document.getElementById('keyboard').classList.remove('active');
+  document.body.className = `start-screen ${document.getElementById('themeSelect')?.value || 'natural-light'}`;
+  const game = document.getElementById('game');
+  const stats = document.getElementById('stats');
+  const input = document.getElementById('input');
+  const controls = document.getElementById('controls');
+  const keyboard = document.getElementById('keyboard');
+  if (game) game.classList.remove('active');
+  if (stats) stats.classList.remove('active');
+  if (input) input.classList.remove('active');
+  if (controls) controls.classList.remove('active');
+  if (keyboard) keyboard.classList.remove('active');
   setTimeout(() => {
-    document.getElementById('game').classList.add('hidden');
-    document.getElementById('stats').classList.add('hidden');
-    document.getElementById('input').classList.add('hidden');
-    document.getElementById('controls').classList.add('hidden');
-    document.getElementById('keyboard').classList.add('hidden');
-    document.getElementById('settings').classList.remove('hidden');
+    if (game) game.classList.add('hidden');
+    if (stats) stats.classList.add('hidden');
+    if (input) input.classList.add('hidden');
+    if (controls) controls.classList.add('hidden');
+    if (keyboard) keyboard.classList.add('hidden');
+    const settings = document.getElementById('settings');
+    if (settings) settings.classList.remove('hidden');
     const appTitle = document.querySelector('.app-title');
     if (appTitle) appTitle.classList.remove('hidden');
   }, 300);
@@ -162,6 +212,10 @@ function createVirtualKeyboard() {
 
 function startGame(vocabData, level, mode, promptType, caseSensitive, randomizeTerms, lives) {
   const canvas = document.getElementById('gameCanvas');
+  if (!canvas) {
+    console.error('gameCanvas element not found');
+    return;
+  }
   const ctx = canvas.getContext('2d');
   const userInput = document.getElementById('userInput');
   let words = [];
@@ -224,28 +278,30 @@ function startGame(vocabData, level, mode, promptType, caseSensitive, randomizeT
     requestAnimationFrame(gameLoop);
   }
 
-  userInput.addEventListener('input', () => {
-    if (!gameActive) return;
-    const input = caseSensitive ? userInput.value : userInput.value.toLowerCase();
-    for (let i = 0; i < words.length; i++) {
-      const word = words[i];
-      const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
-      if (input === target) {
-        words.splice(i, 1);
-        score += 10;
-        correctTermsCount++;
-        coveredTerms.add(word.typedInput);
-        totalChars += target.length;
-        correctChars += target.length;
-        userInput.value = '';
-        if (correctTermsCount >= 10) {
-          wave++;
-          correctTermsCount = 0;
+  if (userInput) {
+    userInput.addEventListener('input', () => {
+      if (!gameActive) return;
+      const input = caseSensitive ? userInput.value : userInput.value.toLowerCase();
+      for (let i = 0; i < words.length; i++) {
+        const word = words[i];
+        const target = caseSensitive ? word.typedInput : word.typedInput.toLowerCase();
+        if (input === target) {
+          words.splice(i, 1);
+          score += 10;
+          correctTermsCount++;
+          coveredTerms.add(word.typedInput);
+          totalChars += target.length;
+          correctChars += target.length;
+          userInput.value = '';
+          if (correctTermsCount >= 10) {
+            wave++;
+            correctTermsCount = 0;
+          }
+          break;
         }
-        break;
       }
-    }
-  });
+    });
+  }
 
   canvas.width = 800;
   canvas.height = 400;
