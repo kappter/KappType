@@ -1,0 +1,1 @@
+console.log('[MindStudio][Content] Initializing content script');
